@@ -1,4 +1,4 @@
-# Polymer App Toolbox - Starter Kit-1-1
+# Polymer App Toolbox - Starter Kit-1-1-2
 
 [![Build Status](https://travis-ci.org/Polymer/polymer-starter-kit.svg?branch=master)](https://travis-ci.org/Polymer/polymer-starter-kit)
 
