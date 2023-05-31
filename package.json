@@ -2,6 +2,7 @@
   "name": "polymer-starter-kit",
   "version": "4.0.0",
   "description": "A starting point for Polymer apps",
+  "homepage":"localhost:8888/polymerApp"
   "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
   "repository": "Polymer/polymer-starter-kit",
