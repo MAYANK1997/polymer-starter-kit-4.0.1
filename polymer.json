@@ -103,3 +103,100 @@ gridOptions.api.addEventListener('cellValueChanged', function (event) {
   }
 });
 
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Style the table container */
+    #inputTable {
+      display: none;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    /* Style the table columns */
+    #inputTable th,
+    #inputTable td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    /* Style the input fields */
+    input[type="text"] {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+
+    /* Style the "Close" button */
+    #closeFormButton {
+      display: block;
+      margin: 10px auto;
+      padding: 8px 16px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="showFormButton">Show Form</button>
+  <table id="inputTable">
+    <tr>
+      <th>Column 1</th>
+      <th>Column 2</th>
+      <th>Column 3</th>
+      <th>Column 4</th>
+      <th>Column 5</th>
+      <th>Column 6</th>
+    </tr>
+    <tr>
+      <td><input type="text" id="input1" placeholder="Enter value"></td>
+      <td><input type="text" id="input2" placeholder="Enter value"></td>
+      <td><input type="text" id="input3" placeholder="Enter value"></td>
+      <td><input type="text" id="input4" placeholder="Enter value"></td>
+      <td><input type="text" id="input5" placeholder="Enter value"></td>
+      <td><input type="text" id="input6" placeholder="Enter value"></td>
+    </tr>
+  </table>
+  <button id="submitFormButton">Submit</button>
+  <button id="closeFormButton">Close</button>
+
+  <script>
+    const showFormButton = document.getElementById('showFormButton');
+    const inputTable = document.getElementById('inputTable');
+    const submitFormButton = document.getElementById('submitFormButton');
+    const closeFormButton = document.getElementById('closeFormButton');
+
+    showFormButton.addEventListener('click', () => {
+      inputTable.style.display = 'block';
+    });
+
+    closeFormButton.addEventListener('click', () => {
+      inputTable.style.display = 'none';
+    });
+
+    submitFormButton.addEventListener('click', () => {
+      // Retrieve input field values and log them to the console
+      const input1Value = document.getElementById('input1').value;
+      const input2Value = document.getElementById('input2').value;
+      const input3Value = document.getElementById('input3').value;
+      const input4Value = document.getElementById('input4').value;
+      const input5Value = document.getElementById('input5').value;
+      const input6Value = document.getElementById('input6').value;
+
+      // Log the values to the console
+      console.log('Column 1 Value:', input1Value);
+      console.log('Column 2 Value:', input2Value);
+      console.log('Column 3 Value:', input3Value);
+      console.log('Column 4 Value:', input4Value);
+      console.log('Column 5 Value:', input5Value);
+      console.log('Column 6 Value:', input6Value);
+    });
+  </script>
+</body>
+</html>
+
