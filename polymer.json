@@ -72,3 +72,34 @@
     ]
   }
 }
+
+
+
+
+const columnDefs = [
+  { headerName: 'ID', field: 'id', pinned: 'left', editable: true },
+  { headerName: 'Name', field: 'name', editable: true },
+  // Add more columns as needed
+];
+
+const gridOptions = {
+  columnDefs: columnDefs,
+  rowData: [],
+  enableCellChangeFlash: true,
+};
+
+new agGrid.Grid(gridDiv, gridOptions);
+function addPinnedRow() {
+  const newRow = { id: '', name: '' }; // Define the structure of your row
+  newRow['_rowPinned'] = 'top'; // Pin the row to the top
+  gridOptions.api.applyTransaction({ add: [newRow] }); // Add the new row
+}
+// Listen for cell value changes in the pinned row
+gridOptions.api.addEventListener('cellValueChanged', function (event) {
+  if (event.data['_rowPinned'] === 'top') {
+    // Handle changes in the pinned row's data
+    const updatedData = event.api.getData();
+    // ...
+  }
+});
+
