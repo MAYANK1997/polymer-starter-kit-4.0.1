@@ -1,4 +1,8 @@
-{
+gridOptions.api.addEventListener('rowSelected', function (event) {
+  if (event.node.isSelected()) {
+    const selectedData = event.node.data;
+    console.log('Selected Row Data:', selectedData);
+  }{
   "entrypoint": "index.html",
   "shell": "src/my-app.js",
   "sources": [
