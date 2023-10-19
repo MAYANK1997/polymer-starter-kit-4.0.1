@@ -1,3 +1,47 @@
+// Custom Header Component for the Checkbox Column
+function CustomCheckboxHeaderComponent() {}
+
+CustomCheckboxHeaderComponent.prototype.init = function (params) {
+  this.params = params;
+  this.eGui = document.createElement('div');
+  this.eGui.innerHTML = `<label><input type="checkbox"> Select All</label>`;
+  this.eCheckbox = this.eGui.querySelector('input[type="checkbox"]');
+  this.eCheckbox.addEventListener('change', this.selectAllRows.bind(this));
+};
+
+CustomCheckboxHeaderComponent.prototype.selectAllRows = function (event) {
+  const checked = event.target.checked;
+  this.params.api.forEachNode(node => {
+    // Check if the row has a checkbox
+    if (node.data.checkbox !== undefined) {
+      node.setSelected(checked);
+    }
+  });
+};
+
+CustomCheckboxHeaderComponent.prototype.getGui = function () {
+  return this.eGui;
+};
+
+
+const gridOptions = {
+  // ... other grid options ...
+
+  columnDefs: [
+    {
+      headerCheckboxSelection: true,
+      checkboxSelection: true,
+      field: "checkbox",
+      headerComponentFramework: CustomCheckboxHeaderComponent, // Use the custom header component
+    },
+    // Define other columns as needed
+  ],
+
+  // Your data source with a "checkbox" field, for example:
+  rowData: yourDataArray,
+};
+
+
 # Polymer App Toolbox - Starter Kit-1-1-2=4
 
 [![Build Status](https://travis-ci.org/Polymer/polymer-starter-kit.svg?branch=master)](https://travis-ci.org/Polymer/polymer-starter-kit)
