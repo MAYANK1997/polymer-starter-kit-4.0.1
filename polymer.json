@@ -1,3 +1,21 @@
+ headerName: '',
+      checkboxSelection: function (params) {
+        // Enable checkbox only for rows where it's needed
+        return params.data.checkbox; // Add your condition here
+      },
+      headerCellRenderer: function (params) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.addEventListener('change', function () {
+          selectAllRows(checkbox.checked);
+        });
+
+
+
+
+
+
+
 // Custom Header Component for the Checkbox Column
 function CustomCheckboxHeaderComponent() {}
 
