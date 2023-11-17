@@ -1,4 +1,29 @@
- headerName: '',
+.dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 200px;
+      border: 1px solid #ddd;
+      z-index: 1;
+    }
+
+    .dropdown-content label {
+      display: block;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .dropdown-content label:hover {
+      background-color: #f1f1f1;
+    }
+
+
+
+
+
+
+
+headerName: '',
       checkboxSelection: function (params) {
         // Enable checkbox only for rows where it's needed
         return params.data.checkbox; // Add your condition here
