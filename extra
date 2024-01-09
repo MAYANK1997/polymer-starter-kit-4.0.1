@@ -19,3 +19,12 @@ function checkForPartialMatch(arr1, arr2) {
   }
   return false; // If no match is found
 }
+
+const columnApi = gridOptions.api.getColumnApi();
+
+// Find the column with header name "dateUnrestricted"
+const dateUnrestrictedColumn = columnApi.getColumn('dateUnrestricted');
+
+// Get the value from the "dateUnrestricted" column's header
+const dateUnrestrictedValue = dateUnrestrictedColumn.getColDef().headerValue;
+
