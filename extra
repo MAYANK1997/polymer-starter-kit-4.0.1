@@ -1,30 +1,14 @@
- cellRenderer: (params) => {
-      if (params.data && params.data.fundGroupName && Array.isArray(params.data.fundGroupName)) {
-        return params.data.fundGroupName.join(", ");
-      } else {
-        return params.value;
-      }
-    }
-  },
-
-
-
-function checkForPartialMatch(arr1, arr2) {
-  for (let i = 0; i < arr1.length; i++) {
-    for (let j = 0; j < arr2.length; j++) {
-      if (arr2[j].includes(arr1[i]) || arr1[i].includes(arr2[j])) {
-        return true; // If any part of the strings match, return true
-      }
-    }
-  }
-  return false; // If no match is found
+onFilterTextBoxChanged() {
+  const filterText = document.getElementById('filter-text-box').value.toLowerCase();
+  this.applyFilterToNodes(this.gridApi.getRootNode(), filterText);
 }
 
-const columnApi = gridOptions.api.getColumnApi();
-
-// Find the column with header name "dateUnrestricted"
-const dateUnrestrictedColumn = columnApi.getColumn('dateUnrestricted');
-
-// Get the value from the "dateUnrestricted" column's header
-const dateUnrestrictedValue = dateUnrestrictedColumn.getColDef().headerValue;
-
+applyFilterToNodes(node, filterText) {
+  if (node.group) {
+    node.childrenAfterFilter.forEach(childNode => {
+      this.applyFilterToNodes(childNode, filterText);
+    });
+  } else {
+    node.setDataValue('ag-Grid-AutoColumn', filterText);
+  }
+}
