@@ -5,10 +5,10 @@ onFilterTextBoxChanged() {
   });
 }
 
-applyFilterToNodes(node, filterText) {
+applyFilterToNodeAndChildren(node, filterText) {
   if (node.group) {
-    node.childrenAfterFilter.forEach(childNode => {
-      this.applyFilterToNodes(childNode, filterText);
+    node.childrenAfterFilter.forEach((childNode) => {
+      this.applyFilterToNodeAndChildren(childNode, filterText);
     });
   } else {
     node.setDataValue('ag-Grid-AutoColumn', filterText);
