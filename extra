@@ -1,6 +1,8 @@
 onFilterTextBoxChanged() {
   const filterText = document.getElementById('filter-text-box').value.toLowerCase();
-  this.applyFilterToNodes(this.gridApi.getRootNode(), filterText);
+  this.gridApi.forEachNode((node) => {
+    this.applyFilterToNodeAndChildren(node, filterText);
+  });
 }
 
 applyFilterToNodes(node, filterText) {
