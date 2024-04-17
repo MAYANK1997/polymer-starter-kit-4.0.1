@@ -1,16 +1,91 @@
-onFilterTextBoxChanged() {
-  const filterText = document.getElementById('filter-text-box').value.toLowerCase();
-  this.gridApi.forEachNode((node) => {
-    this.applyFilterToNodeAndChildren(node, filterText);
-  });
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Book</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    h1, h2 {
+        text-align: center;
+    }
+    .index {
+        list-style: none;
+        padding: 0;
+    }
+    .index li {
+        margin-bottom: 10px;
+    }
+    .index a {
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+    }
+    .content {
+        display: none;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <ul class="index">
+        <li><a href="#chapter1">1. Chapter 1<span class="page">1</span></a></li>
+        <li><a href="#chapter2">2. Chapter 2<span class="page">2</span></a></li>
+        <li><a href="#chapter3">3. Chapter 3<span class="page">3</span></a></li>
+    </ul>
+    <div class="content" id="chapter1">
+        <h2>Chapter 1</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non diam at nunc iaculis feugiat. Duis lacinia magna eu massa posuere, at auctor nisl sodales. Phasellus nec urna aliquam, efficitur tortor eu, cursus metus. Sed sagittis euismod lorem, vel iaculis purus pulvinar in. Fusce id gravida purus. Ut pulvinar eget velit ac mollis. Sed tincidunt, felis ac aliquet vestibulum, nulla turpis dignissim odio, ut congue ex risus vitae tortor.</p>
+        <img src="https://via.placeholder.com/800x400" alt="Image 1">
+        <p>Sed a lorem eu nulla egestas eleifend nec nec lorem. Fusce ac dui eget eros maximus commodo. Vestibulum luctus turpis nec quam mattis, ac vestibulum metus feugiat. Nulla facilisi. Ut ultrices massa id nisl rutrum, sit amet commodo mi molestie. Donec finibus elit non libero feugiat, id accumsan ante efficitur. Integer maximus, eros nec laoreet commodo, enim risus volutpat leo, in tincidunt nisi eros vitae ex.</p>
+    </div>
+    <div class="content" id="chapter2">
+        <h2>Chapter 2</h2>
+        <p>Quisque non fringilla eros. Mauris ac nulla sit amet turpis scelerisque tristique vel ut dui. Aliquam at libero eros. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nullam et eros ac felis malesuada facilisis. Sed non nunc eget arcu posuere vestibulum. In hac habitasse platea dictumst. Sed id nunc nisl. Mauris aliquet, magna a ultricies scelerisque, libero felis eleifend nibh, sed varius justo nisi eget nisi. Curabitur at quam et lorem malesuada gravida non nec dui.</p>
+        <img src="https://via.placeholder.com/800x400" alt="Image 2">
+        <p>Vivamus nec turpis nec orci vehicula feugiat in eget eros. Nullam id enim vitae neque malesuada fringilla ut eu nisi. Aliquam erat volutpat. Duis condimentum, turpis a tristique malesuada, augue arcu egestas metus, nec elementum odio felis ac dui. Ut interdum nisi id velit efficitur vehicula. Vivamus eu ligula velit. Proin hendrerit orci a enim laoreet rutrum. Phasellus sit amet elit a nulla pharetra venenatis. Pellentesque nec mi vel odio pulvinar rutrum eget id nisl. Suspendisse potenti.</p>
+    </div>
+    <div class="content" id="chapter3">
+        <h2>Chapter 3</h2>
+        <p>Maecenas at odio consectetur, efficitur lectus nec, accumsan magna. Donec sed ex eu tellus venenatis pulvinar. Etiam vel turpis velit. Nulla facilisi. Nullam ac felis in odio dictum tempus. Nullam tempor vestibulum eros id lobortis. Fusce hendrerit libero a mauris vestibulum, id mollis nulla convallis. Cras rutrum vehicula mauris vel tempor. Proin consectetur orci sed urna ultrices, vel lobortis odio convallis.</p>
+        <img src="https://via.placeholder.com/800x400" alt="Image 3">
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur fringilla fringilla tortor nec condimentum. Phasellus gravida urna eu quam volutpat, ut malesuada elit varius. Phasellus vestibulum, neque ut pulvinar tristique, nunc lectus commodo orci, id lobortis libero odio a nulla. Mauris consectetur tincidunt tortor, eu eleifend felis tincidunt et. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Pellentesque euismod lectus non magna convallis bibendum. Donec quis quam a mi volutpat tempor vel vel orci.</p>
+    </div>
+</div>
 
-applyFilterToNodeAndChildren(node, filterText) {
-  if (node.group) {
-    node.childrenAfterFilter.forEach((childNode) => {
-      this.applyFilterToNodeAndChildren(childNode, filterText);
+<script>
+    const contents = document.querySelectorAll('.content');
+
+    document.querySelectorAll('.index a').forEach(anchor => {
+        anchor.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = anchor.getAttribute('href').substring(1);
+            contents.forEach(content => {
+                if (content.id === targetId) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+            document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
+        });
     });
-  } else {
-    node.setDataValue('ag-Grid-AutoColumn', filterText);
-  }
-}
+</script>
+</body>
+</html>
