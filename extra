@@ -1,121 +1,27 @@
-let filterInput = document.querySelector('#filter-input');
-var rowData = [
-    {
-        name: 'Nora Thomas',
-        employees: [
-            { employeeName: 'Daysi Branson' },
-            { employeeName: 'Stephaine Thomas' },
-            { employeeName: 'Dominique Desantiago' },
-            { employeeName: 'Corey Demps' },
-        ],
-    },
-    {
-        name: 'Mila Smith',
-        employees: [
-            { employeeName: 'Daryl Loder' },
-            { employeeName: 'Virgil Macarthur' },
-            { employeeName: 'Buena Concannon' },
-            { employeeName: 'Bryant Countess' },
-        ],
-    },
-    {
-        name: 'Evelyn Taylor',
-        employees: [
-            { employeeName: 'Mona Graden' },
-            { employeeName: 'Lera Tarter' },
-            { employeeName: 'Jaunita Copen' },
-            { employeeName: 'Joya Drapeau' },
-        ],
-    },
-    {
-        name: 'Harper Johnson',
-        employees: [
-            { employeeName: 'Renae Carrizales' },
-            { employeeName: 'Patrina Kaye' },
-            { employeeName: 'Kimberly Sutera' },
-            { employeeName: 'Russ Cason' },
-        ],
-    },
-    {
-        name: 'Addison Wilson',
-        employees: [
-            { employeeName: 'Sarai Boyce' },
-            { employeeName: 'Dorinda Suchan' },
-            { employeeName: 'Eneida Session' },
-            { employeeName: 'Del Gillian' },
-        ],
-    },
-];
+ <div id="container" style="width:100%; height:400px;"></div>
 
-var gridOptions = {
-    columnDefs: [
-        { field: 'name', cellRenderer: 'agGroupCellRenderer' },
-        { field: 'searchableOrDetailRows', hide: true },
-    ],
-    rowData: getSearchableOrRowData(),
-    masterDetail: true,
-    detailCellRendererParams: {
-        detailGridOptions: {
-            columnDefs: [{ field: 'employeeName' }],
-            onGridReady: function(params) {
-                params.api.sizeColumnsToFit();
-            },
+  <script>
+    // Your Highcharts code will go here
+    document.addEventListener('DOMContentLoaded', function () {
+      Highcharts.chart('container', {
+        chart: {
+          type: 'line'
         },
-        getDetailRowData: function(params) {
-            params.successCallback(params.data.employees);
+        title: {
+          text: 'Sample Line Chart'
         },
-    },
-    onGridReady: function(params) {
-        params.api.sizeColumnsToFit();
-        setTimeout(function() {
-            params.api.forEachNode(function(node) {
-                node.setExpanded(false);
-            });
-        }, 500);
-    },
-};
-
-function onInputChanged(params) {
-    var toFilterBy = document.getElementById('filter-input').value;
-    var existsInMaster = false;
-
-    gridOptions.api.forEachNode(node => {
-        if (node.data.name.includes(toFilterBy)) existsInMaster = true;
+        xAxis: {
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        },
+        yAxis: {
+          title: {
+            text: 'Value'
+          }
+        },
+        series: [{
+          name: 'Sample Data',
+          data: [29.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4]
+        }]
+      });
     });
-
-    // Nothing in search.
-    if (toFilterBy == '') {
-        console.log('click')
-        gridOptions.api.setFilterModel(null);
-        gridOptions.api.forEachDetailGridInfo(detailGridInfo => {
-            detailGridInfo.api.setQuickFilter(null);
-        });
-    }
-    // Found match in master grid.
-    if (existsInMaster) {
-        gridOptions.api.setQuickFilter(toFilterBy);
-    } else { 
-        // Not in master -> check in detail grids. 
-        gridOptions.api.setQuickFilter(toFilterBy);
-        gridOptions.api.forEachDetailGridInfo(detailGridInfo => {
-            detailGridInfo.api.setQuickFilter(toFilterBy);
-        });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var gridDiv = document.querySelector('#myGrid');
-    new agGrid.Grid(gridDiv, gridOptions);
-});
-
-function getSearchableOrRowData() {
-    let searchableOrRowData = rowData.map(masterRow => {
-        return {
-            ...masterRow,
-            searchableOrDetailRows: masterRow.employees
-                .map(employee => Object.values(employee).join(' '))
-                .join(' '),
-        };
-    });
-    return searchableOrRowData;
-}
+  </script>
