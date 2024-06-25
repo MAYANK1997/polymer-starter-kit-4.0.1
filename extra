@@ -24,6 +24,7 @@
             background-color: #e9ecef;
             display: flex;
             flex-direction: column;
+            padding: 20px;
         }
         .btn-stack {
             margin-bottom: 10px;
@@ -66,32 +67,50 @@
         }
         iframe {
             width: 100%;
-            height: calc(100vh - 60px); /* Adjust height based on padding and tabs */
+            height: calc(100vh - 100px); /* Adjust height based on padding and tabs */
             border: none;
+            display: none; /* Hide iframe by default */
+        }
+        .message {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="section-25">
-        <button class="btn-stack active" onclick="changeIframe('https://www.example.com', 0)">Button 1</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.wikipedia.org', 1)">Button 2</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.openai.com', 2)">Button 3</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.github.com', 3)">Button 4</button>
+        <button class="btn-stack" onclick="changeContent('under-construction', 0)">Button 1</button>
+        <button class="btn-stack active" onclick="changeContent('https://www.wikipedia.org', 1)">Button 2</button>
+        <button class="btn-stack" onclick="changeContent('under-construction', 2)">Button 3</button>
+        <button class="btn-stack" onclick="changeContent('under-construction', 3)">Button 4</button>
     </div>
     <div class="section-75">
         <div class="tabs">
-            <div class="tab active" onclick="changeIframe('https://www.example.com', 0)">Tab 1</div>
-            <div class="tab" onclick="changeIframe('https://www.wikipedia.org', 1)">Tab 2</div>
-            <div class="tab" onclick="changeIframe('https://www.openai.com', 2)">Tab 3</div>
-            <div class="tab" onclick="changeIframe('https://www.github.com', 3)">Tab 4</div>
+            <div class="tab" onclick="changeContent('under-construction', 0)">Tab 1</div>
+            <div class="tab active" onclick="changeContent('https://www.wikipedia.org', 1)">Tab 2</div>
+            <div class="tab" onclick="changeContent('under-construction', 2)">Tab 3</div>
+            <div class="tab" onclick="changeContent('under-construction', 3)">Tab 4</div>
         </div>
-        <iframe id="iframe" src="https://www.example.com"></iframe>
+        <iframe id="iframe" src="https://www.wikipedia.org"></iframe>
+        <div id="message" class="message" style="display: none;">Page is under Construction</div>
     </div>
 
     <script>
-        function changeIframe(url, index) {
-            document.getElementById('iframe').src = url;
-            
+        function changeContent(content, index) {
+            var iframe = document.getElementById('iframe');
+            var message = document.getElementById('message');
+
+            if (content === 'under-construction') {
+                iframe.style.display = 'none';
+                message.style.display = 'block';
+            } else {
+                iframe.src = content;
+                iframe.style.display = 'block';
+                message.style.display = 'none';
+            }
+
             // Update tabs
             var tabs = document.getElementsByClassName('tab');
             for (var i = 0; i < tabs.length; i++) {
