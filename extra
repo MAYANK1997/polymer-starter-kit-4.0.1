@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Vertical Sections with Iframe</title>
+    <title>Two Vertical Sections with Iframe and Tabs</title>
     <style>
         body {
             margin: 0;
@@ -22,7 +22,8 @@
         .section-75 {
             width: 75%;
             background-color: #e9ecef;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
         .btn-stack {
             margin-bottom: 10px;
@@ -37,27 +38,57 @@
         .btn-stack:hover {
             background-color: #0056b3;
         }
+        .tabs {
+            display: flex;
+            background-color: #dee2e6;
+            padding: 10px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #6c757d;
+            color: white;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+        .tab:hover {
+            background-color: #5a6268;
+        }
+        .tab.active {
+            background-color: #007bff;
+        }
         iframe {
             width: 100%;
-            height: calc(100vh - 40px); /* Adjust height based on padding */
+            height: calc(100vh - 60px); /* Adjust height based on padding and tabs */
             border: none;
         }
     </style>
 </head>
 <body>
     <div class="section-25">
-        <button class="btn-stack" onclick="changeIframe('https://www.example.com')">Button 1</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.wikipedia.org')">Button 2</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.openai.com')">Button 3</button>
-        <button class="btn-stack" onclick="changeIframe('https://www.github.com')">Button 4</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.example.com', 0)">Button 1</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.wikipedia.org', 1)">Button 2</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.openai.com', 2)">Button 3</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.github.com', 3)">Button 4</button>
     </div>
     <div class="section-75">
+        <div class="tabs">
+            <div class="tab active" onclick="changeIframe('https://www.example.com', 0)">Tab 1</div>
+            <div class="tab" onclick="changeIframe('https://www.wikipedia.org', 1)">Tab 2</div>
+            <div class="tab" onclick="changeIframe('https://www.openai.com', 2)">Tab 3</div>
+            <div class="tab" onclick="changeIframe('https://www.github.com', 3)">Tab 4</div>
+        </div>
         <iframe id="iframe" src="https://www.example.com"></iframe>
     </div>
 
     <script>
-        function changeIframe(url) {
+        function changeIframe(url, tabIndex) {
             document.getElementById('iframe').src = url;
+            var tabs = document.getElementsByClassName('tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            tabs[tabIndex].classList.add('active');
         }
     </script>
 </body>
