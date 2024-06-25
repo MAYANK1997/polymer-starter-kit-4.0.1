@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Vertical Sections</title>
+    <title>Two Vertical Sections with Iframe</title>
     <style>
         body {
             margin: 0;
@@ -36,18 +37,28 @@
         .btn-stack:hover {
             background-color: #0056b3;
         }
+        iframe {
+            width: 100%;
+            height: calc(100vh - 40px); /* Adjust height based on padding */
+            border: none;
+        }
     </style>
 </head>
 <body>
     <div class="section-25">
-        <button class="btn-stack">Button 1</button>
-        <button class="btn-stack">Button 2</button>
-        <button class="btn-stack">Button 3</button>
-        <button class="btn-stack">Button 4</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.example.com')">Button 1</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.wikipedia.org')">Button 2</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.openai.com')">Button 3</button>
+        <button class="btn-stack" onclick="changeIframe('https://www.github.com')">Button 4</button>
     </div>
     <div class="section-75">
-        <h1>Main Content</h1>
-        <p>This section takes up 75% of the page width. You can add your main content here.</p>
+        <iframe id="iframe" src="https://www.example.com"></iframe>
     </div>
+
+    <script>
+        function changeIframe(url) {
+            document.getElementById('iframe').src = url;
+        }
+    </script>
 </body>
 </html>
