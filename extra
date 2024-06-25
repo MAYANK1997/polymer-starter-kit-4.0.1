@@ -28,15 +28,22 @@
         .btn-stack {
             margin-bottom: 10px;
             padding: 10px;
-            background-color: #007bff;
+            background-color: #6c757d;
             border: none;
             color: white;
             text-align: center;
             cursor: pointer;
             font-size: 16px;
+            box-shadow: 0 5px #999;
         }
-        .btn-stack:hover {
-            background-color: #0056b3;
+        .btn-stack:active {
+            background-color: black;
+            box-shadow: 0 3px #666;
+            transform: translateY(4px);
+        }
+        .btn-stack.active {
+            background-color: black;
+            box-shadow: 0 3px #666;
         }
         .tabs {
             display: flex;
@@ -66,7 +73,7 @@
 </head>
 <body>
     <div class="section-25">
-        <button class="btn-stack" onclick="changeIframe('https://www.example.com', 0)">Button 1</button>
+        <button class="btn-stack active" onclick="changeIframe('https://www.example.com', 0)">Button 1</button>
         <button class="btn-stack" onclick="changeIframe('https://www.wikipedia.org', 1)">Button 2</button>
         <button class="btn-stack" onclick="changeIframe('https://www.openai.com', 2)">Button 3</button>
         <button class="btn-stack" onclick="changeIframe('https://www.github.com', 3)">Button 4</button>
@@ -82,13 +89,22 @@
     </div>
 
     <script>
-        function changeIframe(url, tabIndex) {
+        function changeIframe(url, index) {
             document.getElementById('iframe').src = url;
+            
+            // Update tabs
             var tabs = document.getElementsByClassName('tab');
             for (var i = 0; i < tabs.length; i++) {
                 tabs[i].classList.remove('active');
             }
-            tabs[tabIndex].classList.add('active');
+            tabs[index].classList.add('active');
+
+            // Update buttons
+            var buttons = document.getElementsByClassName('btn-stack');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            buttons[index].classList.add('active');
         }
     </script>
 </body>
