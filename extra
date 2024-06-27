@@ -10,6 +10,7 @@
             font-family: Arial, sans-serif;
             display: flex;
             height: 100vh;
+            overflow: hidden; /* To prevent scrollbars from appearing */
         }
         .section-25 {
             width: 25%;
@@ -137,6 +138,7 @@
         // Set initial content
         document.addEventListener('DOMContentLoaded', function() {
             changeContent('https://www.wikipedia.org', 1);
+            document.body.style.zoom = "60%";
         });
 
         // Resize functionality
