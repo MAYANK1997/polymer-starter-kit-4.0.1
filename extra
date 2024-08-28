@@ -1,171 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resizable Sections with Iframe and Tabs</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden; /* To prevent scrollbars from appearing */
-        }
-        .section-25 {
-            width: 25%;
-            background-color: #f8f9fa;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            box-sizing: border-box;
-        }
-        .section-75 {
-            width: 75%;
-            background-color: #e9ecef;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .divider {
-            width: 5px;
-            background-color: #ccc;
-            cursor: ew-resize;
-        }
-        .btn-stack {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #6c757d;
-            border: none;
-            color: white;
-            text-align: center;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 5px #999;
-        }
-        .btn-stack:active {
-            background-color: black;
-            box-shadow: 0 3px #666;
-            transform: translateY(4px);
-        }
-        .btn-stack.active {
-            background-color: black;
-            box-shadow: 0 3px #666;
-        }
-        .tabs {
-            display: flex;
-            background-color: #dee2e6;
-            padding: 10px;
-        }
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #6c757d;
-            color: white;
-            margin-right: 10px;
-            border-radius: 5px;
-        }
-        .tab:hover {
-            background-color: #5a6268;
-        }
-        .tab.active {
-            background-color: #007bff;
-        }
-        iframe {
-            width: 100%;
-            height: calc(100vh - 100px); /* Adjust height based on padding and tabs */
-            border: none;
-        }
-        .message {
-            font-size: 24px;
-            color: #333;
-            text-align: center;
-            margin-top: 20px;
-            display: none; /* Hide by default */
-        }
-    </style>
-</head>
-<body>
-    <div class="section-25">
-        <button class="btn-stack" onclick="changeContent('under-construction', 0)">Button 1</button>
-        <button class="btn-stack active" onclick="changeContent('https://www.wikipedia.org', 1)">Button 2</button>
-        <button class="btn-stack" onclick="changeContent('under-construction', 2)">Button 3</button>
-        <button class="btn-stack" onclick="changeContent('under-construction', 3)">Button 4</button>
-    </div>
-    <div class="divider" id="divider"></div>
-    <div class="section-75">
-        <div class="tabs">
-            <div class="tab" onclick="changeContent('under-construction', 0)">Tab 1</div>
-            <div class="tab active" onclick="changeContent('https://www.wikipedia.org', 1)">Tab 2</div>
-            <div class="tab" onclick="changeContent('under-construction', 2)">Tab 3</div>
-            <div class="tab" onclick="changeContent('under-construction', 3)">Tab 4</div>
-        </div>
-        <iframe id="iframe" src="https://www.wikipedia.org"></iframe>
-        <div id="message" class="message">Page is under Construction</div>
-    </div>
 
-    <script>
-        function changeContent(content, index) {
-            var iframe = document.getElementById('iframe');
-            var message = document.getElementById('message');
-
-            if (content === 'under-construction') {
-                iframe.style.display = 'none';
-                message.style.display = 'block';
-            } else {
-                iframe.src = content;
-                iframe.style.display = 'block';
-                message.style.display = 'none';
-            }
-
-            // Update tabs
-            var tabs = document.getElementsByClassName('tab');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            tabs[index].classList.add('active');
-
-            // Update buttons
-            var buttons = document.getElementsByClassName('btn-stack');
-            for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active');
-            }
-            buttons[index].classList.add('active');
-        }
-
-        // Set initial content
-        document.addEventListener('DOMContentLoaded', function() {
-            changeContent('https://www.wikipedia.org', 1);
-            document.body.style.zoom = "60%";
-        });
-
-        // Resize functionality
-        const divider = document.getElementById('divider');
-        const section25 = document.querySelector('.section-25');
-        const section75 = document.querySelector('.section-75');
-
-        divider.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            document.addEventListener('mousemove', resizeSections);
-            document.addEventListener('mouseup', stopResizing);
-        });
-
-        function resizeSections(e) {
-            const totalWidth = window.innerWidth;
-            const dividerWidth = divider.offsetWidth;
-            const newSection25Width = e.clientX;
-            const newSection75Width = totalWidth - newSection25Width - dividerWidth;
-
-            section25.style.width = newSection25Width + 'px';
-            section75.style.width = newSection75Width + 'px';
-        }
-
-        function stopResizing() {
-            document.removeEventListener('mousemove', resizeSections);
-            document.removeEventListener('mouseup', stopResizing);
-        }
-    </script>
-</body>
-</html>
+    	$('#calendar').fullCalendar({
+			header: {
+				left: 'prev,next today',
+				center: 'title',
+				right: 'month'
+			},
+			//,agendaWeek,agendaDay
+			defaultDate: moment().format("YYYY-MM-DD"),
+			editable: false,
+			eventLimit: true, // allow "more" link when too many events
+			events: {
+		        url: '/eventbyfundanduserandduration',
+		        type: 'GET',
+		        data: {
+		        	fund: fund==null?null:fund[0],
+		        	user: user==null?null:user[0]
+		        },
+		        error: function() {
+		            alert('there was an error while fetching events!');
+		        }
+		        //color: '#81ccc4',   // a non-ajax option
+		        //textColor: 'white' // a non-ajax option
+		    },
+		    
+		    events: function(start, end, timezone, callback) {
+		        $.ajax({
+		            url: '/eventbyfundanduserandduration',
+		            method: 'GET',
+		            dataType: 'json',
+		            data: {
+			        	fund: fund==null?null:fund[0],
+			        	user: user==null?null:user[0],
+			        	start: start,
+			        	end: end
+			        },
+		            success: function(data) {
+		                //update cp filter with data.corpActionNames
+		                //update fundtype filer with data.fundTypes
+		                callback(data.events); // Pass the events to the calendar
+		            }
+		        });
+		    },
+		    
+		    
+		    
+		    
