@@ -1,30 +1,16 @@
- function displayTableData() {
-            const tableBody = document.getElementById('table-body');
+ let actionNames = [];
+                let tickers = [];
 
-            // Clear any existing rows
-            tableBody.innerHTML = '';
+                corporateActions.forEach(action => {
+                    actionNames.push(action.corporateActionName);
+                    tickers.push(action.tickers.join("\n")); // Join tickers with line breaks
+                });
 
-            // Iterate over the API data
-            apiData.forEach(eventGroup => {
-                const date = eventGroup.effectiveDate;
-                const corporateActions = eventGroup.data;
-
-                // For each corporate action, add rows
-                corporateActions.forEach((action, actionIndex) => {
-                    const tickers = action.tickers;
-
-                    // Add the first row for the date with the first action and ticker
-                    const firstRow = `<tr>
-                                        ${actionIndex === 0 ? `<td rowspan="${corporateActions.length}">${date}</td>` : ''}
-                                        <td rowspan="${tickers.length}">${action.corporateActionName}</td>
-                                        <td>${tickers[0]}</td>
-                                    </tr>`;
-                    tableBody.innerHTML += firstRow;
-
-                    // Add remaining rows for the additional tickers (if any)
-                    for (let i = 1; i < tickers.length; i++) {
-                        const row = `<tr>
-                                        <td>${tickers[i]}</td>
-                                    </tr>`;
-                        tableBody.innerHTML += row;
-                    }
+                // Create a row with the date, actions (line break-separated), and tickers (line break-separated)
+                const row = `<tr>
+                                <td>${date}</td>
+                                <td class="multiline">${actionNames.join("\n")}</td>
+                                <td class="multiline">${tickers.join("\n")}</td>
+                             </tr>`;
+                tableBody.innerHTML += row;
+            });
