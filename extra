@@ -5,3 +5,5 @@ const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
+document.getElementById('currentDate').textContent = formatDate(currentDate);
+    document.getElementById('sevenDaysAgo').textContent = formatDate(sevenDaysAgo);
