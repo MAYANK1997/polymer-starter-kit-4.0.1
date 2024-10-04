@@ -1,145 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corporate Actions</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-        .table-container {
-            width: 80%;
-            margin: auto;
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .table-header {
-            background-color: #003366;
-            color: white;
-            padding: 10px;
-            font-size: 18px;
-            text-align: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #0066cc;
-            color: white;
-        }
-
-        td {
-            background-color: #f9f9f9;
-        }
-
-        tr:nth-child(even) td {
-            background-color: #e6e6e6;
-        }
-
-        .multiline {
-            white-space: normal;
-        }
-    </style>
-</head>
-<body>
-    <div class="table-container">
-        <div class="table-header">
-            Corporate Actions Events for the Week 09/03/2024 – 09/05/2024
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Effective Date</th>
-                    <th>Corporate Action Name</th>
-                    <th>Tickers</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <!-- Data from the API will be inserted here -->
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        // Example data
-        const apiData = [
-            {
-                "data": [
-                    {
-                        "corporateActionName": "Cash Dividend",
-                        "tickers": ["NCC GROUP ORD"]
-                    },
-                    {
-                        "corporateActionName": "Shareholder Meeting",
-                        "tickers": ["SPEEDY HIRE ORD", "XPS PENSIONS GROUP ORD"]
-                    }
-                ],
-                "effectiveDate": "2024-09-05"
-            },
-            {
-                "data": [
-                    {
-                        "corporateActionName": "Shareholder Meeting",
-                        "tickers": ["IOMART GROUP ORD"]
-                    }
-                ],
-                "effectiveDate": "2024-09-03"
-            }
-        ];
-
-        // Function to display the data
-        function displayTableData() {
-            const tableBody = document.getElementById('table-body');
-
-            // Clear any existing rows
-            tableBody.innerHTML = '';
-
-            // Iterate over the API data
-            apiData.forEach(eventGroup => {
-                const date = eventGroup.effectiveDate;
-                const corporateActions = eventGroup.data;
-
-                corporateActions.forEach((action, index) => {
-                    const row = document.createElement('tr');
-
-                    // Only show the effective date for the first action in the group
-                    if (index === 0) {
-                        const dateCell = document.createElement('td');
-                        dateCell.rowSpan = corporateActions.length; // Span the date over multiple rows
-                        dateCell.innerText = date;
-                        row.appendChild(dateCell);
-                    }
-
-                    // Add the corporate action name
-                    const actionCell = document.createElement('td');
-                    actionCell.innerHTML = action.corporateActionName;
-                    row.appendChild(actionCell);
-
-                    // Add the tickers (joined with <br> for line breaks)
-                    const tickerCell = document.createElement('td');
-                    tickerCell.innerHTML = action.tickers.join('<br>');
-                    row.appendChild(tickerCell);
-
-                    tableBody.appendChild(row);
-                });
-            });
-        }
-
-        // Display the data on page load
-        window.onload = displayTableData;
-    </script>
-</body>
-</html>
+[
+    {
+        "NMV": 10.6428,
+        "RiskPercent": 35.6742,
+        "SortType": "Top",
+        "Ticker": "LEN"
+    },
+    {
+        "NMV": 7.6638399999999995,
+        "RiskPercent": 20.5112,
+        "SortType": "Top",
+        "Ticker": "OPCH"
+    },
+    {
+        "NMV": 6.5514600000000005,
+        "RiskPercent": 13.594999999999999,
+        "SortType": "Top",
+        "Ticker": "AGO"
+    },
+    {
+        "NMV": 5.24126,
+        "RiskPercent": 13.0945,
+        "SortType": "Top",
+        "Ticker": "PRGO"
+    },
+    {
+        "NMV": -11.2463,
+        "RiskPercent": -12.9604,
+        "SortType": "Top",
+        "Ticker": "SPY"
+    },
+    {
+        "NMV": -6.490740000000001,
+        "RiskPercent": -12.7738,
+        "SortType": "Top",
+        "Ticker": "IWM"
+    },
+    {
+        "NMV": 5.13773,
+        "RiskPercent": 11.6573,
+        "SortType": "Top",
+        "Ticker": "LAUR"
+    },
+    {
+        "NMV": 3.95687,
+        "RiskPercent": 11.5853,
+        "SortType": "Top",
+        "Ticker": "TMHC"
+    },
+    {
+        "NMV": 3.5575200000000002,
+        "RiskPercent": 10.997300000000001,
+        "SortType": "Top",
+        "Ticker": "BLDR"
+    },
+    {
+        "NMV": -4.8747300000000005,
+        "RiskPercent": -10.963199999999999,
+        "SortType": "Top",
+        "Ticker": "ITB"
+    },
+    {
+        "NMV": 0.00312524,
+        "RiskPercent": 0.0101399,
+        "SortType": "Bottom",
+        "Ticker": "BYON"
+    },
+    {
+        "NMV": 0.022285,
+        "RiskPercent": 0.071128,
+        "SortType": "Bottom",
+        "Ticker": "BE"
+    },
+    {
+        "NMV": 0.034625699999999995,
+        "RiskPercent": 0.0927524,
+        "SortType": "Bottom",
+        "Ticker": "AXL"
+    },
+    {
+        "NMV": 0.275516,
+        "RiskPercent": 0.315136,
+        "SortType": "Bottom",
+        "Ticker": "DG"
+    },
+    {
+        "NMV": -0.21428599999999998,
+        "RiskPercent": -0.32261,
+        "SortType": "Bottom",
+        "Ticker": "XLY"
+    },
+    {
+        "NMV": -0.22626500000000002,
+        "RiskPercent": -0.355702,
+        "SortType": "Bottom",
+        "Ticker": "DECK"
+    },
+    {
+        "NMV": -0.27591899999999997,
+        "RiskPercent": -0.369799,
+        "SortType": "Bottom",
+        "Ticker": "BNS"
+    },
+    {
+        "NMV": -0.141098,
+        "RiskPercent": -0.396704,
+        "SortType": "Bottom",
+        "Ticker": "EXPI"
+    },
+    {
+        "NMV": 0.258448,
+        "RiskPercent": 0.442521,
+        "SortType": "Bottom",
+        "Ticker": "NAPA"
+    },
+    {
+        "NMV": 0.341517,
+        "RiskPercent": 0.501667,
+        "SortType": "Bottom",
+        "Ticker": "GSLOEPOW"
+    }
+]
