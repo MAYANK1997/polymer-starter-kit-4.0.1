@@ -1,122 +1,39 @@
-[
-    {
-        "NMV": 10.6428,
-        "RiskPercent": 35.6742,
-        "SortType": "Top",
-        "Ticker": "LEN"
-    },
-    {
-        "NMV": 7.6638399999999995,
-        "RiskPercent": 20.5112,
-        "SortType": "Top",
-        "Ticker": "OPCH"
-    },
-    {
-        "NMV": 6.5514600000000005,
-        "RiskPercent": 13.594999999999999,
-        "SortType": "Top",
-        "Ticker": "AGO"
-    },
-    {
-        "NMV": 5.24126,
-        "RiskPercent": 13.0945,
-        "SortType": "Top",
-        "Ticker": "PRGO"
-    },
-    {
-        "NMV": -11.2463,
-        "RiskPercent": -12.9604,
-        "SortType": "Top",
-        "Ticker": "SPY"
-    },
-    {
-        "NMV": -6.490740000000001,
-        "RiskPercent": -12.7738,
-        "SortType": "Top",
-        "Ticker": "IWM"
-    },
-    {
-        "NMV": 5.13773,
-        "RiskPercent": 11.6573,
-        "SortType": "Top",
-        "Ticker": "LAUR"
-    },
-    {
-        "NMV": 3.95687,
-        "RiskPercent": 11.5853,
-        "SortType": "Top",
-        "Ticker": "TMHC"
-    },
-    {
-        "NMV": 3.5575200000000002,
-        "RiskPercent": 10.997300000000001,
-        "SortType": "Top",
-        "Ticker": "BLDR"
-    },
-    {
-        "NMV": -4.8747300000000005,
-        "RiskPercent": -10.963199999999999,
-        "SortType": "Top",
-        "Ticker": "ITB"
-    },
-    {
-        "NMV": 0.00312524,
-        "RiskPercent": 0.0101399,
-        "SortType": "Bottom",
-        "Ticker": "BYON"
-    },
-    {
-        "NMV": 0.022285,
-        "RiskPercent": 0.071128,
-        "SortType": "Bottom",
-        "Ticker": "BE"
-    },
-    {
-        "NMV": 0.034625699999999995,
-        "RiskPercent": 0.0927524,
-        "SortType": "Bottom",
-        "Ticker": "AXL"
-    },
-    {
-        "NMV": 0.275516,
-        "RiskPercent": 0.315136,
-        "SortType": "Bottom",
-        "Ticker": "DG"
-    },
-    {
-        "NMV": -0.21428599999999998,
-        "RiskPercent": -0.32261,
-        "SortType": "Bottom",
-        "Ticker": "XLY"
-    },
-    {
-        "NMV": -0.22626500000000002,
-        "RiskPercent": -0.355702,
-        "SortType": "Bottom",
-        "Ticker": "DECK"
-    },
-    {
-        "NMV": -0.27591899999999997,
-        "RiskPercent": -0.369799,
-        "SortType": "Bottom",
-        "Ticker": "BNS"
-    },
-    {
-        "NMV": -0.141098,
-        "RiskPercent": -0.396704,
-        "SortType": "Bottom",
-        "Ticker": "EXPI"
-    },
-    {
-        "NMV": 0.258448,
-        "RiskPercent": 0.442521,
-        "SortType": "Bottom",
-        "Ticker": "NAPA"
-    },
-    {
-        "NMV": 0.341517,
-        "RiskPercent": 0.501667,
-        "SortType": "Bottom",
-        "Ticker": "GSLOEPOW"
+document.addEventListener('DOMContentLoaded', () => {
+    // Assuming this is the API endpoint providing the data
+    fetch('/api/risk-data') // Replace with actual API endpoint
+        .then(response => response.json())
+        .then(data => {
+            // Split data into top and bottom arrays based on SortType
+            const top10 = data.filter(item => item.SortType === 'Top').slice(0, 10);
+            const bottom10 = data.filter(item => item.SortType === 'Bottom').slice(0, 10);
+            populateTable(top10, bottom10);
+        })
+        .catch(error => console.error('Error fetching data:', error));
+});
+
+function populateTable(top10, bottom10) {
+    const tbody = document.getElementById('risk-table-body');
+
+    // Loop for a maximum of 10 rows (Top and Bottom each)
+    for (let i = 0; i < 10; i++) {
+        const row = document.createElement('tr');
+
+        // Add Top 10 data
+        row.appendChild(createCell(top10[i]?.Ticker || ''));
+        row.appendChild(createCell(top10[i]?.NMV?.toFixed(2) || ''));
+        row.appendChild(createCell(top10[i]?.RiskPercent?.toFixed(2) + '%' || ''));
+
+        // Add Bottom 10 data
+        row.appendChild(createCell(bottom10[i]?.Ticker || ''));
+        row.appendChild(createCell(bottom10[i]?.NMV?.toFixed(2) || ''));
+        row.appendChild(createCell(bottom10[i]?.RiskPercent?.toFixed(2) + '%' || ''));
+
+        tbody.appendChild(row);
     }
-]
+}
+
+function createCell(content) {
+    const cell = document.createElement('td');
+    cell.textContent = content;
+    return cell;
+}
