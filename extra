@@ -1,39 +1,150 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Assuming this is the API endpoint providing the data
-    fetch('/api/risk-data') // Replace with actual API endpoint
-        .then(response => response.json())
-        .then(data => {
-            // Split data into top and bottom arrays based on SortType
-            const top10 = data.filter(item => item.SortType === 'Top').slice(0, 10);
-            const bottom10 = data.filter(item => item.SortType === 'Bottom').slice(0, 10);
-            populateTable(top10, bottom10);
-        })
-        .catch(error => console.error('Error fetching data:', error));
-});
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replicate and Restore User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
 
-function populateTable(top10, bottom10) {
-    const tbody = document.getElementById('risk-table-body');
+        .container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 80%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
 
-    // Loop for a maximum of 10 rows (Top and Bottom each)
-    for (let i = 0; i < 10; i++) {
-        const row = document.createElement('tr');
+        .section {
+            flex: 1;
+            text-align: center;
+            margin: 10px;
+        }
 
-        // Add Top 10 data
-        row.appendChild(createCell(top10[i]?.Ticker || ''));
-        row.appendChild(createCell(top10[i]?.NMV?.toFixed(2) || ''));
-        row.appendChild(createCell(top10[i]?.RiskPercent?.toFixed(2) + '%' || ''));
+        h2 {
+            margin-bottom: 20px;
+        }
 
-        // Add Bottom 10 data
-        row.appendChild(createCell(bottom10[i]?.Ticker || ''));
-        row.appendChild(createCell(bottom10[i]?.NMV?.toFixed(2) || ''));
-        row.appendChild(createCell(bottom10[i]?.RiskPercent?.toFixed(2) + '%' || ''));
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
 
-        tbody.appendChild(row);
-    }
-}
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
 
-function createCell(content) {
-    const cell = document.createElement('td');
-    cell.textContent = content;
-    return cell;
-}
+        button {
+            padding: 10px 20px;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        .divider {
+            width: 2px;
+            background-color: #ccc;
+        }
+
+        .dropdown-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-row label {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .dropdown-row {
+                flex-direction: column;
+            }
+
+            .divider {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Replicate Section -->
+        <div class="section">
+            <h2>Replicate User</h2>
+            <div class="dropdown-row">
+                <div>
+                    <label for="source">Source:</label>
+                    <select id="source">
+                        <option value="Amit Amit">Amit Amit</option>
+                        <option value="John Doe">John Doe</option>
+                        <option value="Jane Smith">Jane Smith</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="target">Target:</label>
+                    <select id="target">
+                        <option value="Amit Amit">Amit Amit</option>
+                        <option value="John Doe">John Doe</option>
+                        <option value="Jane Smith">Jane Smith</option>
+                    </select>
+                </div>
+            </div>
+            <button id="replicateButton">Replicate</button>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Restore Section -->
+        <div class="section">
+            <h2>Restore User</h2>
+            <label for="userName">User Name:</label>
+            <select id="userName">
+                <option value="Amit Amit">Amit Amit</option>
+                <option value="John Doe">John Doe</option>
+                <option value="Jane Smith">Jane Smith</option>
+            </select>
+            <br>
+            <button id="restoreButton">Restore</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('replicateButton').addEventListener('click', () => {
+            const source = document.getElementById('source').value;
+            const target = document.getElementById('target').value;
+            alert(`Replicating user from ${source} to ${target}`);
+        });
+
+        document.getElementById('restoreButton').addEventListener('click', () => {
+            const userName = document.getElementById('userName').value;
+            alert(`Restoring user: ${userName}`);
+        });
+    </script>
+</body>
+</html>
