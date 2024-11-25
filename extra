@@ -37,16 +37,26 @@
             margin-bottom: 20px;
         }
 
-        label {
+        .dropdown-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dropdown-row div {
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-row label {
+            margin-right: 10px;
             font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
         }
 
         select {
-            width: 100%;
             padding: 10px;
-            margin-bottom: 20px;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
@@ -70,20 +80,10 @@
             background-color: #ccc;
         }
 
-        .dropdown-row {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dropdown-row label {
-            margin: 0;
-        }
-
         @media (max-width: 768px) {
             .dropdown-row {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
             .divider {
