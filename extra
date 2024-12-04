@@ -29,8 +29,34 @@
 
  
  
+ <script>
+ $(document).ready(function () {
+	$('select').selectpicker();
+    
+	
+       const $select = $('#dynamicSelect');
+
+        // Clear existing options
+        $select.empty();
+
+        // Add new options dynamically
+        $select.append('<option value="C">C</option>');
+        $select.append('<option value="D">D</option>');
+
+     
+        $select.selectpicker('destroy'); 
+        $select.selectpicker();
+     
+
+	
+});
+
+
  
+ </script>
  
 
 </body>
 </html>
+
+
