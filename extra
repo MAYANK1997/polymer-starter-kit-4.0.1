@@ -1,138 +1,610 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Light Keeper Grid</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      max-width: 800px;
-    }
-
-    .card {
-      display: flex;
-      align-items: center;
-      border: 1px solid #000080;
-      border-radius: 10px;
-      padding: 10px;
-      position: relative;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .card:hover {
-      transform: scale(1.05);
-    }
-
-    .logo-container {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 1px solid #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-right: 10px;
-      overflow: hidden; /* Ensures the image stays inside the circle */
-    }
-
-    .logo-container img {
-      width: 100%;
-      height: auto;
-      object-fit: cover; /* Ensures the image scales correctly */
-    }
-
-    .tooltip {
-      display: none;
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #000;
-      color: #fff;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 12px;
-      white-space: nowrap;
-      z-index: 10;
-    }
-
-    .card:hover .tooltip {
-      display: block;
-    }
-
-    /* Responsive styling */
-    @media (max-width: 600px) {
-      .container {
-        grid-template-columns: 1fr; /* Stack items vertically */
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- Card Template -->
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-    <!-- Repeat the card -->
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-    <div class="card" onclick="openNewPage()">
-      <div class="tooltip">Click to visit homepage</div>
-      <div class="logo-container">
-        <img src="https://via.placeholder.com/50" alt="Light Keeper">
-      </div>
-      <div>Light Keeper</div>
-    </div>
-  </div>
-
-  <script>
-    function openNewPage() {
-      window.open("https://www.example.com", "_blank");
-    }
-  </script>
-</body>
-</html>
-
+{
+    "Jonathan Kaethner": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Lionel Vannesson": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Aizaz Ahmed": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Karen Schultz": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Henry Turcan": [
+        {
+            "mdmFundName": "1798 Volantis Catalyst III Ltd",
+            "strategies": []
+        }
+    ],
+    "Sunil Das": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Cyrus-Mael Azarmgin": [
+        {
+            "mdmFundName": "1798 TerreNeuve Master Fund Ltd",
+            "strategies": [
+                "SageBrush"
+            ]
+        }
+    ],
+    "Arnaud Saint-Sauveur": [
+        {
+            "mdmFundName": "1798 Bear Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Credit Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Tail Systematic Master Fund",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Beijing Lyra Investment Corporation",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "CRO ARC LOIM – ALOHA BEAR",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LMAP D - Credit Convexity",
+            "strategies": []
+        }
+    ],
+    "Andrew Gowen": [
+        {
+            "mdmFundName": "1798 Center Master Fund Ltd",
+            "strategies": [
+                "SageBrush-CEN"
+            ]
+        }
+    ],
+    "Adetokunbo Adedeji": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "amit amit": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Roblain Nelson": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Callum Lee": [
+        {
+            "mdmFundName": "Global Carbon Opportunity (Cayman) Fund Ltd.",
+            "strategies": []
+        }
+    ],
+    "Shashank Dixit": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Vagner Bastos": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Stephen Grobman": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Zakariaa Chaanoun": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Arnaud Langlois": [
+        {
+            "mdmFundName": "1798 TerreNeuve Master Fund Ltd",
+            "strategies": [
+                "SageBrush"
+            ]
+        }
+    ],
+    "Curtis Ci": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Jennifer Hargrave": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Scott Nicolich": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Thalia Garza": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Rahul Rahul": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Mayank Tripathi": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Peyman Nayebvali": [
+        {
+            "mdmFundName": "1798 Bear Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Center Master Fund Ltd",
+            "strategies": [
+                "SageBrush-CEN"
+            ]
+        },
+        {
+            "mdmFundName": "1798 Credit Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Tail Systematic Master Fund",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 TerreNeuve Master Fund Ltd",
+            "strategies": [
+                "SageBrush"
+            ]
+        },
+        {
+            "mdmFundName": "1798 UK Small Cap Best Ideas Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Volantis Catalyst II Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Volantis Catalyst III Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Volantis Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Beijing Lyra Investment Corporation",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "CRO ARC LOIM – ALOHA BEAR",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Delfinco LP",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Global Carbon Opportunity (Cayman) Fund Ltd.",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "IMCO - IMAP Cayman SPC",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LMAP Epsilon Limited",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LOF Event Convexity Fund",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Notre Dame",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Progeny 3",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "The Strathclyde Pension Fund",
+            "strategies": []
+        }
+    ],
+    "Florian Pidhorz": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Sonam Pokwal": [
+        {
+            "mdmFundName": "1798 Bear Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Credit Convexity Master Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "CRO ARC LOIM – ALOHA BEAR",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LMAP D - Credit Convexity",
+            "strategies": []
+        }
+    ],
+    "Mark Salamon": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Adam Ehrlich": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Adam Yang": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Steven Bulko": [
+        {
+            "mdmFundName": "LOF Event Convexity Fund",
+            "strategies": []
+        }
+    ],
+    "Jeremy Roulier": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Christophe Khaw": [
+        {
+            "mdmFundName": "1798 Center Master Fund Ltd",
+            "strategies": [
+                "SageBrush-CEN"
+            ]
+        }
+    ],
+    "Adam McConkey": [
+        {
+            "mdmFundName": "1798 UK Small Cap Best Ideas Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Volantis Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Delfinco LP",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "IMCO - IMAP Cayman SPC",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LMAP Epsilon Limited",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Notre Dame",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Progeny 3",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "The Strathclyde Pension Fund",
+            "strategies": []
+        }
+    ],
+    "Maxwell Album": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Trevor Leydon": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Andrew Hyatt": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Dolly Dave": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "stephen scapillato": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Matthew OAK": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "John Segrich": [
+        {
+            "mdmFundName": "1798 Center Master Fund Ltd",
+            "strategies": [
+                "SageBrush-CEN"
+            ]
+        },
+        {
+            "mdmFundName": "1798 TerreNeuve Master Fund Ltd",
+            "strategies": [
+                "SageBrush"
+            ]
+        }
+    ],
+    "graziella bays": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Elyse Strauss": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Sameer Rele": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Rob Fryer": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "David Weitzner": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Jamie Brooke": [
+        {
+            "mdmFundName": "1798 Volantis Catalyst II Ltd",
+            "strategies": []
+        }
+    ],
+    "Florian Lauwers": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Joel Broillet": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "James AFFINITO": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Mayank Pabbi": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Manisha Sharma": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Nicolas Szewe": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Rob Giles": [
+        {
+            "mdmFundName": "1798 UK Small Cap Best Ideas Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "1798 Volantis Fund Ltd",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Delfinco LP",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "IMCO - IMAP Cayman SPC",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "LMAP Epsilon Limited",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Notre Dame",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "Progeny 3",
+            "strategies": []
+        },
+        {
+            "mdmFundName": "The Strathclyde Pension Fund",
+            "strategies": []
+        }
+    ],
+    "Shreeshail Aalgundagi": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Mohammad Mosafir": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ],
+    "Brennan Moxham": [
+        {
+            "mdmFundName": "All funds",
+            "strategies": [
+                "All Strategy"
+            ]
+        }
+    ]
+}
