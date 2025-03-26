@@ -57,3 +57,7 @@ const positionDescription = document.createElement("td");
     const avg6Month = document.createElement("td");
     avg6Month.textContent = "3.9%";
     row.appendChild(avg6Month);
+
+const today = new Date().toISOString().split('T')[0];
+console.log(today); // Outputs: "2025-03-26" (for example)
+
