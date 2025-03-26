@@ -1,45 +1,59 @@
-<th style="width:40px; font-size:14px">
-              Position Description
-            </th>
-            <th style="font-size:14px">
-              ISIN
-            </th>
-            <th style="font-size:14px">
-              Position Stock Loan Cost
-            </th>
-			<th style="font-size:14px">
-              Today's Rate
-            </th>
-			<th style="font-size:14px">
-             From Rate
-            </th>
-			<th style="font-size:14px">
-             Position Start Rate
-            </th>
-			<th style="font-size:14px">
-              Position Start Date
-            </th>
-			<th style="font-size:14px">
-              Position High Rate
-            </th>
-			<th style="font-size:14px">
-              High Rate Date
-            </th>
-			<th style="font-size:14px">
-              Position Low Rate
-            </th>
-			<th style="font-size:14px">
-              Low Rate Date
-            </th>
-			<th style="font-size:14px">
-              30D Avg
-            </th>
-			<th style="font-size:14px">
-              60D Avg
-            </th>
-			<th style="font-size:14px">
-              3 Month Avg
-            </th>
-			<th style="font-size:14px">
-              6 Month Avg
-            </th>
+const positionDescription = document.createElement("td");
+    positionDescription.textContent = "Example Position";
+    row.appendChild(positionDescription);
+
+    const isin = document.createElement("td");
+    isin.textContent = "US1234567890";
+    row.appendChild(isin);
+
+    const positionStockLoanCost = document.createElement("td");
+    positionStockLoanCost.textContent = "5.23%";
+    row.appendChild(positionStockLoanCost);
+
+    const todaysRate = document.createElement("td");
+    todaysRate.textContent = "4.5%";
+    row.appendChild(todaysRate);
+
+    const fromRate = document.createElement("td");
+    fromRate.textContent = "3.8%";
+    row.appendChild(fromRate);
+
+    const positionStartRate = document.createElement("td");
+    positionStartRate.textContent = "4.0%";
+    row.appendChild(positionStartRate);
+
+    const positionStartDate = document.createElement("td");
+    positionStartDate.textContent = "2024-03-01";
+    row.appendChild(positionStartDate);
+
+    const positionHighRate = document.createElement("td");
+    positionHighRate.textContent = "6.0%";
+    row.appendChild(positionHighRate);
+
+    const highRateDate = document.createElement("td");
+    highRateDate.textContent = "2024-03-15";
+    row.appendChild(highRateDate);
+
+    const positionLowRate = document.createElement("td");
+    positionLowRate.textContent = "3.5%";
+    row.appendChild(positionLowRate);
+
+    const lowRateDate = document.createElement("td");
+    lowRateDate.textContent = "2024-02-25";
+    row.appendChild(lowRateDate);
+
+    const avg30D = document.createElement("td");
+    avg30D.textContent = "4.2%";
+    row.appendChild(avg30D);
+
+    const avg60D = document.createElement("td");
+    avg60D.textContent = "4.1%";
+    row.appendChild(avg60D);
+
+    const avg3Month = document.createElement("td");
+    avg3Month.textContent = "4.0%";
+    row.appendChild(avg3Month);
+
+    const avg6Month = document.createElement("td");
+    avg6Month.textContent = "3.9%";
+    row.appendChild(avg6Month);
