@@ -1,54 +1,8 @@
-// Sample JSON data
-const data = {
-    "Jonathan Kaethner": [{ "mdmFundName": "All funds", "strategies": ["All Strategy"] }],
-    "Lionel Vannesson": [{ "mdmFundName": "All funds", "strategies": ["All Strategy"] }],
-    "Henry Turcan": [{ "mdmFundName": "1798 Volantis Catalyst III Ltd", "strategies": [] }],
-    "Cyrus-Mael Azarmgin": [{ "mdmFundName": "1798 TerreNeuve Master Fund Ltd", "strategies": ["SageBrush"] }],
-    "Arnaud Saint-Sauveur": [
-        { "mdmFundName": "1798 Bear Convexity Master Fund Ltd", "strategies": [] },
-        { "mdmFundName": "1798 Credit Convexity Master Fund Ltd", "strategies": [] },
-        { "mdmFundName": "1798 Tail Systematic Master Fund", "strategies": [] }
-    ],
-    // Add the rest of the data here...
-};
-
-// Function to populate the table
-function populateTable(data) {
-    // Get the table body element
-    const tableBody = document.querySelector("#fundsTable tbody");
-
-    // Clear any existing rows (if needed)
-    tableBody.innerHTML = "";
-
-    // Loop through the data and create rows
-    for (const [username, fundData] of Object.entries(data)) {
-        // Create a new row
-        const row = document.createElement("tr");
-
-        // Username column
-        const usernameCell = document.createElement("td");
-        usernameCell.textContent = username;
-        row.appendChild(usernameCell);
-
-        // Access to Funds column
-        const fundsCell = document.createElement("td");
-        const funds = fundData.map(fund => fund.mdmFundName).join(", ");
-        fundsCell.textContent = funds;
-        row.appendChild(fundsCell);
-
-        // Strategies column
-        const strategiesCell = document.createElement("td");
-        const strategies = fundData
-            .flatMap(fund => fund.strategies)
-            .filter(strategy => strategy) // Remove empty strategies
-            .join(", ");
-        strategiesCell.textContent = strategies || "None"; // Display "None" if no strategies
-        row.appendChild(strategiesCell);
-
-        // Append the row to the table body
-        tableBody.appendChild(row);
+document.addEventListener("DOMContentLoaded", function () {
+    const checkbox = document.querySelector(
+        "#columnTransactionType .Multicheckboxdetail .checkboxbody .cont:nth-child(5) div input[type='checkbox']"
+    );
+    if (checkbox) {
+        checkbox.checked = true;
     }
-}
-
-// Call the function to populate the table
-populateTable(data);
+});
