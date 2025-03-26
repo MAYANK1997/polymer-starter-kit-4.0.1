@@ -1,1 +1,45 @@
-const checkbox = document.querySelector("input[type='checkbox'][value='None']");
+<th style="width:40px; font-size:14px">
+              Position Description
+            </th>
+            <th style="font-size:14px">
+              ISIN
+            </th>
+            <th style="font-size:14px">
+              Position Stock Loan Cost
+            </th>
+			<th style="font-size:14px">
+              Today's Rate
+            </th>
+			<th style="font-size:14px">
+             From Rate
+            </th>
+			<th style="font-size:14px">
+             Position Start Rate
+            </th>
+			<th style="font-size:14px">
+              Position Start Date
+            </th>
+			<th style="font-size:14px">
+              Position High Rate
+            </th>
+			<th style="font-size:14px">
+              High Rate Date
+            </th>
+			<th style="font-size:14px">
+              Position Low Rate
+            </th>
+			<th style="font-size:14px">
+              Low Rate Date
+            </th>
+			<th style="font-size:14px">
+              30D Avg
+            </th>
+			<th style="font-size:14px">
+              60D Avg
+            </th>
+			<th style="font-size:14px">
+              3 Month Avg
+            </th>
+			<th style="font-size:14px">
+              6 Month Avg
+            </th>
