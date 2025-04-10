@@ -1,11 +1,63 @@
- const select = document.getElementById("addRestrictionCategory");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid Example</title>
+    
+    <!-- Include AG Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
+    
+    <style>
+        #myGrid {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Grid container -->
+    <div id="myGrid" class="ag-theme-alpine"></div>
 
-    // Create default option
-    const defaultOption = document.createElement("option");
-    defaultOption.value = ""; // Empty value (or set your default value)
-    defaultOption.textContent = "Select a category"; // Default text
-    defaultOption.selected = true;
-    defaultOption.disabled = true; // Prevent selection
+    <!-- Include AG Grid JavaScript -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 
-    // Insert the default option at the beginning
-    select.insertBefore(defaultOption, select.firstChild);
+    <script>
+        // Define column definitions
+        const columnDefs = [
+            { headerName: "Make", field: "make" },
+            { headerName: "Model", field: "model" },
+            { headerName: "Price", field: "price" },
+            { headerName: "Year", field: "year" }
+        ];
+
+        // Sample row data
+        const rowData = [
+            { make: "Toyota", model: "Camry", price: 25000, year: 2020 },
+            { make: "Ford", model: "Mustang", price: 35000, year: 2021 },
+            { make: "Honda", model: "Civic", price: 22000, year: 2019 },
+            { make: "Tesla", model: "Model 3", price: 45000, year: 2022 }
+        ];
+
+        // Grid options
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowData: rowData,
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true
+            },
+            pagination: true,
+            paginationPageSize: 10
+        };
+
+        // Setup the grid after the page has loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridDiv = document.querySelector('#myGrid');
+            agGrid.createGrid(gridDiv, gridOptions);
+        });
+    </script>
+</body>
+</html>
