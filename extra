@@ -1,63 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AG Grid Example</title>
-    
-    <!-- Include AG Grid CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
-    
-    <style>
-        #myGrid {
-            height: 500px;
-            width: 100%;
+document.addEventListener('DOMContentLoaded', () => {
+    // Select the grid container
+    const gridDiv = document.querySelector('#myGrid');
+
+    // Show loading message
+    gridDiv.innerHTML = '<p class="loading">Loading data...</p>';
+
+    // Column definitions based on JSONPlaceholder user data
+    const columnDefs = [
+        { headerName: 'ID', field: 'id', sortable: true, filter: 'agNumberColumnFilter', width: 100 },
+        { headerName: 'Name', field: 'name', sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: 'Email', field: 'email', sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: 'Phone', field: 'phone', sortable: true, filter: 'agTextColumnFilter' },
+        { 
+            headerName: 'Company', 
+            field: 'company.name', 
+            sortable: true, 
+            filter: 'agTextColumnFilter' 
         }
-    </style>
-</head>
-<body>
-    <!-- Grid container -->
-    <div id="myGrid" class="ag-theme-alpine"></div>
+    ];
 
-    <!-- Include AG Grid JavaScript -->
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    // Grid options
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: [],
+        pagination: true,
+        paginationPageSize: 10,
+        defaultColDef: {
+            flex: 1,
+            minWidth: 150,
+            sortable: true,
+            filter: true,
+            resizable: true
+        },
+    };
 
-    <script>
-        // Define column definitions
-        const columnDefs = [
-            { headerName: "Make", field: "make" },
-            { headerName: "Model", field: "model" },
-            { headerName: "Price", field: "price" },
-            { headerName: "Year", field: "year" }
-        ];
+    // Initialize AG Grid
+    new agGrid.Grid(gridDiv, gridOptions);
 
-        // Sample row data
-        const rowData = [
-            { make: "Toyota", model: "Camry", price: 25000, year: 2020 },
-            { make: "Ford", model: "Mustang", price: 35000, year: 2021 },
-            { make: "Honda", model: "Civic", price: 22000, year: 2019 },
-            { make: "Tesla", model: "Model 3", price: 45000, year: 2022 }
-        ];
-
-        // Grid options
-        const gridOptions = {
-            columnDefs: columnDefs,
-            rowData: rowData,
-            defaultColDef: {
-                sortable: true,
-                filter: true,
-                resizable: true
-            },
-            pagination: true,
-            paginationPageSize: 10
-        };
-
-        // Setup the grid after the page has loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            const gridDiv = document.querySelector('#myGrid');
-            agGrid.createGrid(gridDiv, gridOptions);
+    // Fetch data from JSONPlaceholder mock API
+    fetch('https://jsonplaceholder.typicode.com/users')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update grid with fetched data
+            gridOptions.api.setRowData(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            gridDiv.innerHTML = '<p class="error">Failed to load data. Please try again later.</p>';
         });
-    </script>
-</body>
-</html>
+});
