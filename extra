@@ -3,103 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AG Grid Example</title>
-    
-    <!-- Include AG Grid CSS -->
+    <title>AG Grid with Mock API</title>
     <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
-    
     <style>
+        html, body {
+            background-color: black !important;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
         #myGrid {
             height: 500px;
-            width: 100%;
+            background-color: black !important;
+            --ag-foreground-color: white;
+            --ag-background-color: black;
+            --ag-header-foreground-color: white;
+            --ag-row-background-color: black;
+            --ag-border-color: white;
+            --ag-grid-size: 4px;
+            --ag-cell-horizontal-border: solid white 1px;
+        }
+        .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #d32f2f;
+        }
+        /* Grid wrapper and viewport */
+        .ag-root-wrapper,
+        .ag-root,
+        .ag-body-viewport,
+        .ag-center-cols-clipper,
+        .ag-center-cols-container {
+            background-color: black !important;
+        }
+        /* Header row */
+        .ag-header,
+        .ag-header-cell {
+            background-color: #1a1a1a !important; /* Dark gray */
+            color: white !important;
+            border-right: 1px solid white !important;
+            border-bottom: 1px solid white !important;
+        }
+        /* Center-align and remove ellipsis in headers */
+        .ag-header-cell-text {
+            text-align: center !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+            overflow: visible !important;
+        }
+        /* Grid cells */
+        .ag-cell {
+            background-color: black !important;
+            color: white !important;
+            border-right: 1px solid white !important;
+            border-bottom: 1px solid white !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+            overflow: visible !important;
+        }
+        /* Rows */
+        .ag-row {
+            background-color: black !important;
+        }
+        /* Remove blue hover/selection */
+        .ag-row-hover,
+        .ag-row-selected,
+        .ag-column-select,
+        .ag-cell-focus {
+            background-color: black !important;
+            color: white !important;
+        }
+        /* Floating filter inputs */
+        .ag-floating-filter input,
+        .ag-floating-filter select {
+            background-color: black !important;
+            color: white !important;
+            border: 1px solid white !important;
+            outline: none !important;
+        }
+        .ag-floating-filter input:focus,
+        .ag-floating-filter select:focus {
+            outline: none !important;
+            border: 1px solid white !important;
+            box-shadow: none !important;
+        }
+        .ag-floating-filter input::placeholder {
+            color: #ccc !important;
+        }
+        /* Hide filter menus and icons */
+        .ag-header-cell-menu-button,
+        .ag-icon-menu {
+            display: none !important;
+        }
+        .ag-filter-toolpanel,
+        .ag-filter,
+        .ag-menu {
+            background-color: black !important;
+            color: white !important;
+            border: 1px solid white !important;
+        }
+        .ag-menu-option {
+            background-color: black !important;
+            color: white !important;
+        }
+        .ag-menu-option:hover {
+            background-color: #333 !important;
+        }
+        /* Hide pagination panel */
+        .ag-paging-panel {
+            display: none !important;
+        }
+        /* Sort indicators */
+        .ag-header-cell-sort .ag-icon,
+        .ag-icon-asc,
+        .ag-icon-desc,
+        .ag-icon-none,
+        .ag-icon svg,
+        .ag-icon svg path {
+            color: white !important;
+            fill: white !important;
+        }
+        /* Custom arrow styling for RateDeltaFromStart */
+        .positive-arrow::before {
+            content: '↑';
+            color: green;
+            margin-right: 5px;
+        }
+        .negative-arrow::before {
+            content: '↓';
+            color: red;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <!-- Grid container -->
     <div id="myGrid" class="ag-theme-alpine"></div>
-
-    <!-- Include AG Grid JavaScript -->
     <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
-
     <script>
- 
-       
-  
-		
-  document.addEventListener('DOMContentLoaded', () => {
-    // Select the grid container
-    const gridDiv = document.querySelector('#myGrid');
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridDiv = document.querySelector('#myGrid');
 
-    // Show loading message
-    gridDiv.innerHTML = '<p class="loading">Loading data...</p>';
+            // Column definitions with search filters
+            const columnDefs = [
+                { headerName: 'Position Description', field: 'Symbol', sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, suppressMenu: true, width: 150 },
+                { headerName: 'ISIN', field: 'ISIN', sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: "Today's Rate", field: 'TodaysRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                {
+                    headerName: 'From Rate',
+                    field: 'RateDeltaFromStart',
+                    sortable: true,
+                    filter: 'agNumberColumnFilter',
+                    floatingFilter: true,
+                    suppressMenu: true,
+                    cellRenderer: params => {
+                        const value = params.value;
+                        if (value == null) return '';
+                        const isPositive = value >= 0;
+                        return `<span class="${isPositive ? 'positive-arrow' : 'negative-arrow'}">${value}</span>`;
+                    },
+                    cellStyle: params => {
+                        const value = params.value;
+                        if (value == null) return {};
+                        return { color: value >= 0 ? 'green' : 'red' };
+                    }
+                },
+                { headerName: 'Position Start Rate', field: 'PositionStartRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: 'Position Start Date', field: 'PositionStartDate', sortable: true, filter: 'agDateColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: 'Position High Rate', field: 'PositionHighRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: 'High Rate Date', field: 'PositionHighRateDate', sortable: true, filter: 'agDateColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: 'Position Low Rate', field: 'PositionLowRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: 'Low Rate Date', field: 'PositionLowRateDate', sortable: true, filter: 'agDateColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: '30D Avg', field: 'thirtyDAvgRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: '60D Avg', field: 'sixtyDAvgRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: '3 Month Avg', field: 'threeMonthAvgRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+                { headerName: '6 Month Avg', field: 'sixMonthAvgRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
+            ];
 
-    // Column definitions based on JSONPlaceholder user data
-    const columnDefs = [
-        { headerName: 'Position Description', field: 'Symbol', sortable: true, filter: 'agNumberColumnFilter', width: 100 },
-        { headerName: 'ISIN', field: 'ISIN', sortable: true, filter: 'agTextColumnFilter'},
-        { headerName: "Today's Rate", field: 'TodaysRate', sortable: true, filter: 'agTextColumnFilter'},
-        { headerName: 'From Rate', field: 'RateDeltaFromStart', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'Position Start Rate', field: 'PositionStartRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'Position Start Date', field: 'PositionStartDate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'Position High Rate', field: 'PositionHighRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'High Rate Date', field: 'PositionHighRateDate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'Position Low Rate', field: 'PositionLowRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: 'Low Rate Date', field: 'PositionLowRateDate', sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: '30D Avg', field: 'thirtyDAvgRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: '60D Avg', field: 'sixtyDAvgRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: '3 Month Avg', field: 'threeMonthAvgRate', sortable: true, filter: 'agTextColumnFilter' },
-		{ headerName: '6 Month Avg', field: 'sixMonthAvgRate', sortable: true, filter: 'agTextColumnFilter' },
-    ];
+            // Grid options
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: [],
+                pagination: false,
+                icons: {
+                    sortAscending: '<span style="color: white; font-size: 14px;">▲</span>',
+                    sortDescending: '<span style="color: white; font-size: 14px;">▼</span>',
+                    sortUnSort: '<span style="color: white; font-size: 14px;">↕</span>'
+                },
+                defaultColDef: {
+                    flex: 1,
+                    minWidth: 150,
+                    sortable: true,
+                    resizable: true
+                },
+            };
 
-    // Grid options
-    const gridOptions = {
-        columnDefs: columnDefs,
-        rowData: [],
-        pagination: true,
-        paginationPageSize: 10,
-        defaultColDef: {
-            flex: 1,
-            minWidth: 150,
-            sortable: true,
-            filter: true,
-            resizable: true
-        },
-    };
+            // Initialize AG Grid
+            const gridApi = agGrid.createGrid(gridDiv, gridOptions);
 
-    // Initialize AG Grid
-    const gridApi = agGrid.createGrid(gridDiv, gridOptions);
-	
-	const today = new Date().toISOString().split('T')[0];
-         
-    let urlBorrowData = `http://nycuapp01.biz.lodh.com:9002/mdm/api/borrowRatesSummary/2025-03-19`;
-
-    // Fetch data from JSONPlaceholder mock API
-    fetch(urlBorrowData)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Update grid with fetched data
-			console.log(data)
-            gridApi.setGridOption('rowData',data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            gridDiv.innerHTML = '<p class="error">Failed to load data. Please try again later.</p>';
+            // Mock API call
+            fetch('https://jsonplaceholder.typicode.com/users')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch data');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Map JSONPlaceholder data to match required fields
+                    const mappedData = data.map((item, index) => ({
+                        Symbol: `SYM${index + 1}`,
+                        ISIN: `US${1000000000 + item.id}XYZ`,
+                        TodaysRate: (1.0 + Math.random() * 2).toFixed(2),
+                        RateDeltaFromStart: ((Math.random() - 0.5) * 0.5).toFixed(2),
+                        PositionStartRate: (0.8 + Math.random() * 2).toFixed(2),
+                        PositionStartDate: `2025-01-${String(index + 1).padStart(2, '0')}`,
+                        PositionHighRate: (1.2 + Math.random() * 2).toFixed(2),
+                        PositionHighRateDate: `2025-02-${String(index + 1).padStart(2, '0')}`,
+                        PositionLowRate: (0.7 + Math.random() * 1).toFixed(2),
+                        PositionLowRateDate: `2025-01-${String(index + 5).padStart(2, '0')}`,
+                        thirtyDAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        sixtyDAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        threeMonthAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        sixMonthAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                    }));
+                    gridApi.setGridOption('rowData', mappedData);
+                    // Auto-size columns to fit content
+                    gridApi.autoSizeAllColumns();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    gridDiv.innerHTML = '<p class="error">Failed to load data. <button onclick="location.reload()">Retry</button></p>';
+                });
         });
-});
-	
-	
-
     </script>
-	
-	
-	
-	
 </body>
 </html>
