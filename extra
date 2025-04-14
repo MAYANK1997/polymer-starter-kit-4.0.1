@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@29.3.3/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@29.3.3/styles/ag-theme-alpine.css">
+    <title>AG Grid with Mock API</title>
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@31.0.0/dist/styles/ag-grid.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@31.0.0/dist/styles/ag-theme-alpine.min.css">
     <style>
-       
+        html, body {
+            background-color: black !important;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
         #myGrid {
-            
-			width:500px;
+            height: 500px;
             background-color: black !important;
             --ag-foreground-color: white;
             --ag-background-color: black;
@@ -19,9 +24,13 @@
             --ag-border-color: white;
             --ag-grid-size: 4px;
             --ag-cell-horizontal-border: solid white 1px;
-			font-size:12px !important;
         }
-      
+        .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #d32f2f;
+        }
         /* Grid wrapper and viewport */
         .ag-root-wrapper,
         .ag-root,
@@ -33,12 +42,10 @@
         /* Header row */
         .ag-header,
         .ag-header-cell {
-            background-color: grey !important; /* Dark gray */
+            background-color: #1a1a1a !important; /* Dark gray */
             color: white !important;
-            border: 1px solid white !important;
-			text-align: center !important;
-			
-    
+            border-right: 1px solid white !important;
+            border-bottom: 1px solid white !important;
         }
         /* Center-align and remove ellipsis in headers */
         .ag-header-cell-text {
@@ -51,23 +58,29 @@
         .ag-cell {
             background-color: black !important;
             color: white !important;
-            border: 1px solid white !important;
-          
+            border-right: 1px solid white !important;
+            border-bottom: 1px solid white !important;
             text-overflow: clip !important;
             white-space: normal !important;
             overflow: visible !important;
-			font-size:12px !important;
         }
         /* Rows */
         .ag-row {
             background-color: black !important;
         }
-      
+        /* Remove blue hover/selection */
+        .ag-row-hover,
+        .ag-row-selected,
+        .ag-column-select,
+        .ag-cell-focus {
+            background-color: black !important;
+            color: white !important;
+        }
         /* Floating filter inputs */
         .ag-floating-filter input,
         .ag-floating-filter select {
-            background-color: white !important;
-            color: black !important;
+            background-color: black !important;
+            color: white !important;
             border: 1px solid white !important;
             outline: none !important;
         }
@@ -85,25 +98,6 @@
         .ag-icon-menu {
             display: none !important;
         }
-		
-	    .ag-icon:before{
-		
-		    display: none !important;
-		
-		}
-		
-		.ag-icon:after, .ag-icon-filter:after{
-		
-		    display: none !important;
-		
-		}
-		
-		.ag-floating-filter-button-button{
-		
-		   display: none !important;
-		
-		}
-		
         .ag-filter-toolpanel,
         .ag-filter,
         .ag-menu {
@@ -118,50 +112,28 @@
         .ag-menu-option:hover {
             background-color: #333 !important;
         }
-       
-     
+        /* Hide pagination panel */
         .ag-paging-panel {
             display: none !important;
         }
-		
-		.ag-sort-ascending-icon span{
-		
-		   display:none;
-		
-		}
-		
-		.ag-sort-descending-icon span{
-		
-		   display:none;
-		
-		}
-		
-		.ag-sort-ascending-icon:before{
-		
-		   content: '\2191';
-		
-		}
-		
-		.ag-sort-descending-icon:before{
-		
-		   content: '\2193';
-		
-		}
-		
-		.ag-wrapper:before{
-		
-		 display:none !important;
-		
-		}
-       
-      
+        /* Sort indicators */
+        .ag-header-cell-sort .ag-icon,
+        .ag-icon-asc,
+        .ag-icon-desc,
+        .ag-icon-none,
+        .ag-icon svg,
+        .ag-icon svg path {
+            color: white !important;
+            fill: white !important;
+        }
+        /* Custom arrow styling for RateDeltaFromStart */
         .positive-arrow::before {
-            content: '\2191';
+            content: '↑';
             color: green;
             margin-right: 5px;
         }
         .negative-arrow::before {
-            content: '\2193';
+            content: '↓';
             color: red;
             margin-right: 5px;
         }
@@ -170,18 +142,14 @@
 <body>
     <!-- Grid container -->
     <div id="myGrid" class="ag-theme-alpine"></div>
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <script src="https://unpkg.com/ag-grid-community@31.0.0/dist/ag-grid-community.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const gridDiv = document.querySelector('#myGrid');
-			
-			
-			
 
             // Column definitions with search filters
             const columnDefs = [
                 { headerName: 'Position Description', field: 'Symbol', sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, suppressMenu: true, width: 150 },
-				
                 { headerName: 'ISIN', field: 'ISIN', sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, suppressMenu: true },
                 { headerName: "Today's Rate", field: 'TodaysRate', sortable: true, filter: 'agNumberColumnFilter', floatingFilter: true, suppressMenu: true },
                 {
@@ -220,24 +188,24 @@
                 columnDefs: columnDefs,
                 rowData: [],
                 pagination: false,
-               
+                icons: {
+                    sortAscending: '<span style="color: white; font-size: 14px;">▲</span>',
+                    sortDescending: '<span style="color: white; font-size: 14px;">▼</span>',
+                    sortUnSort: '<span style="color: white; font-size: 14px;">↕</span>'
+                },
                 defaultColDef: {
                     flex: 1,
                     minWidth: 150,
                     sortable: true,
                     resizable: true
-                }
-				
-				
-				
-				
+                },
             };
 
-          
+            // Initialize AG Grid
             const gridApi = agGrid.createGrid(gridDiv, gridOptions);
 
-          
-            fetch('http://nycuapp01.biz.lodh.com:9002/mdm/api/borrowRatesSummary/2025-03-19')
+            // Mock API call
+            fetch('https://jsonplaceholder.typicode.com/users')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to fetch data');
@@ -245,18 +213,32 @@
                     return response.json();
                 })
                 .then(data => {
-          
-                   
-                    gridApi.setGridOption('rowData', data);
+                    // Map JSONPlaceholder data to match required fields
+                    const mappedData = data.map((item, index) => ({
+                        Symbol: `SYM${index + 1}`,
+                        ISIN: `US${1000000000 + item.id}XYZ`,
+                        TodaysRate: (1.0 + Math.random() * 2).toFixed(2),
+                        RateDeltaFromStart: ((Math.random() - 0.5) * 0.5).toFixed(2),
+                        PositionStartRate: (0.8 + Math.random() * 2).toFixed(2),
+                        PositionStartDate: `2025-01-${String(index + 1).padStart(2, '0')}`,
+                        PositionHighRate: (1.2 + Math.random() * 2).toFixed(2),
+                        PositionHighRateDate: `2025-02-${String(index + 1).padStart(2, '0')}`,
+                        PositionLowRate: (0.7 + Math.random() * 1).toFixed(2),
+                        PositionLowRateDate: `2025-01-${String(index + 5).padStart(2, '0')}`,
+                        thirtyDAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        sixtyDAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        threeMonthAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                        sixMonthAvgRate: (1.0 + Math.random() * 2).toFixed(2),
+                    }));
+                    gridApi.setGridOption('rowData', mappedData);
                     // Auto-size columns to fit content
                     gridApi.autoSizeAllColumns();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                   
+                    gridDiv.innerHTML = '<p class="error">Failed to load data. <button onclick="location.reload()">Retry</button></p>';
                 });
         });
-	
     </script>
 </body>
 </html>
