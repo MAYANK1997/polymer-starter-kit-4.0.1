@@ -1,4 +1,34 @@
-document.addEventListener('DOMContentLoaded', () => {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid Example</title>
+    
+    <!-- Include AG Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
+    
+    <style>
+        #myGrid {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Grid container -->
+    <div id="myGrid" class="ag-theme-alpine"></div>
+
+    <!-- Include AG Grid JavaScript -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+    <script>
+ 
+       
+  
+		
+  document.addEventListener('DOMContentLoaded', () => {
     // Select the grid container
     const gridDiv = document.querySelector('#myGrid');
 
@@ -7,16 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Column definitions based on JSONPlaceholder user data
     const columnDefs = [
-        { headerName: 'ID', field: 'id', sortable: true, filter: 'agNumberColumnFilter', width: 100 },
-        { headerName: 'Name', field: 'name', sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: 'Email', field: 'email', sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: 'Phone', field: 'phone', sortable: true, filter: 'agTextColumnFilter' },
-        { 
-            headerName: 'Company', 
-            field: 'company.name', 
-            sortable: true, 
-            filter: 'agTextColumnFilter' 
-        }
+        { headerName: 'Position Description', field: 'Symbol', sortable: true, filter: 'agNumberColumnFilter', width: 100 },
+        { headerName: 'ISIN', field: 'ISIN', sortable: true, filter: 'agTextColumnFilter'},
+        { headerName: "Today's Rate", field: 'TodaysRate', sortable: true, filter: 'agTextColumnFilter'},
+        { headerName: 'From Rate', field: 'RateDeltaFromStart', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'Position Start Rate', field: 'PositionStartRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'Position Start Date', field: 'PositionStartDate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'Position High Rate', field: 'PositionHighRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'High Rate Date', field: 'PositionHighRateDate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'Position Low Rate', field: 'PositionLowRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: 'Low Rate Date', field: 'PositionLowRateDate', sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: '30D Avg', field: 'thirtyDAvgRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: '60D Avg', field: 'sixtyDAvgRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: '3 Month Avg', field: 'threeMonthAvgRate', sortable: true, filter: 'agTextColumnFilter' },
+		{ headerName: '6 Month Avg', field: 'sixMonthAvgRate', sortable: true, filter: 'agTextColumnFilter' },
     ];
 
     // Grid options
@@ -35,10 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Initialize AG Grid
-    new agGrid.Grid(gridDiv, gridOptions);
+    const gridApi = agGrid.createGrid(gridDiv, gridOptions);
+	
+	const today = new Date().toISOString().split('T')[0];
+         
+    let urlBorrowData = `http://nycuapp01.biz.lodh.com:9002/mdm/api/borrowRatesSummary/2025-03-19`;
 
     // Fetch data from JSONPlaceholder mock API
-    fetch('https://jsonplaceholder.typicode.com/users')
+    fetch(urlBorrowData)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to fetch data');
@@ -47,10 +85,21 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(data => {
             // Update grid with fetched data
-            gridOptions.api.setRowData(data);
+			console.log(data)
+            gridApi.setGridOption('rowData',data);
         })
         .catch(error => {
             console.error('Error:', error);
             gridDiv.innerHTML = '<p class="error">Failed to load data. Please try again later.</p>';
         });
 });
+	
+	
+
+    </script>
+	
+	
+	
+	
+</body>
+</html>
