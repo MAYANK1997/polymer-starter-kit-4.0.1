@@ -1,9 +1,4 @@
- {
-    headerName: "Age",
-    field: "age",
-    valueFormatter: params =>
-      params.value != null ? Number(params.value).toFixed(2) : '',
-    tooltipValueGetter: params =>
-      params.value != null ? String(params.value) : ''
-  },
- enableBrowserTooltips: true,
+valueFormatter: params => {
+  const value = parseFloat(params.value);
+  return isNaN(value) ? '' : value.toFixed(2);
+}
