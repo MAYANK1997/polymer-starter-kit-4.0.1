@@ -6,3 +6,4 @@
     tooltipValueGetter: params =>
       params.value != null ? String(params.value) : ''
   },
+ enableBrowserTooltips: true,
