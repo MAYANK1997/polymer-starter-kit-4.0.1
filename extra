@@ -1,38 +1,17 @@
-async loadAgridLicense() {
-        try {
-            const agGridConfigUrl = 'http://nycuapp01.biz.lodh.com:9002/mdm/api/list/ag-grid-license';
-            const response = await fetch(agGridConfigUrl, {
-                method: 'GET',
-                credentials: 'include', // Include cookies for authentication
-                headers: {
-                    Accept: 'application/json',
-                },
-            });
+async function getData() {
+  // Simulate async data fetching (e.g., from API or user input)
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const data = { name: "John", age: 30 };
+      resolve(data);
+    }, 2000); // waits 2 seconds
+  });
+}
 
-            // Check if response is OK (status 200-299)
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
-            }
+async function main() {
+  console.log("Waiting for data...");
+  const data = await getData(); // waits until getData resolves
+  console.log("Data received:", data);
+}
 
-            // Verify Content-Type is JSON
-            const contentType = response.headers.get('Content-Type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                throw new Error(`Expected JSON, but received ${contentType || 'unknown content type'}. Response: ${text.slice(0, 100)}...`);
-            }
-
-            // Parse JSON response
-            const data = await response.json();
-            const agGridLicense = data[0]?.licenseInfo;
-
-            if (agGridLicense) {
-                this.agGridLicense = agGridLicense;
-                console.log('AG Grid License loaded:', agGridLicense);
-            } else {
-                throw new Error('No license info found in response');
-            }
-        } catch (error) {
-            console.error('Failed to load AG Grid license:', error);
-            this.agGridLicense = ''; // Fallback to empty string if fetch fails
-        }
-    }
+main();
