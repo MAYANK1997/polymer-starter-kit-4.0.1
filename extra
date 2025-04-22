@@ -1,210 +1,30 @@
-class Constants {
-
- constructor(){
- 
-  this.agGridLicense = '';
-  this.loadAgridLicense();
- 
- 
- }
-     
-	async loadAgridLicense(){
-	 
-	let agGridConfigUrl = 'http://nycuapp01.biz.lodh.com:9002/mdm/api/list/ag-grid-license';
-
-	
-	const response = await fetch(agGridConfigUrl);
-	
-	
-	 const data = await response.json();
-	 const agGridLicense = await data[0].licenseInfo;
-	 console.log(agGridLicense);
-	 
-	 }
-	 
-
-
-    getSettings() {
-	
-	 
-	
-	
-        return {
-            License:this.agGridLicense,
-            dev: "DEV",
-            uat: "UAT",
-            prd: "PRD",
-            int: "INT",
-            configFile: "/restrictedListUI/1.0.0/config.json",
-            fetchOptions: { method: "GET", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json; charset=utf-8", cache: "no-cache" } },
-            fetchPost: { method: "POST", credentials: "include", headers: { "Content-Type": "application/json; charset=utf-8", cache: "no-cache" }, body: "" },
-            swal: { title: "", text: "", icon: "", dangerMode: !0, buttons: { catch: { text: "", value: "" }, cancel: "" } },
-            swalOk: { title: "", text: "", icon: "", dangerMode: !0, buttons: { catch: { text: "", value: "" } } },
-            params: {},
-        };
+constructor() {
+        this.agGridLicense = null; // Initialize as null to indicate not yet loaded
     }
-    Views = { subsReds: "Select Category...", subsReds1: "LOIM RL", subsReds2: "BeijingLyra RL", subsReds3: "CW RL", subsReds4: "LMAPD RL" };
-    ViewsIndices = { subsReds: 0, subsReds1: 1, subsReds2: 2, subsReds3: 3, subsReds4: 4 };
-    Text = {
-        messageEomAum: "**If EOM AUM not checked, AUM will default to beginning of month",
-        noRecordsTitle: "No Record to Save",
-        noRecordsMessage: "No records have been modified",
-        noEnvironment: "Environment not specified",
-        warning: "warning",
-        error: "error",
-        inputAccessValues: "Access Denied",
-        inputAccessMessage: "You don't have permission to this page",
-        mtdMissingValues: "Missing MTD values?",
-        mtdRequired: "MTD Net Value is a required field when saving data",
-        aumMissingValues: "Missing AUM values?",
-        aumMissingMessage: "AUM value is a required field when saving data.",
-        feesMissingValues: "Missing Fee values?",
-        feesMissingMessage: "Fee value is a required field when saving data.",
-        monthlyFeesMissingValues: "Missing Monthly Fee values?",
-        monthlyFeesMissingMessage: "Monthly Fee value is a required field when saving data.",
-        hwmMissingValues: "Missing High Water Mark?",
-        hwmMissingMessage: "High Watermark value or percent is a required field when saving data.",
-        savingData: "Saving data...",
-        accept: "Accept",
-        accepted: "accepted",
-        cancel: "Cancel",
-        enter: "Enter",
-        percFor: "% for",
-        valuesFor: "values for",
-        value: "value",
-        buttons: "buttons",
-        for: "for",
-        body: "body",
-        text: "text",
-        title: "title",
-        icon: "icon",
-        year: "year",
-        ok: "OK",
-        fundName: "Fund Name",
-        month: "Month",
-        period: "Period",
-        fiscalYear: "Fiscal Year",
-        inputsMtdQuestion: "Are you sure you wish to save the MTD Net %",
-        inputFsfMessage: "Are you sure you wish to save the FSF Feeder Allocation values for",
-        inputsSaveQuestion: "Are you sure you wish to save the",
-        inputsFinalMessage: "Any new input or previous values marked as final will be locked and can no longer be modified.",
-        expandAll: "Expand All",
-        collapseAll: "Collapse All",
-        all: "All",
-        ucits: "UCITS",
-        cayman: "Cayman",
-        benchmark: "benchmark",
-        alternative: "other alternative funds",
-        approveTitle: "Send PM Report",
-        approveNoPmMessage: "This will not send PM email, do you wish to approve this",
-        approveMessage: "Do you wish to Send PM report for this fund?",
-        recalculateTitle: "Recalculate",
-        recalculateMessage: "This process could take from several seconds up to a few minutes to finish. Refresh will be required to reflect the changes. Would you like to proceed?",
-        approvalLegend: "*Please refresh screen if P&L was re-triggered.",
-        sendEODEmailTitle: "Send EOD Email",
-        sendVolantisEODEmailTitle: "Send Volantis EOD Email",
-        sendEODEmailMessage: "Do you wish to send the EOD email?",
-        eodEmailMessage: "Do you wish to proceed?",
-        proceed: "Do you wish to proceed?",
-        items: "Items",
-        item: "Item",
-        requestTitle: "Recalculate Request",
-        requestTopMessage: "P&L has been kicked off for following funds:",
-        requestBottomMessage: "Please refer to P&L Validation page for details",
-        StartDateGreaterMessage: "Start date cannot be greater than End date",
-        fundamentalStrategies: "1798 Fundamental Strategies Fund Ltd",
-        fundFeesFootNote1: "Negative numbers indicate the fund is paying a fee",
-        fundFeesFootNote2: "Positive numbers indicate the fund is receiving income",
-        pnlApproval: "P&L Validation",
-        noVolantisData: "There are no current day Volantis PNLs to send",
-        appliedTowards: "will be applied towards",
-        nav: "NAV",
-        adjustment: "Adjustment",
-        rowsLimitAchieved: "The result size is greater than 100,000 please choose a shorter date range.",
-        navNonVolantisNote: "Please enter FSF Feeder Allocation data BEFORE finalizing NAVs",
-    };
-    PnlConfig = {
-        agSetColumnFilter: "agSetColumnFilter",
-        allocationValue: "allocationValue",
-        always: "always",
-        amount: "amount",
-        approval: "approval",
-        approved: "approved",
-        bom: "bom",
-        categoryChild: "category-child",
-        colId: "colId",
-        columnDefs: "columnDefs",
-        comments: "comments",
-        count: "count",
-        current: 1,
-        enableValue: "enableValue",
-        eom: "eom",
-        feeValue: "feeValue",
-        finalized: "finalized",
-        fund: "Fund",
-        fundGroup: "0",
-        fundType: "fundType",
-        highWaterMarkPerc: "highWaterMarkPerc",
-        highWaterMarkValue: "highWaterMarkValue",
-        includeInFinalReport: "includeInFinalReport",
-        isDirty: "isDirty",
-        isHwmValue: "isHwmValue",
-        management: "Management",
-        monthGroup: "1",
-        monthlyFeeValue: "monthlyFeeValue",
-        mtdNetValue: "mtdNetValue",
-        NA: "N/A",
-        notes: "Notes",
-        noIndex: -1,
-        originalAllocationValue: "originalAllocationValue",
-        originalApproved: "originalApproved",
-        originalAumValue: "originalAumValue",
-        originalComments: "originalComments",
-        originalFeeValue: "originalFeeValue",
-        originalFinalized: "originalFinalized",
-        originalIncludeInFinalReport: "originalIncludeInFinalReport",
-        originalMonthlyFeeValue: "originalMonthlyFeeValue",
-        originalMtdNetValue: "originalMtdNetValue",
-        originalSendToPM: "originalSendToPM",
-        percentage: "percentage",
-        performance: "Performance",
-        previous: 0,
-        recalculate: "recalculate",
-        sendToPM: "sendToPM",
-        showEnableValue: "showEnableValue",
-        single: "single",
-        type: "type",
-        undefined: "undefined",
-        zero: "0",
-        originalFsfAllocationAmt: "originalFsfAllocationAmt",
-    };
-    Chars = { amp: "&", equals: "=", check: "✓", dash: "-", longDash: "―", qmark: "?", comma: ",", perc: "%", right: ">", rightAll: ">>", left: "<", leftAll: "<<", breakLine: "\n", roundBulletPoint: "•", br: "<br/>" };
-    CheckboxColumns = { isFinal: "Is Final", isEomAum: "Is EOM AUM" };
-    Periods = { previous: "Previous", current: "Current", next: "Next" };
-    Months = { january: "January", february: "February", march: "March", april: "April", may: "May", june: "June", july: "July", august: "August", september: "September", october: "October", november: "November", december: "December" };
-    Classes = {
-        arrowCollapse: "arrow-collapse",
-        arrowExpand: "arrow-expand",
-        agDetail: "ag-detail",
-        disabled: "disabled",
-        environment: "environment",
-        environmentExplorer: "environmentExplorer",
-        fadeIn: "fade-in",
-        fadeOut: "fade-out",
-        hidden: "hidden",
-        mtdNetFinal: "mtdnet-final",
-        mtdNetFinalBr: "mtdnet-final-br",
-        mtdNetNoFinal: "mtdnet-nofinal",
-        mtdNetNoValue: "mtdnet-novalue",
-        mtdNetNoValueBr: "mtdnet-novalue-br",
-        toRight: "to-right",
-        explorerNoValue: "explorer-novalue",
-        explorerPosValueLatest: "explorer-posvalue-latest",
-        explorerPosValueNotLatest: "explorer-posvalue-notlatest",
-        explorerNegValueLatest: "explorer-negvalue-latest",
-        explorerNegValueNotLatest: "explorer-negvalue-notlatest",
-    };
-    Style = { none: "none", inline: "inline" };
-    Colors = { yellow: "#fffee7", orange: "#F5CBA7" };
-}
-export default Constants;
+
+    async loadAgridLicense() {
+        try {
+            const agGridConfigUrl = 'http://nycuapp01.biz.lodh.com:9002/mdm/api/list/ag-grid-license';
+            const response = await fetch(agGridConfigUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const agGridLicense = data[0]?.licenseInfo;
+            if (agGridLicense) {
+                this.agGridLicense = agGridLicense;
+                console.log('AG Grid License loaded:', agGridLicense);
+            } else {
+                throw new Error('No license info found in response');
+            }
+        } catch (error) {
+            console.error('Failed to load AG Grid license:', error);
+            this.agGridLicense = ''; // Fallback to empty string if fetch fails
+        }
+    }
+
+    async getSettings() {
+        // Wait for the license to be loaded
+        if (this.agGridLicense === null) {
+            await this.loadAgridLicense();
+        }
