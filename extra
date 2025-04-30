@@ -2,3 +2,8 @@ input.addEventListener('input', (e) => {
     const value = e.target.value.replace(/\D/g, ''); // remove non-digit chars
     e.target.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ','); // format with commas
   });
+
+const input = document.querySelector('[data-field="amount"]');
+  const rawValue = '456789567';
+  const formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  input.value = formattedValue;
