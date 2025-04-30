@@ -1,17 +1,4 @@
-async function getData() {
-  // Simulate async data fetching (e.g., from API or user input)
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const data = { name: "John", age: 30 };
-      resolve(data);
-    }, 2000); // waits 2 seconds
+input.addEventListener('input', (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // remove non-digit chars
+    e.target.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ','); // format with commas
   });
-}
-
-async function main() {
-  console.log("Waiting for data...");
-  const data = await getData(); // waits until getData resolves
-  console.log("Data received:", data);
-}
-
-main();
