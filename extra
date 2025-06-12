@@ -182,7 +182,7 @@
             color: #e0e0e0;
         }
         .light-mode .ag-theme-alpine {
-            height: calc(100vh - 250px); /* Adjust height to fit full screen */
+            height: calc(100vh - 190px); /* Adjusted height after removing pagination */
             width: 100%;
             --ag-header-background-color: #f5f7fa;
             --ag-header-foreground-color: #333;
@@ -193,7 +193,7 @@
             --ag-font-size: 14px;
         }
         .dark-mode .ag-theme-alpine-dark {
-            height: calc(100vh - 250px); /* Adjust height to fit full screen */
+            height: calc(100vh - 190px); /* Adjusted height after removing pagination */
             width: 100%;
             --ag-header-background-color: #2a2a2a;
             --ag-header-foreground-color: #e0e0e0;
@@ -247,54 +247,6 @@
         }
         .light-mode .action-icon:hover {
             fill: #333333;
-        }
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            font-size: 14px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .pagination .left {
-            transition: color 0.3s;
-        }
-        .light-mode .pagination .left {
-            color: #666;
-        }
-        .dark-mode .pagination .left {
-            color: #a0a0a0;
-        }
-        .pagination .right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .pagination button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .light-mode .pagination button {
-            border: 1px solid #e0e0e0;
-            background-color: white;
-            color: #333;
-        }
-        .dark-mode .pagination button {
-            border: 1px solid #444;
-            background-color: #333;
-            color: #e0e0e0;
-        }
-        .pagination .page-info {
-            transition: color 0.3s;
-        }
-        .light-mode .pagination .page-info {
-            color: #666;
-        }
-        .dark-mode .pagination .page-info {
-            color: #a0a0a0;
         }
         /* Modal Styles */
         .modal {
@@ -592,14 +544,6 @@
             </div>
         </div>
         <div id="issuerGrid" class="ag-theme-alpine-dark"></div>
-        <div class="pagination">
-            <div class="left" id="issuerPaginationLeft">1 to 100 of 139</div>
-            <div class="right">
-                <div class="page-info" id="issuerPageInfo">Page 1 of 2</div>
-                <button id="issuerPrevPage">Previous</button>
-                <button id="issuerNextPage">Next</button>
-            </div>
-        </div>
     </div>
 
     <!-- Restricted Issues History Tab -->
@@ -625,14 +569,6 @@
             </div>
         </div>
         <div id="historyGrid" class="ag-theme-alpine-dark"></div>
-        <div class="pagination">
-            <div class="left" id="historyPaginationLeft">1 to 100 of 139</div>
-            <div class="right">
-                <div class="page-info" id="historyPageInfo">Page 1 of 2</div>
-                <button id="historyPrevPage">Previous</button>
-                <button id="historyNextPage">Next</button>
-            </div>
-        </div>
     </div>
 
     <!-- Restricted Instruments Tab -->
@@ -658,14 +594,6 @@
             </div>
         </div>
         <div id="instrumentsGrid" class="ag-theme-alpine-dark"></div>
-        <div class="pagination">
-            <div class="left" id="instrumentsPaginationLeft">1 to 100 of 139</div>
-            <div class="right">
-                <div class="page-info" id="instrumentsPageInfo">Page 1 of 2</div>
-                <button id="instrumentsPrevPage">Previous</button>
-                <button id="instrumentsNextPage">Next</button>
-            </div>
-        </div>
     </div>
 
     <!-- Restriction Category Tab -->
@@ -710,7 +638,7 @@
                         <option value="Group C">Group C</option>
                     </select>
                 </div>
-                <div class "field-group">
+                <div class="field-group">
                     <label for="addFundName">Fund Name</label>
                     <select id="addFundName">
                         <option value="Fund 1">Fund 1</option>
@@ -735,14 +663,6 @@
             </div>
         </div>
         <div id="categoryGrid" class="ag-theme-alpine-dark"></div>
-        <div class="pagination">
-            <div class="left" id="categoryPaginationLeft">1 to 10 of 10</div>
-            <div class="right">
-                <div class="page-info" id="categoryPageInfo">Page 1 of 1</div>
-                <button id="categoryPrevPage">Previous</button>
-                <button id="categoryNextPage">Next</button>
-            </div>
-        </div>
     </div>
 
     <!-- Add Issuer Modal -->
@@ -939,37 +859,6 @@
             };
         })();
 
-        // Utils: pagination.js
-        const PaginationModule = (function () {
-            function updatePagination(gridApi, rowData, paginationLeftId, pageInfoId) {
-                const totalRows = rowData.length;
-                const pageSize = gridApi.paginationGetPageSize();
-                const totalPages = Math.ceil(totalRows / pageSize);
-                const currentPage = gridApi.paginationGetCurrentPage() + 1;
-                const startRow = (currentPage - 1) * pageSize + 1;
-                const endRow = Math.min(currentPage * pageSize, totalRows);
-
-                document.getElementById(paginationLeftId).textContent = `${startRow} to ${endRow} of ${totalRows}`;
-                document.getElementById(pageInfoId).textContent = `Page ${currentPage} of ${totalPages}`;
-            }
-
-            function previousPage(gridApi, rowData, paginationLeftId, pageInfoId) {
-                gridApi.paginationGoToPreviousPage();
-                updatePagination(gridApi, rowData, paginationLeftId, pageInfoId);
-            }
-
-            function nextPage(gridApi, rowData, paginationLeftId, pageInfoId) {
-                gridApi.paginationGoToNextPage();
-                updatePagination(gridApi, rowData, paginationLeftId, pageInfoId);
-            }
-
-            return {
-                updatePagination,
-                previousPage,
-                nextPage
-            };
-        })();
-
         // Utils: helpers.js
         const HelpersModule = (function () {
             function switchTab(tabId) {
@@ -1088,9 +977,7 @@
             const issuerGridOptions = {
                 columnDefs: issuerColumnDefs,
                 rowData: issuerRowData,
-                pagination: true,
-                paginationPageSize: 100,
-                paginationPageSizeSelector: [100, 200],
+                pagination: false, // Disable pagination
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1106,9 +993,7 @@
             const historyGridOptions = {
                 columnDefs: historyAndInstrumentsColumnDefs,
                 rowData: issuerRowData,
-                pagination: true,
-                paginationPageSize: 100,
-                paginationPageSizeSelector: [100, 200],
+                pagination: false, // Disable pagination
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1124,9 +1009,7 @@
             const instrumentsGridOptions = {
                 columnDefs: historyAndInstrumentsColumnDefs,
                 rowData: issuerRowData,
-                pagination: true,
-                paginationPageSize: 100,
-                paginationPageSizeSelector: [100, 200],
+                pagination: false, // Disable pagination
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1142,9 +1025,7 @@
             const categoryGridOptions = {
                 columnDefs: categoryColumnDefs,
                 rowData: categoryRowData,
-                pagination: true,
-                paginationPageSize: 10,
-                paginationPageSizeSelector: [10, 20, 50],
+                pagination: false, // Disable pagination
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1158,7 +1039,6 @@
                     const updatedData = rowNode.data;
                     categoryRowData[event.rowIndex] = updatedData;
                     categoryGridApi.setGridOption('rowData', categoryRowData);
-                    PaginationModule.updatePagination(categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo');
                 },
                 onGridReady: (params) => {
                     params.api.setGridOption('quickFilterText', document.getElementById('categorySearchInput').value || '');
@@ -1169,19 +1049,15 @@
             function initGrids() {
                 const issuerGridDiv = document.querySelector('#issuerGrid');
                 issuerGridApi = agGrid.createGrid(issuerGridDiv, issuerGridOptions);
-                PaginationModule.updatePagination(issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo');
 
                 const historyGridDiv = document.querySelector('#historyGrid');
                 historyGridApi = agGrid.createGrid(historyGridDiv, historyGridOptions);
-                PaginationModule.updatePagination(historyGridApi, issuerRowData, 'historyPaginationLeft', 'historyPageInfo');
 
                 const instrumentsGridDiv = document.querySelector('#instrumentsGrid');
                 instrumentsGridApi = agGrid.createGrid(instrumentsGridDiv, instrumentsGridOptions);
-                PaginationModule.updatePagination(instrumentsGridApi, issuerRowData, 'instrumentsPaginationLeft', 'instrumentsPageInfo');
 
                 const categoryGridDiv = document.querySelector('#categoryGrid');
                 categoryGridApi = agGrid.createGrid(categoryGridDiv, categoryGridOptions);
-                PaginationModule.updatePagination(categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo');
             }
 
             // Start editing a specific row in the category grid
@@ -1239,7 +1115,6 @@
                 };
                 categoryRowData.unshift(newCategory);
                 gridApis.categoryGridApi.setGridOption('rowData', categoryRowData);
-                PaginationModule.updatePagination(gridApis.categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo');
                 hideAddCategoryForm();
             }
 
@@ -1286,7 +1161,6 @@
                 };
                 issuerRowData.push(newIssuer);
                 gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
-                PaginationModule.updatePagination(gridApis.issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo');
                 closeIssuerModal();
             }
 
@@ -1308,11 +1182,9 @@
                     if (selectedGridType === 'issuer') {
                         issuerRowData.splice(selectedRowIndex, 1);
                         gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
-                        PaginationModule.updatePagination(gridApis.issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo');
                     } else if (selectedGridType === 'category') {
                         categoryRowData.splice(selectedRowIndex, 1);
                         gridApis.categoryGridApi.setGridOption('rowData', categoryRowData);
-                        PaginationModule.updatePagination(gridApis.categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo');
                     }
                     closeDeleteModal();
                 }
@@ -1338,7 +1210,6 @@
                     if (selectedGridType === 'issuer') {
                         issuerRowData.splice(selectedRowIndex, 1);
                         gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
-                        PaginationModule.updatePagination(gridApis.issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo');
                     }
                     closeUnrestrictModal();
                 }
@@ -1423,20 +1294,14 @@
             document.getElementById('submitIssuerForm').addEventListener('click', ModalModule.submitIssuerForm);
             document.getElementById('clearIssuerFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.issuerGridApi, 'issuerSearchInput'));
             document.getElementById('exportIssuerBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.issuerGridApi));
-            document.getElementById('issuerPrevPage').addEventListener('click', () => PaginationModule.previousPage(gridApis.issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo'));
-            document.getElementById('issuerNextPage').addEventListener('click', () => PaginationModule.nextPage(gridApis.issuerGridApi, issuerRowData, 'issuerPaginationLeft', 'issuerPageInfo'));
 
             // History grid events
             document.getElementById('clearHistoryFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.historyGridApi, 'historySearchInput'));
             document.getElementById('exportHistoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.historyGridApi));
-            document.getElementById('historyPrevPage').addEventListener('click', () => PaginationModule.previousPage(gridApis.historyGridApi, issuerRowData, 'historyPaginationLeft', 'historyPageInfo'));
-            document.getElementById('historyNextPage').addEventListener('click', () => PaginationModule.nextPage(gridApis.historyGridApi, issuerRowData, 'historyPaginationLeft', 'historyPageInfo'));
 
             // Instruments grid events
             document.getElementById('clearInstrumentsFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.instrumentsGridApi, 'instrumentsSearchInput'));
             document.getElementById('exportInstrumentsBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.instrumentsGridApi));
-            document.getElementById('instrumentsPrevPage').addEventListener('click', () => PaginationModule.previousPage(gridApis.instrumentsGridApi, issuerRowData, 'instrumentsPaginationLeft', 'instrumentsPageInfo'));
-            document.getElementById('instrumentsNextPage').addEventListener('click', () => PaginationModule.nextPage(gridApis.instrumentsGridApi, issuerRowData, 'instrumentsPaginationLeft', 'instrumentsPageInfo'));
 
             // Category grid events
             document.getElementById('addCategoryBtn').addEventListener('click', CategoryFormModule.showAddCategoryForm);
@@ -1444,8 +1309,6 @@
             document.getElementById('submitNewCategory').addEventListener('click', CategoryFormModule.submitNewCategory);
             document.getElementById('clearCategoryFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.categoryGridApi, 'categorySearchInput'));
             document.getElementById('exportCategoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.categoryGridApi));
-            document.getElementById('categoryPrevPage').addEventListener('click', () => PaginationModule.previousPage(gridApis.categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo'));
-            document.getElementById('categoryNextPage').addEventListener('click', () => PaginationModule.nextPage(gridApis.categoryGridApi, categoryRowData, 'categoryPaginationLeft', 'categoryPageInfo'));
 
             // Delete modal events
             document.getElementById('closeDeleteModal').addEventListener('click', ModalModule.closeDeleteModal);
