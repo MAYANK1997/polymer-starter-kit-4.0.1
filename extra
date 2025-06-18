@@ -17,6 +17,7 @@
             height: 100vh;
             width: 100vw;
             overflow-x: hidden;
+            overflow-y: hidden;
             transition: background-color 0.3s, color 0.3s;
         }
         body.light-mode {
@@ -500,7 +501,7 @@
 <body class="dark-mode">
     <div class="header">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="logo">RL</div>
+           
             <div class="title">Restricted List</div>
         </div>
         <div class="actions">
