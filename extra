@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restricted List</title>
     <!-- AG-Grid CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@31.0.2/dist/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@31.0.2/dist/styles/ag-theme-alpine.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@31.0.2/dist/styles/ag-theme-alpine-dark.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-theme-alpine.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-theme-alpine-dark.css">
     <!-- Embedded CSS -->
     <style>
         html, body {
@@ -36,16 +36,15 @@
             width: 100%;
             box-sizing: border-box;
         }
-        .header .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: #1a73e8;
-            width: 40px;
-            height: 40px;
+        .header .logo-container {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+        }
+        .header .logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
             border-radius: 4px;
         }
         .header .title {
@@ -183,7 +182,7 @@
             color: #e0e0e0;
         }
         .light-mode .ag-theme-alpine {
-            height: calc(100vh - 190px); /* Adjusted height after removing pagination */
+            height: calc(100vh - 190px);
             width: 100%;
             --ag-header-background-color: #f5f7fa;
             --ag-header-foreground-color: #333;
@@ -194,7 +193,7 @@
             --ag-font-size: 14px;
         }
         .dark-mode .ag-theme-alpine-dark {
-            height: calc(100vh - 190px); /* Adjusted height after removing pagination */
+            height: calc(100vh - 190px);
             width: 100%;
             --ag-header-background-color: #2a2a2a;
             --ag-header-foreground-color: #e0e0e0;
@@ -462,7 +461,7 @@
             height: 18px;
             cursor: pointer;
             transition: fill 0.3s;
-            margin-top: 20px; /* Align with input fields */
+            margin-top: 20px;
         }
         .dark-mode .form-row .action-icon.submit-icon {
             fill: #1a73e8;
@@ -496,12 +495,41 @@
         .tab-content.active {
             display: block;
         }
+        /* Floating Filter Styles */
+        .ag-floating-filter {
+            padding: 4px;
+        }
+        .custom-floating-filter-input {
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .light-mode .custom-floating-filter-input {
+            border: 1px solid #e0e0e0;
+            background-color: #ffffff;
+            color: #333;
+        }
+        .dark-mode .custom-floating-filter-input {
+            border: 1px solid #444;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        .custom-floating-filter-input:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        .ag-floating-filter-body {
+            height: 24px;
+        }
     </style>
 </head>
 <body class="dark-mode">
     <div class="header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-           
+        <div class="logo-container">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT27U3Jq0VurF4B5hKNg9p4H2nG5DqB3jG6Hg&s" alt="Company Logo" class="logo">
             <div class="title">Restricted List</div>
         </div>
         <div class="actions">
@@ -520,7 +548,6 @@
         <div data-tab="restrictedInstruments">Restricted Instruments</div>
         <div data-tab="restrictionCategory">Restriction Category</div>
     </div>
-
     <!-- Restricted Issuers Tab -->
     <div id="restrictedIssuers" class="tab-content active">
         <div class="controls">
@@ -546,7 +573,6 @@
         </div>
         <div id="issuerGrid" class="ag-theme-alpine-dark"></div>
     </div>
-
     <!-- Restricted Issues History Tab -->
     <div id="restrictedIssuesHistory" class="tab-content">
         <div class="controls">
@@ -571,7 +597,6 @@
         </div>
         <div id="historyGrid" class="ag-theme-alpine-dark"></div>
     </div>
-
     <!-- Restricted Instruments Tab -->
     <div id="restrictedInstruments" class="tab-content">
         <div class="controls">
@@ -596,7 +621,6 @@
         </div>
         <div id="instrumentsGrid" class="ag-theme-alpine-dark"></div>
     </div>
-
     <!-- Restriction Category Tab -->
     <div id="restrictionCategory" class="tab-content">
         <div class="controls">
@@ -613,7 +637,7 @@
                     Clear Filters
                 </button>
                 <button class="export" id="exportCategoryBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="16" height="16" viewBox="0 0 24 19" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
                     </svg>
                     Export
@@ -665,7 +689,6 @@
         </div>
         <div id="categoryGrid" class="ag-theme-alpine-dark"></div>
     </div>
-
     <!-- Add Issuer Modal -->
     <div id="addIssuerModal" class="modal">
         <div class="modal-content">
@@ -741,7 +764,6 @@
             </div>
         </div>
     </div>
-
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
         <div class="delete-modal-content">
@@ -763,7 +785,6 @@
             </div>
         </div>
     </div>
-
     <!-- Unrestrict Confirmation Modal -->
     <div id="unrestrictModal" class="modal">
         <div class="delete-modal-content">
@@ -785,9 +806,8 @@
             </div>
         </div>
     </div>
-
     <!-- AG-Grid JS -->
-    <script src="https://unpkg.com/ag-grid-community@31.0.2/dist/ag-grid-community.min.js"></script>
+    <script src="https://unpkg.com/ag-grid-community@30.2.0/dist/ag-grid-community.min.js"></script>
     <!-- Embedded JavaScript -->
     <script>
         // Data: issuers.js
@@ -803,7 +823,6 @@
             { issuerName: "Hemogenyx Pharmaceuticals PLC", userEnteredName: "Hemogenyx Pharmaceuticals PLC", issueType: "Public", ticker: "HEMO LN", isin: "GB00BYX3WZ24", cusip: "-", sedol: "-", ultimateParentName: "Hemogenyx Pharmaceuticals PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-02-20", restrictionRequester: "Rob Giles", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
             { issuerName: "Induction Healthcare Group PLC", userEnteredName: "Induction Healthcare Group PLC", issueType: "Public", ticker: "INHC LN", isin: "GB00BJ0M3545", cusip: "-", sedol: "-", ultimateParentName: "Induction Healthcare Group PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2023-09-01", restrictionRequester: "Rob Giles", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
         ];
-
         // Data: categories.js
         const categoryRowData = [
             { categoryName: "ESG RL", description: "Environmental, Social, and Governance Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "All", createdOn: "2023-01-15", createdBy: "Admin", action: "" },
@@ -817,7 +836,6 @@
             { categoryName: "Geopolitical RL", description: "Geopolitical Risk Restrictions", fundGroup: "Group C", fundName: "Fund 3", availableFor: "Retail", createdOn: "2024-12-01", createdBy: "Strategy Team", action: "" },
             { categoryName: "Custom RL", description: "Custom Client Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "All", createdOn: "2025-01-01", createdBy: "Client Services", action: "" },
         ];
-
         // Utils: theme.js
         const ThemeModule = (function () {
             function toggleTheme() {
@@ -827,7 +845,6 @@
                 const instrumentsGridDiv = document.querySelector('#instrumentsGrid');
                 const categoryGridDiv = document.querySelector('#categoryGrid');
                 const themeIcon = document.querySelector('#themeIcon');
-
                 if (body.classList.contains('light-mode')) {
                     body.classList.remove('light-mode');
                     body.classList.add('dark-mode');
@@ -839,7 +856,7 @@
                     instrumentsGridDiv.classList.add('ag-theme-alpine-dark');
                     categoryGridDiv.classList.remove('ag-theme-alpine');
                     categoryGridDiv.classList.add('ag-theme-alpine-dark');
-                    themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'; // Moon icon
+                    themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
                 } else {
                     body.classList.remove('dark-mode');
                     body.classList.add('light-mode');
@@ -851,97 +868,128 @@
                     instrumentsGridDiv.classList.add('ag-theme-alpine');
                     categoryGridDiv.classList.remove('ag-theme-alpine-dark');
                     categoryGridDiv.classList.add('ag-theme-alpine');
-                    themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>'; // Sun icon
+                    themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>';
                 }
             }
-
             return {
                 toggleTheme
             };
         })();
-
         // Utils: helpers.js
         const HelpersModule = (function () {
             function switchTab(tabId) {
                 const tabs = document.querySelectorAll('.tabs div');
                 const tabContents = document.querySelectorAll('.tab-content');
-
                 tabs.forEach(tab => tab.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
-
                 document.querySelector(`.tabs div[data-tab="${tabId}"]`).classList.add('active');
                 document.getElementById(tabId).classList.add('active');
             }
-
             function exportToCSV(gridApi) {
                 gridApi.exportDataAsCsv();
             }
-
             function clearFilters(gridApi, searchInputId) {
-                gridApi.setGridOption('quickFilterText', '');
+                gridApi.setQuickFilter('');
                 if (searchInputId) {
                     document.getElementById(searchInputId).value = '';
                 }
+                // Clear individual column filters for issuer grid
+                if (searchInputId === 'issuerSearchInput') {
+                    const columns = gridApi.getColumnDefs().map(col => col.field);
+                    columns.forEach(field => {
+                        if (field !== 'unrestrict') {
+                            gridApi.getFilterInstance(field, (filter) => {
+                                if (filter) {
+                                    filter.setModel(null);
+                                    // Clear the floating filter input if it exists
+                                    const filterInput = document.querySelector(`.ag-floating-filter-body input[data-column="${field}"]`);
+                                    if (filterInput) filterInput.value = '';
+                                }
+                            });
+                        }
+                    });
+                }
+                gridApi.onFilterChanged();
             }
-
             return {
                 switchTab,
                 exportToCSV,
                 clearFilters
             };
         })();
-
         // Components: grids.js
         const GridModule = (function () {
             let issuerGridApi, historyGridApi, instrumentsGridApi, categoryGridApi;
-
-            // Column definitions for Issuer grid (includes Unrestrict column)
+            // Custom Floating Filter Component
+            function CustomFloatingFilter() {}
+            CustomFloatingFilter.prototype.init = function (params) {
+                this.params = params;
+                this.eGui = document.createElement('div');
+                this.eGui.className = 'ag-floating-filter';
+                this.eGui.innerHTML = `
+                    <input type="text" class="custom-floating-filter-input" placeholder="Filter..." data-column="${params.column.getColId()}">
+                `;
+                this.eInput = this.eGui.querySelector('.custom-floating-filter-input');
+                this.eInput.addEventListener('input', () => {
+                    const filterText = this.eInput.value;
+                    params.parentFilterInstance((filterInstance) => {
+                        filterInstance.setModel({
+                            type: 'contains',
+                            filter: filterText
+                        });
+                        params.api.onFilterChanged();
+                    });
+                });
+            };
+            CustomFloatingFilter.prototype.getGui = function () {
+                return this.eGui;
+            };
+            CustomFloatingFilter.prototype.onParentModelChanged = function (parentModel) {
+                if (!parentModel) {
+                    this.eInput.value = '';
+                } else {
+                    this.eInput.value = parentModel.filter || '';
+                }
+            };
+            CustomFloatingFilter.prototype.destroy = function () {
+                this.eInput.removeEventListener('input', this.onInput);
+            };
             const issuerColumnDefs = [
-                { headerName: "VALID ISSUER NAME", field: "issuerName", sortable: true, filter: true },
-                { headerName: "USER ENTERED ISSUER NAME", field: "userEnteredName", sortable: true, filter: true },
-                { 
-                    headerName: "ISSUE TYPE", 
-                    field: "issueType", 
-                    sortable: true, 
-                    filter: true,
-                    cellRenderer: params => `<span class="issue-type">${params.value}</span>`
-                },
-                { headerName: "TICKER", field: "ticker", sortable: true, filter: true },
-                { headerName: "ISIN", field: "isin", sortable: true, filter: true },
-                { headerName: "CUSIP", field: "cusip", sortable: true, filter: true },
-                { headerName: "SEDOL", field: "sedol", sortable: true, filter: true },
-                { headerName: "ULTIMATE PARENT NAME", field: "ultimateParentName", sortable: true, filter: true },
-                { headerName: "RESTRICTION CATEGORY", field: "restrictionCategory", sortable: true, filter: true },
-                { headerName: "ALLOWED TRANSACTION TYPE", field: "allowedTransactionType", sortable: true, filter: true },
-                { headerName: "START DATE", field: "startDate", sortable: true, filter: true },
-                { headerName: "RESTRICTION REQUESTER", field: "restrictionRequester", sortable: true, filter: true },
-                { headerName: "RESTRICTION NOTES", field: "restrictionNotes", sortable: true, filter: true },
-                { headerName: "RESTRICTED BY", field: "restrictedBy", sortable: true, filter: true },
-                { headerName: "RESTRICTED ON", field: "restrictedOn", sortable: true, filter: true },
+                { headerName: "VALID ISSUER NAME", field: "issuerName", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "USER ENTERED ISSUER NAME", field: "userEnteredName", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "ISSUE TYPE", field: "issueType", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter', cellRenderer: params => `<span class="issue-type">${params.value}</span>` },
+                { headerName: "TICKER", field: "ticker", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "ISIN", field: "isin", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "CUSIP", field: "cusip", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "SEDOL", field: "sedol", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "ULTIMATE PARENT NAME", field: "ultimateParentName", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "RESTRICTION CATEGORY", field: "restrictionCategory", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "ALLOWED TRANSACTION TYPE", field: "allowedTransactionType", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "START DATE", field: "startDate", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "RESTRICTION REQUESTER", field: "restrictionRequester", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "RESTRICTION NOTES", field: "restrictionNotes", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "RESTRICTED BY", field: "restrictedBy", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
+                { headerName: "RESTRICTED ON", field: "restrictedOn", sortable: true, filter: 'agTextColumnFilter', floatingFilter: true, floatingFilterComponent: 'CustomFloatingFilter' },
                 { 
                     headerName: "UNRESTRICT", 
                     field: "unrestrict", 
                     sortable: true, 
-                    filter: true,
+                    filter: 'agTextColumnFilter',
                     cellRenderer: params => {
                         return `
-                            <svg class="action-icon" onclick="ModalModule.openUnrestrictModal('issuer', ${params.rowIndex})" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"/>
+                            <svg class="action-icon" onclick="ModalModule.openUnrestrictModal('issuer', ${params.rowIndex})" viewBox="0 0 24 24" fill="none">
+                                <path stroke="currentColor" stroke-width="2" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12px"/>
                             </svg>
                         `;
                     }
                 }
             ];
-
-            // Column definitions for History and Instruments (excludes Unrestrict column)
             const historyAndInstrumentsColumnDefs = issuerColumnDefs.filter(col => col.headerName !== "UNRESTRICT");
-
-            // Column definitions for Restriction Categories
             const categoryColumnDefs = [
                 { headerName: "CATEGORY NAME", field: "categoryName", sortable: true, filter: true, editable: true },
                 { headerName: "DESCRIPTION", field: "description", sortable: true, filter: true, editable: true },
                 { headerName: "FUND GROUP", field: "fundGroup", sortable: true, filter: true, editable: true },
-                { headerName: "FUND NAME", field: "fundName", sortable: true, filter: true, editable: true },
+                { headerName: "FUND NAME", sortable: true, field: "fundName", sortable: true, filter: true, editable: true },
                 { 
                     headerName: "AVAILABLE FOR", 
                     field: "availableFor", 
@@ -963,38 +1011,38 @@
                     filter: true,
                     cellRenderer: params => {
                         return `
-                            <svg class="action-icon" onclick="GridModule.startEditingRow(${params.rowIndex})" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            <svg class="action-icon" onclick="GridModule.startEditingRow(${params.rowIndex})" viewBox="0 0 24 24" fill="none">
+                                <path stroke="currentColor" stroke-width="2" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                             </svg>
-                            <svg class="action-icon" onclick="ModalModule.openDeleteModal('category', ${params.rowIndex})" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            <svg class="action-icon" onclick="ModalModule.openDeleteModal('category', ${params.rowIndex})" viewBox="0 0 24 24" fill="none">
+                                <path stroke="currentColor" stroke-width="2" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                             </svg>
                         `;
                     }
                 }
             ];
-
-            // Grid options for Restricted Issuers
             const issuerGridOptions = {
                 columnDefs: issuerColumnDefs,
                 rowData: issuerRowData,
-                pagination: false, // Disable pagination
+                pagination: false,
                 domLayout: 'normal',
+                floatingFiltersHeight: 30,
                 defaultColDef: {
                     resizable: true,
                     sortable: true,
                     filter: true,
                 },
-                onGridReady: (params) => {
-                    params.api.setGridOption('quickFilterText', document.getElementById('issuerSearchInput').value || '');
+                components: {
+                    CustomFloatingFilter: CustomFloatingFilter
                 },
+                onGridReady: (params) => {
+                    params.api.setQuickFilter(document.getElementById('issuerSearchInput').value || '');
+                }
             };
-
-            // Grid options for Restricted Issues History (without Unrestrict column)
             const historyGridOptions = {
                 columnDefs: historyAndInstrumentsColumnDefs,
                 rowData: issuerRowData,
-                pagination: false, // Disable pagination
+                pagination: false,
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1002,15 +1050,13 @@
                     filter: true,
                 },
                 onGridReady: (params) => {
-                    params.api.setGridOption('quickFilterText', document.getElementById('historySearchInput').value || '');
-                },
+                    params.api.setQuickFilter(document.getElementById('historySearchInput').value || '');
+                }
             };
-
-            // Grid options for Restricted Instruments (without Unrestrict column)
             const instrumentsGridOptions = {
                 columnDefs: historyAndInstrumentsColumnDefs,
                 rowData: issuerRowData,
-                pagination: false, // Disable pagination
+                pagination: false,
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1018,15 +1064,13 @@
                     filter: true,
                 },
                 onGridReady: (params) => {
-                    params.api.setGridOption('quickFilterText', document.getElementById('instrumentsSearchInput').value || '');
-                },
+                    params.api.setQuickFilter(document.getElementById('instrumentsSearchInput').value || '');
+                }
             };
-
-            // Grid options for Restriction Categories
             const categoryGridOptions = {
                 columnDefs: categoryColumnDefs,
                 rowData: categoryRowData,
-                pagination: false, // Disable pagination
+                pagination: false,
                 domLayout: 'normal',
                 defaultColDef: {
                     resizable: true,
@@ -1039,37 +1083,32 @@
                     const rowNode = event.node;
                     const updatedData = rowNode.data;
                     categoryRowData[event.rowIndex] = updatedData;
-                    categoryGridApi.setGridOption('rowData', categoryRowData);
+                    categoryGridApi.setRowData(categoryRowData);
                 },
                 onGridReady: (params) => {
-                    params.api.setGridOption('quickFilterText', document.getElementById('categorySearchInput').value || '');
-                },
+                    params.api.setQuickFilter(document.getElementById('categorySearchInput').value || '');
+                }
             };
-
-            // Initialize grids
             function initGrids() {
                 const issuerGridDiv = document.querySelector('#issuerGrid');
-                issuerGridApi = agGrid.createGrid(issuerGridDiv, issuerGridOptions);
-
+                new agGrid.Grid(issuerGridDiv, issuerGridOptions);
+                issuerGridApi = issuerGridOptions.api;
                 const historyGridDiv = document.querySelector('#historyGrid');
-                historyGridApi = agGrid.createGrid(historyGridDiv, historyGridOptions);
-
+                new agGrid.Grid(historyGridDiv, historyGridOptions);
+                historyGridApi = historyGridOptions.api;
                 const instrumentsGridDiv = document.querySelector('#instrumentsGrid');
-                instrumentsGridApi = agGrid.createGrid(instrumentsGridDiv, instrumentsGridOptions);
-
+                new agGrid.Grid(instrumentsGridDiv, instrumentsGridOptions);
+                instrumentsGridApi = instrumentsGridOptions.api;
                 const categoryGridDiv = document.querySelector('#categoryGrid');
-                categoryGridApi = agGrid.createGrid(categoryGridDiv, categoryGridOptions);
+                new agGrid.Grid(categoryGridDiv, categoryGridOptions);
+                categoryGridApi = categoryGridOptions.api;
             }
-
-            // Start editing a specific row in the category grid
             function startEditingRow(rowIndex) {
                 categoryGridApi.startEditingCell({
                     rowIndex: rowIndex,
                     colKey: 'categoryName'
                 });
             }
-
-            // Getter for grid APIs
             function getGridApis() {
                 return {
                     issuerGridApi,
@@ -1078,22 +1117,18 @@
                     categoryGridApi
                 };
             }
-
             return {
                 initGrids,
                 startEditingRow,
                 getGridApis
             };
         })();
-
         // Components: categoryForm.js
         const CategoryFormModule = (function () {
             const gridApis = GridModule.getGridApis();
-
             function showAddCategoryForm() {
                 document.getElementById('addCategoryForm').style.display = 'block';
             }
-
             function hideAddCategoryForm() {
                 document.getElementById('addCategoryForm').style.display = 'none';
                 document.getElementById('addCategoryName').value = '';
@@ -1102,7 +1137,6 @@
                 document.getElementById('addFundName').value = 'Fund 1';
                 document.getElementById('addAvailableFor').value = 'All';
             }
-
             function submitNewCategory() {
                 const newCategory = {
                     categoryName: document.getElementById('addCategoryName').value || "-",
@@ -1115,32 +1149,26 @@
                     action: ""
                 };
                 categoryRowData.unshift(newCategory);
-                gridApis.categoryGridApi.setGridOption('rowData', categoryRowData);
+                gridApis.categoryGridApi.setRowData(categoryRowData);
                 hideAddCategoryForm();
             }
-
             return {
                 showAddCategoryForm,
                 hideAddCategoryForm,
                 submitNewCategory
             };
         })();
-
         // Components: modals.js
         const ModalModule = (function () {
             let selectedRowIndex = null;
             let selectedGridType = null;
             const gridApis = GridModule.getGridApis();
-
-            // Add Issuer Modal
             function openIssuerModal() {
                 document.getElementById('addIssuerModal').style.display = 'flex';
             }
-
             function closeIssuerModal() {
                 document.getElementById('addIssuerModal').style.display = 'none';
             }
-
             function submitIssuerForm() {
                 const newIssuer = {
                     issuerName: document.getElementById('issuerName').value || "-",
@@ -1158,46 +1186,39 @@
                     restrictionNotes: document.getElementById('restrictionNotes').value || "-",
                     restrictedBy: "-",
                     restrictedOn: "-",
-                    unrestrict: "-"
+                    unrestrict: ""
                 };
                 issuerRowData.push(newIssuer);
-                gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
+                gridApis.issuerGridApi.setRowData(issuerRowData);
                 closeIssuerModal();
             }
-
-            // Delete Modal
             function openDeleteModal(gridType, rowIndex) {
                 selectedGridType = gridType;
                 selectedRowIndex = rowIndex;
                 document.getElementById('deleteModal').style.display = 'flex';
             }
-
             function closeDeleteModal() {
                 document.getElementById('deleteModal').style.display = 'none';
                 selectedRowIndex = null;
                 selectedGridType = null;
             }
-
             function confirmDelete() {
                 if (selectedRowIndex !== null && selectedGridType !== null) {
                     if (selectedGridType === 'issuer') {
                         issuerRowData.splice(selectedRowIndex, 1);
-                        gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
+                        gridApis.issuerGridApi.setRowData(issuerRowData);
                     } else if (selectedGridType === 'category') {
                         categoryRowData.splice(selectedRowIndex, 1);
-                        gridApis.categoryGridApi.setGridOption('rowData', categoryRowData);
+                        gridApis.categoryGridApi.setRowData(categoryRowData);
                     }
                     closeDeleteModal();
                 }
             }
-
-            // Unrestrict Modal
             function openUnrestrictModal(gridType, rowIndex) {
                 selectedGridType = gridType;
                 selectedRowIndex = rowIndex;
                 document.getElementById('unrestrictModal').style.display = 'flex';
             }
-
             function closeUnrestrictModal() {
                 document.getElementById('unrestrictModal').style.display = 'none';
                 document.getElementById('unrestrictDate').value = '2025-06-12';
@@ -1205,17 +1226,15 @@
                 selectedRowIndex = null;
                 selectedGridType = null;
             }
-
             function confirmUnrestrict() {
                 if (selectedRowIndex !== null && selectedGridType !== null) {
                     if (selectedGridType === 'issuer') {
                         issuerRowData.splice(selectedRowIndex, 1);
-                        gridApis.issuerGridApi.setGridOption('rowData', issuerRowData);
+                        gridApis.issuerGridApi.setRowData(issuerRowData);
                     }
                     closeUnrestrictModal();
                 }
             }
-
             return {
                 openIssuerModal,
                 closeIssuerModal,
@@ -1228,95 +1247,67 @@
                 confirmUnrestrict
             };
         })();
-
         // Main: main.js
         document.addEventListener('DOMContentLoaded', function () {
-            // Initialize grids first
             GridModule.initGrids();
-
-            // Access grid APIs after initialization
             const gridApis = GridModule.getGridApis();
-
-            // Theme toggle
             document.getElementById('themeToggle').addEventListener('click', ThemeModule.toggleTheme);
-
-            // Tab switching
             document.querySelectorAll('.tabs div').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabId = tab.getAttribute('data-tab');
                     HelpersModule.switchTab(tabId);
                 });
             });
-
-            // Search functionality for Issuers
             const issuerSearchInput = document.getElementById('issuerSearchInput');
             if (issuerSearchInput && gridApis.issuerGridApi) {
                 issuerSearchInput.addEventListener('input', function(e) {
-                    gridApis.issuerGridApi.setGridOption('quickFilterText', e.target.value);
+                    gridApis.issuerGridApi.setQuickFilter(e.target.value);
                 });
             } else {
-                console.error('Issuer search input or grid API not found.');
+                console.error('Issuer error search input or grid API not found.');
             }
-
-            // Search functionality for History
             const historySearchInput = document.getElementById('historySearchInput');
             if (historySearchInput && gridApis.historyGridApi) {
                 historySearchInput.addEventListener('input', function(e) {
-                    gridApis.historyGridApi.setGridOption('quickFilterText', e.target.value);
+                    gridApis.historyGridApi.setQuickFilter(e.target.value);
                 });
             } else {
-                console.error('History search input or grid API not found.');
+                console.error('Error: history search input or grid API not found.');
             }
-
-            // Search functionality for Instruments
             const instrumentsSearchInput = document.getElementById('instrumentsSearchInput');
             if (instrumentsSearchInput && gridApis.instrumentsGridApi) {
                 instrumentsSearchInput.addEventListener('input', function(e) {
-                    gridApis.instrumentsGridApi.setGridOption('quickFilterText', e.target.value);
+                    gridApis.instrumentsGridApi.setQuickFilter(e.target.value);
                 });
             } else {
-                console.error('Instruments search input or grid API not found.');
+                console.error('Error: instruments search input or grid API not found.');
             }
-
-            // Search functionality for Categories
             const categorySearchInput = document.getElementById('categorySearchInput');
             if (categorySearchInput && gridApis.categoryGridApi) {
                 categorySearchInput.addEventListener('input', function(e) {
-                    gridApis.categoryGridApi.setGridOption('quickFilterText', e.target.value);
+                    gridApis.categoryGridApi.setQuickFilter(e.target.value);
                 });
             } else {
-                console.error('Category search input or grid API not found.');
+                console.error('Error: category search input or grid API not found.');
             }
-
-            // Issuer grid events
             document.getElementById('addIssuerBtn').addEventListener('click', ModalModule.openIssuerModal);
             document.getElementById('closeIssuerModal').addEventListener('click', ModalModule.closeIssuerModal);
             document.getElementById('closeIssuerModalBtn').addEventListener('click', ModalModule.closeIssuerModal);
             document.getElementById('submitIssuerForm').addEventListener('click', ModalModule.submitIssuerForm);
             document.getElementById('clearIssuerFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.issuerGridApi, 'issuerSearchInput'));
             document.getElementById('exportIssuerBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.issuerGridApi));
-
-            // History grid events
             document.getElementById('clearHistoryFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.historyGridApi, 'historySearchInput'));
             document.getElementById('exportHistoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.historyGridApi));
-
-            // Instruments grid events
             document.getElementById('clearInstrumentsFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.instrumentsGridApi, 'instrumentsSearchInput'));
             document.getElementById('exportInstrumentsBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.instrumentsGridApi));
-
-            // Category grid events
             document.getElementById('addCategoryBtn').addEventListener('click', CategoryFormModule.showAddCategoryForm);
             document.getElementById('closeAddCategoryForm').addEventListener('click', CategoryFormModule.hideAddCategoryForm);
             document.getElementById('submitNewCategory').addEventListener('click', CategoryFormModule.submitNewCategory);
             document.getElementById('clearCategoryFilters').addEventListener('click', () => HelpersModule.clearFilters(gridApis.categoryGridApi, 'categorySearchInput'));
             document.getElementById('exportCategoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.categoryGridApi));
-
-            // Delete modal events
             document.getElementById('closeDeleteModal').addEventListener('click', ModalModule.closeDeleteModal);
             document.getElementById('closeDeleteModalBtn').addEventListener('click', ModalModule.closeDeleteModal);
             document.getElementById('confirmDelete').addEventListener('click', ModalModule.confirmDelete);
-
-            // Unrestrict modal events
             document.getElementById('closeUnrestrictModal').addEventListener('click', ModalModule.closeUnrestrictModal);
             document.getElementById('closeUnrestrictModalBtn').addEventListener('click', ModalModule.closeUnrestrictModal);
             document.getElementById('confirmUnrestrict').addEventListener('click', ModalModule.confirmUnrestrict);
