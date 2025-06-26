@@ -1,1378 +1,372 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restricted List Ui</title>
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-theme-alpine.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@30.2.0/dist/styles/ag-theme-alpine-dark.css">
-    <style>
-        html, body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow-x: hidden;
-            overflow-y: hidden;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        body.light-mode {
-            background-color: #f5f7fa;
-            color: #333;
-        }
-        body.dark-mode {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .header .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header .logo {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            border-radius: 4px;
-        }
-        .header .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0;
-            transition: color 0.3s;
-        }
-        .light-mode .header .title {
-            color: #333;
-        }
-        .dark-mode .header .title {
-            color: #e0e0e0;
-        }
-        .header .actions {
-            display: flex;
-            gap: 10px;
-        }
-        .header .actions button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .light-mode .header .actions button {
-            border: 1px solid #e0e0e0;
-            background-color: white;
-            color: #333;
-        }
-        .dark-mode .header .actions button {
-            border: 1px solid #444;
-            background-color: #333;
-            color: #e0e0e0;
-        }
-        .tabs {
-            display: flex;
-            gap: 20px;
-            padding: 0 20px;
-            border-bottom: 1px solid;
-            transition: border-color 0.3s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .light-mode .tabs {
-            border-color: #e0e0e0;
-        }
-        .dark-mode .tabs {
-            border-color: #444;
-        }
-        .tabs div {
-            padding: 10px 0;
-            cursor: pointer;
-            font-size: 14px;
-            transition: color 0.3s;
-        }
-        .light-mode .tabs div {
-            color: #666;
-        }
-        .dark-mode .tabs div {
-            color: #a0a0a0;
-        }
-        .tabs div.active {
-            color: #1a73e8;
-            border-bottom: 2px solid #1a73e8;
-        }
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .controls .left {
-            display: flex;
-            gap: 10px;
-        }
-        .controls button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .controls .add-btn {
-            font-weight: bold;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .light-mode .controls .add-btn {
-            background-color: #ffffff;
-            color: #333;
-        }
-        .dark-mode .controls .add-btn {
-            background-color: #ffffff;
-            color: #333;
-        }
-        .controls .search {
-            padding: 8px;
-            border-radius: 4px;
-            width: 200px;
-            font-size: 14px;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .light-mode .controls .search {
-            border: 1px solid #e0e0e0;
-            background-color: white;
-            color: #333;
-        }
-        .dark-mode .controls .search {
-            border: 1px solid #444;
-            background-color: #333;
-            color: #e0e0e0;
-        }
-        .controls .right {
-            display: flex;
-            gap: 10px;
-        }
-        .controls .export {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .light-mode .controls .export {
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            color: #333;
-        }
-        .dark-mode .controls .export {
-            background-color: #333;
-            border: 1px solid #444;
-            color: #e0e0e0;
-        }
-        .light-mode .ag-theme-alpine {
-            height: calc(100vh - 190px);
-            width: 100%;
-            --ag-header-background-color: #f5f7fa;
-            --ag-header-foreground-color: #333;
-            --ag-row-hover-color: #e8f0fe;
-            --ag-background-color: white;
-            --ag-foreground-color: #333;
-            --ag-border-color: #e0e0e0;
-            --ag-font-size: 14px;
-        }
-        .dark-mode .ag-theme-alpine-dark {
-            height: calc(100vh - 190px);
-            width: 100%;
-            --ag-header-background-color: #2a2a2a;
-            --ag-header-foreground-color: #e0e0e0;
-            --ag-row-hover-color: #444;
-            --ag-background-color: #1e1e1e;
-            --ag-foreground-color: #e0e0e0;
-            --ag-border-color: #444;
-            --ag-font-size: 14px;
-        }
-        .ag-theme-alpine .ag-header-cell,
-        .ag-theme-alpine-dark .ag-header-cell {
-            font-weight: normal;
-        }
-        .ag-theme-alpine .ag-cell,
-        .ag-theme-alpine-dark .ag-cell {
-            display: flex;
-            align-items: center;
-        }
-        .ag-theme-alpine .ag-cell .issue-type,
-        .ag-theme-alpine-dark .ag-cell .issue-type {
-            background-color: #1a73e8;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-        .ag-theme-alpine .ag-cell .available-for-tag,
-        .ag-theme-alpine-dark .ag-cell .available-for-tag {
-            background-color: #1a73e8;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-right: 4px;
-        }
-        .action-icon {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            transition: fill 0.3s;
-        }
-        .dark-mode .action-icon {
-            fill: #ffffff;
-        }
-        .dark-mode .action-icon:hover {
-            fill: #aaaaaa;
-        }
-        .light-mode .action-icon {
-            fill: #666666;
-        }
-        .light-mode .action-icon:hover {
-            fill: #333333;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            padding: 20px;
-            border-radius: 8px;
-            width: 800px;
-            max-width: 90%;
-            position: relative;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .light-mode .modal-content {
-            background-color: #ffffff;
-            color: #333;
-        }
-        .dark-mode .modal-content {
-            background-color: #1e1e1e;
-            color: #e0e0e0;
-        }
-        .modal-content h2 {
-            margin: 0 0 20px 0;
-            font-size: 18px;
-        }
-        .modal-content .close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-        .light-mode .modal-content .close {
-            color: #333;
-        }
-        .dark-mode .modal-content .close {
-            color: #e0e0e0;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        .form-group input,
-        .form-group select {
-            padding: 8px;
-            border-radius: 44px;
-            font-size: 14px;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .light-mode .form-group input,
-        .light-mode .form-group select {
-            border: 1px solid #e0e0e0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        .dark-mode .form-group input,
-        .dark-mode .form-group select {
-            border: 1px solid #444;
-            background-color: #333;
-            color: #e0e0e0;
-        }
-        .form-group input[type="date"] {
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .form-group select[multiple] {
-            height: 120px;
-            width: 100%;
-            box-sizing: border-box;
-            min-height: 120px;
-            min-width: 200px;
-            display: block;
-            padding: 8px;
-        }
-        .checkbox-container {
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid;
-            border-radius: 4px;
-            padding: 8px;
-            background-color: inherit;
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-        .light-mode .checkbox-container {
-            border-color: #e0e0e0;
-            background-color: #f5f5f5;
-        }
-        .dark-mode .checkbox-container {
-            border-color: #444;
-            background-color: #333;
-        }
-        .checkbox-option {
-            display: flex;
-            align-items: center;
-            padding: 4px 0;
-        }
-        .checkbox-option input[type="checkbox"] {
-            margin-right: 8px;
-        }
-        .checkbox-label {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        .form-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .form-buttons button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .form-buttons .close-btn {
-            background-color: #d32f2f;
-            color: white;
-        }
-        .form-buttons .submit-btn {
-            background-color: #1e1e1e;
-            color: #e0e0e0;
-        }
-        .light-mode .form-buttons .submit-btn {
-            background-color: #333;
-            color: #ffffff;
-        }
-        .delete-modal-content, .confirm-modal-content, .success-modal-content, .error-modal-content {
-            padding: 20px;
-            border-radius: 8px;
-            width: 400px;
-            max-width: 90%;
-            position: relative;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .light-mode .delete-modal-content, .light-mode .confirm-modal-content, .light-mode .success-modal-content, .light-mode .error-modal-content {
-            background-color: #ffffff;
-            color: #333;
-        }
-        .dark-mode .delete-modal-content, .dark-mode .confirm-modal-content, .dark-mode .success-modal-content, .dark-mode .error-modal-content {
-            background-color: #1e1e1e;
-            color: #e0e0e0;
-        }
-        .delete-form-grid, .confirm-form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-        .confirm-form-grid p {
-            margin: 0;
-            font-size: 14px;
-        }
-        .confirm-form-grid p strong {
-            display: inline-block;
-            width: 150px;
-        }
-        .success-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 20px;
-            display: block;
-        }
-        .success-icon path {
-            stroke: #4caf50;
-            stroke-width: 4;
-            fill: none;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: drawCheck 0.5s ease-in-out forwards;
-        }
-        @keyframes drawCheck {
-            to {
-                stroke-dashoffset: 0;
+async addNewRow() {
+
+
+    const addNewIssuerModal = document.getElementById('addIssuerModal');
+    const submitFormButton = document.getElementById('submitFormButton');
+	const closeFormButton = document.getElementById('closeIssuerModalBtn');
+    const historicalGrid = document.querySelector('#historical-grid-container');
+	addNewIssuerModal.style.display = 'flex';
+
+    this.pnl.setDropDownListOptions(
+
+      document.querySelector('#restrictionCategoryModal'),
+      true
+    );
+    
+	const categorySelect = document.getElementById("restrictionCategoryModal");
+	const defaultOption = document.createElement("option");
+    defaultOption.value = ""; 
+    defaultOption.textContent = "Select Below";
+    defaultOption.selected = true;
+    
+
+  
+    categorySelect.insertBefore(defaultOption, categorySelect.firstChild);
+    
+
+    const newIssueData = {
+
+
+
+      dateRestricted: "",
+      requester: "",
+      notes: "",
+      categoryName: "",
+      transactionTypes:null,
+      issuerName: "",
+      issuerType: "",
+      ticker: "",
+      isin: "",
+      sedol: "",
+      instrumentType: ""
+
+
+
+
+
+    };
+
+
+   
+
+
+    document.getElementById('issuerName').value = '';
+    document.getElementById('issuerType').value = 'Public';
+    document.getElementById('cusip').value = '';
+    document.getElementById('ticker').value = '';
+    document.getElementById('isin').value = '';
+    document.getElementById('sedol').value = '';
+    document.getElementById('instrumentType').value = 'Equity';
+    document.getElementById('restrictionCategoryModal').value = '';
+    
+    document.getElementById('startDate').value = '';
+    document.getElementById('requester').value = '';
+    document.getElementById('notes').value = '';
+
+
+
+    const dropdownTransactionTypes = document.getElementById('restrictedTransactionTypes');
+
+    const columnTransactionType = document.querySelectorAll('#columnTransactionType>div.MultiCheckBox');
+
+
+    
+    let transactionTypes = [];
+
+    transactionTypes = await this.getTransactionTypes();
+
+    dropdownTransactionTypes.innerHTML = '';
+
+    transactionTypes.forEach(item => {
+
+      const optionElement1 = document.createElement("option");
+      optionElement1.value = item
+      optionElement1.text = item
+      dropdownTransactionTypes.add(optionElement1);
+
+
+    });
+	
+
+
+
+    $(document).ready(function () {
+      $("#restrictedTransactionTypes").CreateMultiCheckBox({ width: '', defaultText: 'Select Below', height: '' });
+    });
+   
+    
+
+
+    if (columnTransactionType.length > 0) {
+      columnTransactionType[0].remove();
+    }
+
+	
+	
+
+    
+
+    submitFormButton.addEventListener('click', () => {
+      // Retrieve input field values and log them to the console
+      const input1Value = document.getElementById('issuerName').value;
+      const input10Value = document.getElementById('issuerType').value;
+      const input2Value = document.getElementById('cusip').value;
+      const input3Value = document.getElementById('ticker').value;
+      const input4Value = document.getElementById('isin').value;
+      const input5Value = document.getElementById('sedol').value;
+      const input11Value = document.getElementById('instrumentType').value;
+      const input6Value = document.getElementById('restrictionCategoryModal').value;
+      const input12Value = this.selectedTransactionTypes;
+      const input7Value = document.getElementById('startDate').value;
+      const input8Value = document.getElementById('requester').value;
+      const input9Value = document.getElementById('notes').value;
+	  
+	  console.log(input6Value);
+
+      if (input10Value === 'Public') {
+
+
+        if ((input2Value !== '' || input3Value !== '' || input4Value !== '' || input5Value !== '' || input11Value !== '') && (input7Value !== '') && (input6Value !== '') ) {
+
+        const savedTheme = localStorage.getItem('theme');
+		
+		if(savedTheme === 'light-mode'){
+		
+		Swal.fire({
+            title: '<span style="font-size:20px; color:"black"; ">Please validate the values before submission</span>',
+            html: `<div style="text-align: left;
+          font-size: 14px;
+          line-height: 10px;
+		  theme:'light',
+          border: 1px solid black;
+          padding: 10px;"><p>ISSUER NAME : ${input1Value}</p>` +
+
+              `<p>ISSUER TYPE : ${input10Value}</p>` +
+              `<p>TICKER : ${input3Value}</p>` +
+              ` <p>ISIN : ${input4Value}</p>` +
+              ` <p>CUSIP : ${input2Value}</p>` +
+              `<p>SEDOL : ${input5Value}</p>` +
+              `<p>INSTRUMENT TYPE : ${input11Value}</p>` +
+              `<p>RESTRICTION CATEGORY : ${input6Value}</p>` +
+              `<p>ALLOWED TRANSACTION TYPE : ${input12Value}</p>` +
+              `<p>START DATE : ${input7Value}</p>` +
+              ` <p>REQUESTER : ${input8Value}</p>` +
+              `<p>NOTES : ${input9Value}</p><div>`,
+
+
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: 'black',
+            cancelButtonColor: 'red',
+
+
+
+          }).then((result) => {
+            if (result.isConfirmed) {
+
+              newIssueData.dateRestricted = input7Value;
+              newIssueData.requester = input8Value;
+              newIssueData.notes = input9Value;
+              newIssueData.categoryName = input6Value;
+              newIssueData.transactionTypes = input12Value;
+              newIssueData.issuerName = input1Value;
+              newIssueData.issuerType = input10Value;
+              newIssueData.cusip = input2Value;
+              newIssueData.ticker = input3Value;
+              newIssueData.isin = input4Value;
+              newIssueData.sedol = input5Value;
+              newIssueData.instrumentType = input11Value;
+
+
+
+              this.gridOptions.api.showLoadingOverlay();
+
+              this.addNewRestrictedIssuer(this.pnl.dashboard.restrictedIssuer, newIssueData);
+
+
+
+
+
+              closeFormButton.click();
+
+
+
             }
+          })
+		  
+		  }
+          else{
+		  
+		  Swal.fire({
+            title: '<span style="font-size:20px; color:"white"; ">Please validate the values before submission</span>',
+            html: `<div style="text-align: left;
+          font-size: 14px;
+          line-height: 10px;
+		  theme:'dark',
+          border: 1px solid white;
+          padding: 10px;"><p>ISSUER NAME : ${input1Value}</p>` +
+
+              `<p>ISSUER TYPE : ${input10Value}</p>` +
+              `<p>TICKER : ${input3Value}</p>` +
+              ` <p>ISIN : ${input4Value}</p>` +
+              ` <p>CUSIP : ${input2Value}</p>` +
+              `<p>SEDOL : ${input5Value}</p>` +
+              `<p>INSTRUMENT TYPE : ${input11Value}</p>` +
+              `<p>RESTRICTION CATEGORY : ${input6Value}</p>` +
+              `<p>ALLOWED TRANSACTION TYPE : ${input12Value}</p>` +
+              `<p>START DATE : ${input7Value}</p>` +
+              ` <p>REQUESTER : ${input8Value}</p>` +
+              `<p>NOTES : ${input9Value}</p><div>`,
+
+
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: 'black',
+            cancelButtonColor: 'red',
+
+
+
+          }).then((result) => {
+            if (result.isConfirmed) {
+
+              newIssueData.dateRestricted = input7Value;
+              newIssueData.requester = input8Value;
+              newIssueData.notes = input9Value;
+              newIssueData.categoryName = input6Value;
+              newIssueData.transactionTypes = input12Value;
+              newIssueData.issuerName = input1Value;
+              newIssueData.issuerType = input10Value;
+              newIssueData.cusip = input2Value;
+              newIssueData.ticker = input3Value;
+              newIssueData.isin = input4Value;
+              newIssueData.sedol = input5Value;
+              newIssueData.instrumentType = input11Value;
+
+
+
+              this.gridOptions.api.showLoadingOverlay();
+
+              this.addNewRestrictedIssuer(this.pnl.dashboard.restrictedIssuer, newIssueData);
+
+
+
+
+
+              closeFormButton.click();
+
+
+
+            }
+          })
+
+		  
+		  }
+		
+		}
+
+       }
+
+
+
+
+        else {
+          Swal.fire({
+            icon: 'error',
+            title: '<span style="font-size:20px; color:"black"; ">Oops...Something went wrong!</span>',
+            text: 'At least one of the four out of TICKER, ISIN, CUSIP, SEDOL and Restriction Category Name, Instrument Type and Start Date are mandatory for Public Entries.',
+            confirmButtonColor: 'black',
+
+          });
+
+          return;
         }
-        .error-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 20px;
-            display: block;
+
+      }
+
+      else {
+        if (input1Value !== '' && input7Value !== '' && input6Value !== '' ) {
+
+
+
+
+          Swal.fire({
+            title: '<span style="font-size:20px; color:"black"; ">Please validate the values before submission </span>',
+            html: `<div style="text-align: left;
+          font-size: 14px;
+          line-height: 10px;
+          border: 1px solid black;
+          padding: 10px;"><p>ISSUER NAME : ${input1Value}</p>` +
+
+              `<p>ISSUER TYPE : ${input10Value}</p>` +
+              `<p>TICKER : ${input3Value}</p>` +
+              ` <p>ISIN : ${input4Value}</p>` +
+              ` <p>CUSIP : ${input2Value}</p>` +
+              `<p>SEDOL : ${input5Value}</p>` +
+              `<p>INSTRUMENT TYPE : ${input11Value}</p>` +
+              `<p>RESTRICTION CATEGORY : ${input6Value}</p>` +
+              `<p>ALLOWED TRANSACTION TYPE : ${input12Value}</p>` +
+              `<p>START DATE : ${input7Value}</p>` +
+              ` <p>REQUESTER : ${input8Value}</p>` +
+              `<p>NOTES : ${input9Value}</p><div>`,
+
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: 'black',
+            cancelButtonColor: 'red',
+
+          }).then((result) => {
+            if (result.isConfirmed) {
+
+              newIssueData.dateRestricted = input7Value;
+              newIssueData.requester = input8Value;
+              newIssueData.notes = input9Value;
+              newIssueData.categoryName = input6Value;
+              newIssueData.transactionTypes = input12Value;
+              newIssueData.issuerName = input1Value;
+              newIssueData.issuerType = input10Value;
+              newIssueData.cusip = input2Value;
+              newIssueData.ticker = input3Value;
+              newIssueData.isin = input4Value;
+              newIssueData.sedol = input5Value;
+              newIssueData.instrumentType = input11Value;
+
+
+              this.gridOptions.api.showLoadingOverlay();
+
+              this.addNewRestrictedIssuer(this.pnl.dashboard.restrictedIssuer, newIssueData);
+
+              closeFormButton.click();
+
+            }
+          })
         }
-        .error-icon path {
-            fill: #d32f2f;
+
+        else {
+          Swal.fire({
+            icon: 'error',
+            title: '<span style="font-size:20px; color:"black"; ">Oops...Something went wrong!</span>',
+            text: 'At least Issuer Name, Restriction Category and Start Date are mandatory for Private Entries.',
+            confirmButtonColor: 'black',
+
+          });
+
+          return;
         }
-        .success-modal-content h2, .error-modal-content h2 {
-            text-align: center;
-            margin: 0 0 20px 0;
-        }
-        #addCategoryForm {
-            display: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            transition: background-color 0.3s, color 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .light-mode #addCategoryForm {
-            background-color: #ffffff;
-            color: #333;
-        }
-        .dark-mode #addCategoryForm {
-            background-color: #252525;
-            color: #f0f0f0;
-        }
-        .form-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .form-row .field-group {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 120px;
-            max-width: 200px;
-        }
-        .form-row .field-group label {
-            font-size: 12px;
-            margin-bottom: 4px;
-            transition: color 0.3s;
-        }
-        .light-mode .form-row .field-group label {
-            color: #666;
-        }
-        .dark-mode .form-row .field-group label {
-            color: #a0a0a0;
-        }
-        .form-row input,
-        .form-row select {
-            padding: 6px;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-            box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
-        }
-        .light-mode .form-row input,
-        .light-mode .form-row select {
-            border: 1px solid #e0e0e0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        .light-mode .form-row input:focus,
-        .light-mode .form-row select:focus {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-            outline: none;
-        }
-        .dark-mode .form-row input,
-        .dark-mode .form-row select {
-            border: 1px solid #555;
-            background-color: #333;
-            color: #f0f0f0;
-        }
-        .dark-mode .form-row input:focus,
-        .dark-mode .form-row select:focus {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.3);
-            outline: none;
-        }
-        .form-row select {
-            max-width: 150px;
-        }
-        .form-row .action-icon {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            transition: fill 0.3s;
-            margin-top: 20px;
-        }
-        .dark-mode .form-row .action-icon.submit-icon {
-            fill: #1a73e8;
-        }
-        .dark-mode .form-row .action-icon.submit-icon:hover {
-            fill: #4285f4;
-        }
-        .dark-mode .form-row .action-icon.close-icon {
-            fill: #e63946;
-        }
-        .dark-mode .form-row .action-icon.close-icon:hover {
-            fill: #ff5555;
-        }
-        .light-mode .form-row .action-icon.submit-icon {
-            fill: #1a73e8;
-        }
-        .light-mode .form-row .action-icon.submit-icon:hover {
-            fill: #4285f4;
-        }
-        .light-mode .form-row .action-icon.close-icon {
-            fill: #e63946;
-        }
-        .light-mode .form-row .action-icon.close-icon:hover {
-            fill: #ff5555;
-        }
-    </style>
-</head>
-<body class="dark-mode">
-    <div class="header">
-        <div class="logo-container">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT27U3U3q0VurF4B5hKNg9p4H2nG5DqB3jGrok&s" alt="Company Logo" class="logo">
-            <div class="title">Restricted List Ui</div>
-        </div>
-        <div class="actions">
-            <button>MP</button>
-            <button id="themeToggle">
-                <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-            </button>
-            <button>Help</button>
-        </div>
-    </div>
-    <div class="tabs">
-        <div class="active" data-tab="restrictedIssuers">Restricted Issuers</div>
-        <div data-tab="restrictedIssuesHistory">Restricted Issues History</div>
-        <div data-tab="restrictedInstruments">Restricted Instruments</div>
-        <div data-tab="restrictionCategory">Restriction Category</div>
-    </div>
-    <div id="restrictedIssuers" class="tab-content active">
-        <div class="controls">
-            <div class="left">
-                <button class="add-btn" id="addIssuerBtn">+ Insert New Entry</button>
-                <input type="text" class="search" placeholder="Search issuers..." id="issuerSearchInput">
-            </div>
-            <div class="right">
-                <button class="export" id="exportIssuerBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-                    </svg>
-                    Export
-                </button>
-            </div>
-        </div>
-        <div id="issuerGrid" class="ag-theme-alpine-dark"></div>
-    </div>
-    <div id="restrictedIssuesHistory" class="tab-content">
-        <div class="controls">
-            <div class="left">
-                <input type="text" class="search" placeholder="Search history..." id="historySearchInput">
-            </div>
-            <div class="right">
-                <button class="export" id="exportHistoryBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-                    </svg>
-                    Export
-                </button>
-            </div>
-        </div>
-        <div id="historyGrid" class="ag-theme-alpine-dark"></div>
-    </div>
-    <div id="restrictedInstruments" class="tab-content">
-        <div class="controls">
-            <div class="left">
-                <input type="text" class="search" placeholder="Search instruments..." id="instrumentsSearchInput">
-            </div>
-            <div class="right">
-                <button class="export" id="exportInstrumentsBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-                    </svg>
-                    Export
-                </button>
-            </div>
-        </div>
-        <div id="instrumentsGrid" class="ag-theme-alpine-dark"></div>
-    </div>
-    <div id="restrictionCategory" class="tab-content">
-        <div class="controls">
-            <div class="left">
-                <button class="add-btn" id="addCategoryBtn">+ Insert New Category</button>
-                <input type="text" class="search" placeholder="Search categories..." id="categorySearchInput">
-            </div>
-            <div class="right">
-                <button class="export" id="exportCategoryBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-                    </svg>
-                    Export
-                </button>
-            </div>
-        </div>
-        <div id="addCategoryForm">
-            <div class="form-row">
-                <div class="field-group">
-                    <label for="addCategoryName">Category Name</label>
-                    <input type="text" id="addCategoryName" placeholder="Category Name">
-                </div>
-                <div class="field-group">
-                    <label for="addDescription">Description</label>
-                    <input type="text" id="addDescription" placeholder="Description">
-                </div>
-                <div class="field-group">
-                    <label for="addFundGroup">Fund Group</label>
-                    <select id="addFundGroup">
-                        <option value="Group A">Group A</option>
-                        <option value="Group B">Group B</option>
-                        <option value="Group C">Group C</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <label for="addFundName">Fund Name</label>
-                    <select id="addFundName">
-                        <option value="Fund 1">Fund 1</option>
-                        <option value="Fund 2">Fund 2</option>
-                        <option value="Fund 3">Fund 3</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <label for="addAvailableFor">Available For</label>
-                    <select id="addAvailableFor">
-                        <option value="All">All</option>
-                        <option value="Retail">Retail</option>
-                        <option value="Institutional">Institutional</option>
-                    </select>
-                </div>
-                <svg class="action-icon submit-icon" id="submitNewCategory" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.2l-4.2-4.2-1.4 1.4L9 18.8l11.6-11.6-1.4-1.4L9 16.2z"/>
-                </svg>
-                <svg class="action-icon close-icon" id="closeAddCategoryForm" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-            </div>
-        </div>
-        <div id="categoryGrid" class="ag-theme-alpine-dark"></div>
-    </div>
-    <div id="addIssuerModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeIssuerModal">×</span>
-            <h2>Add New Restricted Issuer</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="issuerName">Issuer Name</label>
-                    <input type="text" id="issuerName" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="issuerType">Issuer Type</label>
-                    <select id="issuerType">
-                        <option value="Public">Public</option>
-                        <option value="Private">Private</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="ticker">Ticker</label>
-                    <input type="text" id="ticker" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="isin">ISIN</label>
-                    <input type="text" id="isin" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="cusip">CUSIP</label>
-                    <input type="text" id="cusip" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="sedol">SEDOL</label>
-                    <input type="text" id="sedol" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="instrumentType">Instrument Type</label>
-                    <select id="instrumentType">
-                        <option value="Equity">Equity</option>
-                        <option value="Debt">Debt</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="restrictionCategory">Restriction Category</label>
-                    <select id="restrictionCategory">
-                        <option value="" disabled selected>Select Below</option>
-                        <option value="Category1">Category 1</option>
-                        <option value="Category2">Category 2</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="allowedTransactionType">Allowed Transaction Type</label>
-                    <select id="allowedTransactionType" multiple>
-                        <option value="" disabled selected>Select Below</option>
-                        <option value="selectAll">Select All</option>
-                        <option value="Buy">Buy</option>
-                        <option value="Sell">Sell</option>
-                        <option value="Buy to Cover">Buy to Cover</option>
-                        <option value="Sell Short">Sell Short</option>
-                        <option value="None">None</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="startDate">Start Date</label>
-                    <input type="date" id="startDate">
-                </div>
-                <div class="form-group">
-                    <label for="restrictionRequestor">Restriction Requestor</label>
-                    <input type="text" id="restrictionRequestor" placeholder="Enter value">
-                </div>
-                <div class="form-group">
-                    <label for="restrictionNotes">Restriction Notes</label>
-                    <input type="text" id="restrictionNotes" placeholder="Enter value">
-                </div>
-            </div>
-            <div class="form-buttons">
-                <button class="close-btn" id="closeIssuerModalBtn">Close</button>
-                <button class="submit-btn" id="submitIssuerForm">Submit</button>
-            </div>
-        </div>
-    </div>
-    <div id="confirmIssuerModal" class="modal">
-        <div class="confirm-modal-content">
-            <span class="close" id="closeConfirmIssuerModal">×</span>
-            <h2>Confirm New Issuer</h2>
-            <div class="confirm-form-grid" id="confirmIssuerDetails">
-                <!-- Form values will be populated here -->
-            </div>
-            <div class="form-buttons">
-                <button class="close-btn" id="cancelConfirmIssuer">Cancel</button>
-                <button class="submit-btn" id="confirmIssuerSubmission">Confirm</button>
-            </div>
-        </div>
-    </div>
-    <div id="successIssuerModal" class="modal">
-        <div class="success-modal-content">
-            <span class="close" id="closeSuccessIssuerModal">×</span>
-            <svg class="success-icon" viewBox="0 0 24 24">
-                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
-            </svg>
-            <h2>New Issuer Added</h2>
-            <div class="form-buttons">
-                <button class="submit-btn" id="closeSuccessIssuerModalBtn">OK</button>
-            </div>
-        </div>
-    </div>
-    <div id="errorIssuerModal" class="modal">
-        <div class="error-modal-content">
-            <span class="close" id="closeErrorIssuerModal">×</span>
-            <svg class="error-icon" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
-            </svg>
-            <h2>Error</h2>
-            <p id="errorMessage">Issuer Name is required.</p>
-            <div class="form-buttons">
-                <button class="submit-btn" id="closeErrorIssuerModalBtn">OK</button>
-            </div>
-        </div>
-    </div>
-    <div id="deleteModal" class="modal">
-        <div class="delete-modal-content">
-            <span class="close" id="closeDeleteModal">×</span>
-            <h2>Delete Category</h2>
-            <div class="delete-form-grid">
-                <div class="form-group">
-                    <label for="deleteDate">Delete Date</label>
-                    <input type="date" id="deleteDate" value="2025-06-22">
-                </div>
-                <div class="form-group">
-                    <label for="deleteNotes">Delete Notes</label>
-                    <input type="text" id="deleteNotes" placeholder="Enter notes">
-                </div>
-            </div>
-            <div class="form-buttons">
-                <button class="close-btn" id="closeDeleteModalBtn">Close</button>
-                <button class="submit-btn" id="confirmDelete">Confirm Delete</button>
-            </div>
-        </div>
-    </div>
-    <div id="unrestrictModal" class="modal">
-        <div class="delete-modal-content">
-            <span class="close" id="closeUnrestrictModal">×</span>
-            <h2>Unrestrict Issuer</h2>
-            <div class="delete-form-grid">
-                <div class="form-group">
-                    <label for="unrestrictDate">Unrestrict Date</label>
-                    <input type="date" id="unrestrictDate" value="2025-06-22">
-                </div>
-                <div class="form-group">
-                    <label for="unrestrictNotes">Unrestrict Notes</label>
-                    <input type="text" id="unrestrictNotes" placeholder="Enter notes">
-                </div>
-            </div>
-            <div class="form-buttons">
-                <button class="close-btn" id="closeUnrestrictModalBtn">Close</button>
-                <button class="submit-btn" id="confirmUnrestrict">Confirm Unrestrict</button>
-            </div>
-        </div>
-    </div>
-    <script src="https://unpkg.com/ag-grid-community@30.2.0/dist/ag-grid-community.min.js"></script>
-    <script>
-        // Data: issuers.js
-        const issuerRowData = [
-            { issuerName: "Minerals Ltd", userEnteredName: "-", issueType: "Public", ticker: "BMG614P1014", isin: "-", cusip: "-", sedol: "-", ultimateParentName: "People's Republic of China", restrictionCategory: "ESG RL", allowedTransactionType: "None", startDate: "2025-06-09", restrictionRequestor: "autoscripts", restrictionNotes: "", restrictedBy: "-", restrictedOn: "2025-06-09 09:30:00", unrestrict: "" },
-            { issuerName: "Hosken Consolidated Investment", userEnteredName: "-", issueType: "Public", ticker: "-", isin: "ZAE000003257", cusip: "-", sedol: "-", ultimateParentName: "Hosken Consolidated Investment", restrictionCategory: "ESG RL", allowedTransactionType: "None", startDate: "2025-06-09", restrictionRequestor: "autoscripts", restrictionNotes: "", restrictedBy: "-", restrictedOn: "2025-06-09 09:30:00", unrestrict: "" },
-            { issuerName: "British American Tobacco PLC", userEnteredName: "-", issueType: "Public", ticker: "-", isin: "US1104481072", cusip: "110448107", sedol: "-", ultimateParentName: "British American Tobacco PLC", restrictionCategory: "ESG RL", allowedTransactionType: "None", startDate: "2025-06-09", restrictionRequestor: "autoscripts", restrictionNotes: "", restrictedBy: "-", restrictedOn: "2025-06-09 09:30:00", unrestrict: "" },
-            { issuerName: "Jaywing PLC", userEnteredName: "Jaywing PLC", issueType: "Public", ticker: "JWN LN", isin: "GB00BF5KDY46", cusip: "-", sedol: "-", ultimateParentName: "Jaywing PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2023-06-23", restrictionRequestor: "Henry Turcan", restrictionNotes: "", restrictedBy: "-", restrictedOn: "", unrestrict: "" },
-            { issuerName: "EnQuest PLC", userEnteredName: "EnQuest PLC", issueType: "Public", ticker: "ENQ LN", isin: "GB00B635TG28", cusip: "-", sedol: "-", ultimateParentName: "EnQuest PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-01-22", restrictionRequestor: "Henry Turcan", restrictionNotes: "", restrictedBy: "-", restrictedOn: "", unrestrict: "" },
-            { issuerName: "Seeing Machines Ltd", userEnteredName: "Seeing Machines Ltd", issueType: "Public", ticker: "SEE LN", isin: "AU0000XINA10", cusip: "-", sedol: "-", ultimateParentName: "Seeing Machines Ltd", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-12-30", restrictionRequestor: "Michael Brown", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
-            { issuerName: "Kibo Energy PLC", userEnteredName: "Kibo Energy PLC", issueType: "Public", ticker: "KIBO LN", isin: "IE00B97C0C31", cusip: "-", sedol: "-", ultimateParentName: "Kibo Energy PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-02-17", restrictionRequestor: "Henry Turcan", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
-            { issuerName: "Science in Sport PLC", userEnteredName: "Science in Sport PLC", issueType: "Public", ticker: "SIS LN", isin: "GB00BBPV5329", cusip: "-", sedol: "-", ultimateParentName: "Science in Sport PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-10-03", restrictionRequestor: "Henry Turcan", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
-            { issuerName: "Hemogenyx Pharmaceuticals PLC", userEnteredName: "Hemogenyx Pharmaceuticals PLC", issueType: "Public", ticker: "HEMO LN", isin: "GB00BYX3WZ24", cusip: "-", sedol: "-", ultimateParentName: "Hemogenyx Pharmaceuticals PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2024-02-20", restrictionRequestor: "Rob Giles", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
-            { issuerName: "Induction Healthcare Group PLC", userEnteredName: "Induction Healthcare Group PLC", issueType: "Public", ticker: "INHC LN", isin: "Healthcare", cusip: "Healthcare", sedol: "-", ultimateParentName: "Induction Healthcare Group PLC", restrictionCategory: "Volantis RL", allowedTransactionType: "None", startDate: "2023-09-17", restrictionRequestor: "Rob Giles", restrictionNotes: "", restrictedBy: "", restrictedOn: "", unrestrict: "" },
-        ];
 
-        // Data: categories.js
-        const categoryRowData = [
-            { categoryName: "ESG RL", description: "Environmental, Social, and Governance Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "All", createdOn: "2023-01-15", createdBy: "Admin", action: "" },
-            { categoryName: "Volantis RL", description: "Volantis Fund Restrictions", fundGroup: "Group B", fundName: "Fund 2", availableFor: "Institutional", createdOn: "2023-06-01", createdBy: "Restricted", action: "" },
-            { categoryName: "Compliance RL", description: "Regulatory Compliance Restrictions", fundGroup: "Group C", fundName: "Fund 3", availableFor: "Retail, Institutional", createdOn: "2024-02-10", createdBy: "Compliance Team", action: "" },
-            { categoryName: "Risk RL", description: "High Risk Investment Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "All", createdOn: "2024-05-20", createdBy: "Risk Team", action: "" },
-            { categoryName: "Legal RL", description: "Legal and Litigation Restrictions", fundGroup: "Group B", fundName: "Fund 2", availableFor: "Institutional", createdOn: "2024-07-17", createdBy: "Legal Team", action: "" },
-            { categoryName: "Tax RL", description: "Tax Compliance Restrictions", fundGroup: "Group C", fundName: "Fund 3", availableFor: "Retail", createdOn: "2024-09-01", createdBy: "Finance Team", action: "" },
-            { categoryName: "Operational RL", description: "Operational Risk Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "Retail, Institutional", createdOn: "2024-10-10", createdBy: "Operations Team", action: "" },
-            { categoryName: "Market RL", description: "Market Volatility Restrictions", fundGroup: "Group B", fundName: "Fund 2", availableFor: "Institutional", createdOn: "2024-11-01", createdBy: "Trading Team", action: "" },
-            { categoryName: "Geopolitical RL", description: "Geopolitical Risk Restrictions", fundGroup: "Group C", fundName: "Fund 3", availableFor: "Retail", createdOn: "2024-12-01", createdBy: "Strategy Team", action: "" },
-            { categoryName: "Custom RL", description: "Custom Client Restrictions", fundGroup: "Group A", fundName: "Fund 1", availableFor: "All", createdOn: "2025-01-01", createdBy: "Client Services", action: "" },
-        ];
+      }
 
-        // Utils: theme.js
-        const ThemeModule = (function () {
-            function initTheme() {
-                const savedTheme = localStorage.getItem('theme') || 'dark-mode';
-                const body = document.body;
-                const issuerGridDiv = document.querySelector('#issuerGrid');
-                const historyGridDiv = document.querySelector('#historyGrid');
-                const instrumentsGridDiv = document.querySelector('#instrumentsGrid');
-                const categoryGridDiv = document.querySelector('#categoryGrid');
-                const themeIcon = document.querySelector('#themeIcon');
 
-                body.classList.remove('light-mode', 'dark-mode');
-                body.classList.add(savedTheme);
-                if (savedTheme === 'light-mode') {
-                    issuerGridDiv.classList.remove('ag-theme-alpine-dark');
-                    issuerGridDiv.classList.add('ag-theme-alpine');
-                    historyGridDiv.classList.remove('ag-theme-alpine-dark');
-                    historyGridDiv.classList.add('ag-theme-alpine');
-                    instrumentsGridDiv.classList.remove('ag-theme-alpine-dark');
-                    instrumentsGridDiv.classList.add('ag-theme-alpine');
-                    categoryGridDiv.classList.remove('ag-theme-alpine-dark');
-                    categoryGridDiv.classList.add('ag-theme-alpine');
-                    themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>';
-                } else {
-                    issuerGridDiv.classList.remove('ag-theme-alpine');
-                    issuerGridDiv.classList.add('ag-theme-alpine-dark');
-                    historyGridDiv.classList.remove('ag-theme-alpine');
-                    historyGridDiv.classList.add('ag-theme-alpine-dark');
-                    instrumentsGridDiv.classList.remove('ag-theme-alpine');
-                    instrumentsGridDiv.classList.add('ag-theme-alpine-dark');
-                    categoryGridDiv.classList.remove('ag-theme-alpine');
-                    categoryGridDiv.classList.add('ag-theme-alpine-dark');
-                    themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-                }
-            }
+    });
 
-            function toggleTheme() {
-                const body = document.body;
-                const issuerGridDiv = document.querySelector('#issuerGrid');
-                const historyGridDiv = document.querySelector('#historyGrid');
-                const instrumentsGridDiv = document.querySelector('#instrumentsGrid');
-                const categoryGridDiv = document.querySelector('#categoryGrid');
-                const themeIcon = document.querySelector('#themeIcon');
-                
-                let currentTheme = localStorage.getItem('theme') || 'dark-mode';
-                
-                body.classList.remove('light-mode', 'dark-mode');
-                issuerGridDiv.classList.remove('ag-theme-alpine', 'ag-theme-alpine-dark');
-                historyGridDiv.classList.remove('ag-theme-alpine', 'ag-theme-alpine-dark');
-                instrumentsGridDiv.classList.remove('ag-theme-alpine', 'ag-theme-alpine-dark');
-                categoryGridDiv.classList.remove('ag-theme-alpine', 'ag-theme-alpine-dark');
 
-                if (currentTheme === 'light-mode') {
-                    body.classList.add('dark-mode');
-                    issuerGridDiv.classList.add('ag-theme-alpine-dark');
-                    historyGridDiv.classList.add('ag-theme-alpine-dark');
-                    instrumentsGridDiv.classList.add('ag-theme-alpine-dark');
-                    categoryGridDiv.classList.add('ag-theme-alpine-dark');
-                    themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-                    localStorage.setItem('theme', 'dark-mode');
-                } else {
-                    body.classList.add('light-mode');
-                    issuerGridDiv.classList.add('ag-theme-alpine');
-                    historyGridDiv.classList.add('ag-theme-alpine');
-                    instrumentsGridDiv.classList.add('ag-theme-alpine');
-                    categoryGridDiv.classList.add('ag-theme-alpine');
-                    themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>';
-                    localStorage.setItem('theme', 'light-mode');
-                }
-            }
 
-            return { initTheme, toggleTheme };
-        })();
 
-        // Utils: helpers.js
-        const HelpersModule = (function () {
-            function switchTab(tabId) {
-                const tabs = document.querySelectorAll('.tabs div');
-                const tabContents = document.querySelectorAll('.tab-content');
-                tabs.forEach(tab => tab.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-                document.querySelector(`.tabs div[data-tab="${tabId}"]`).classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            }
 
-            function exportToCSV(gridApi) {
-                gridApi.exportDataAsCsv();
-            }
 
-            function clearFilters(gridApi, searchInputId) {
-                gridApi.setQuickFilter('');
-                if (searchInputId) {
-                    document.getElementById(searchInputId).value = '';
-                }
-            }
 
-            return { switchTab, exportToCSV, clearFilters };
-        })();
 
-        // Components: grids.js
-        const GridModule = (function () {
-            let issuerGridApi, historyGridApi, instrumentsGridApi, categoryGridApi;
+  }
 
-            const issuerColumnDefs = [
-                { headerName: "VALID ISSUER NAME", field: "issuerName", sortable: true },
-                { headerName: "USER ENTERED ISSUER NAME", field: "userEnteredName", sortable: true },
-                { headerName: "ISSUE TYPE", field: "issueType", sortable: true, cellRenderer: params => `<span class="issue-type">${params.value}</span>` },
-                { headerName: "TICKER", field: "ticker", sortable: true },
-                { headerName: "ISIN", field: "isin", sortable: true },
-                { headerName: "CUSIP", field: "cusip", sortable: true },
-                { headerName: "SEDOL", field: "sedol", sortable: true },
-                { headerName: "ULTIMATE PARENT NAME", field: "ultimateParentName", sortable: true },
-                { headerName: "RESTRICTION CATEGORY", field: "restrictionCategory", sortable: true },
-                { headerName: "ALLOWED TRANSACTION TYPE", field: "allowedTransactionType", sortable: true },
-                { headerName: "START DATE", field: "startDate", sortable: true },
-                { headerName: "RESTRICTION REQUESTOR", field: "restrictionRequestor", sortable: true },
-                { headerName: "RESTRICTION NOTES", field: "restrictionNotes", sortable: true },
-                { headerName: "RESTRICTED BY", field: "restrictedBy", sortable: true },
-                { headerName: "RESTRICTED ON", field: "restrictedOn", sortable: true },
-                { 
-                    headerName: "UNRESTRICT", 
-                    field: "unrestrict", 
-                    sortable: true,
-                    cellRenderer: params => `
-                        <svg class="action-icon" onclick="ModalModule.openUnrestrictModal('issuer', ${params.rowIndex})" viewBox="0 0 24 24" fill="none">
-                            <path stroke="currentColor" stroke-width="2" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"/>
-                        </svg>
-                    `
-                }
-            ];
-
-            const historyAndInstrumentsColumnDefs = issuerColumnDefs.filter(col => col.headerName !== "UNRESTRICT");
-
-            const categoryColumnDefs = [
-                { headerName: "CATEGORY NAME", field: "categoryName", sortable: true, editable: true },
-                { headerName: "DESCRIPTION", field: "description", sortable: true, editable: true },
-                { headerName: "FUND GROUP", field: "fundGroup", sortable: true, editable: true },
-                { headerName: "FUND NAME", field: "fundName", sortable: true, editable: true },
-                { 
-                    headerName: "AVAILABLE FOR", 
-                    field: "availableFor", 
-                    sortable: true, 
-                    editable: true,
-                    cellRenderer: params => params.value ? params.value.split(',').map(v => `<span class="available-for-tag">${v.trim()}</span>`).join(' ') : "-"
-                },
-                { headerName: "CREATED ON", field: "createdOn", sortable: true, editable: true },
-                { headerName: "CREATED BY", field: "createdBy", sortable: true, editable: true },
-                { 
-                    headerName: "ACTION", 
-                    field: "action", 
-                    sortable: true,
-                    cellRenderer: params => `
-                        <svg class="action-icon" onclick="GridModule.startEditingRow(${params.rowIndex})" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                        <svg class="action-icon" onclick="ModalModule.openDeleteModal('category', ${params.rowIndex})" viewBox="0 0 24 22" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                        </svg>
-                    `
-                }
-            ];
-
-            const issuerGridOptions = {
-                columnDefs: issuerColumnDefs,
-                rowData: issuerRowData,
-                pagination: false,
-                domLayout: 'normal',
-                defaultColDef: { resizable: true, sortable: true },
-                onGridReady: params => params.api.setQuickFilter(document.getElementById('issuerSearchInput').value || '')
-            };
-
-            const historyGridOptions = {
-                columnDefs: historyAndInstrumentsColumnDefs,
-                rowData: issuerRowData,
-                pagination: false,
-                domLayout: 'normal',
-                defaultColDef: { resizable: true, sortable: true },
-                onGridReady: params => params.api.setQuickFilter(document.getElementById('historySearchInput').value || '')
-            };
-
-            const instrumentsGridOptions = {
-                columnDefs: historyAndInstrumentsColumnDefs,
-                rowData: issuerRowData,
-                pagination: false,
-                domLayout: 'normal',
-                defaultColDef: { resizable: true, sortable: true },
-                onGridReady: params => params.api.setQuickFilter(document.getElementById('instrumentsSearchInput').value || '')
-            };
-
-            const categoryGridOptions = {
-                columnDefs: categoryColumnDefs,
-                rowData: categoryRowData,
-                pagination: false,
-                domLayout: 'normal',
-                defaultColDef: { resizable: true, sortable: true, editable: true },
-                editType: 'fullRow',
-                onRowEditingStopped: event => {
-                    categoryRowData[event.rowIndex] = event.data;
-                    categoryGridApi.setRowData(categoryRowData);
-                },
-                onGridReady: params => params.api.setQuickFilter(document.getElementById('categorySearchInput').value || '')
-            };
-
-            function initGrids() {
-                new agGrid.Grid(document.querySelector('#issuerGrid'), issuerGridOptions);
-                issuerGridApi = issuerGridOptions.api;
-                new agGrid.Grid(document.querySelector('#historyGrid'), historyGridOptions);
-                historyGridApi = historyGridOptions.api;
-                new agGrid.Grid(document.querySelector('#instrumentsGrid'), instrumentsGridOptions);
-                instrumentsGridApi = instrumentsGridOptions.api;
-                new agGrid.Grid(document.querySelector('#categoryGrid'), categoryGridOptions);
-                categoryGridApi = categoryGridOptions.api;
-            }
-
-            function startEditingRow(rowIndex) {
-                categoryGridApi.startEditingRow({ rowIndex });
-            }
-
-            function getGridApis() {
-                return { issuerGridApi, historyGridApi, instrumentsGridApi, categoryGridApi };
-            }
-
-            return { initGrids, startEditingRow, getGridApis };
-        })();
-
-        // Components: categoryForm.js
-        const CategoryFormModule = (function () {
-            const gridApis = GridModule.getGridApis();
-
-            function showAddCategoryForm() {
-                document.getElementById('addCategoryForm').style.display = 'block';
-            }
-
-            function hideAddCategoryForm() {
-                document.getElementById('addCategoryForm').style.display = 'none';
-                document.getElementById('addCategoryName').value = '';
-                document.getElementById('addDescription').value = '';
-                document.getElementById('addFundGroup').value = 'Group A';
-                document.getElementById('addFundName').value = 'Fund 1';
-                document.getElementById('addAvailableFor').value = 'All';
-            }
-
-            function submitNewCategory() {
-                const newCategory = {
-                    categoryName: document.getElementById('addCategoryName').value || '-',
-                    description: document.getElementById('addDescription').value || '-',
-                    fundGroup: document.getElementById('addFundGroup').value || '-',
-                    fundName: document.getElementById('addFundName').value || '-',
-                    availableFor: document.getElementById('addAvailableFor').value || '-',
-                    createdOn: new Date().toISOString().split('T')[0],
-                    createdBy: "User",
-                    action: ""
-                };
-                categoryRowData.push(newCategory);
-                gridApis.categoryGridApi.setRowData(categoryRowData);
-                hideAddCategoryForm();
-            }
-
-            return { showAddCategoryForm, hideAddCategoryForm, submitNewCategory };
-        })();
-
-        // Components: modals.js
-        const ModalModule = (function () {
-            let selectedGridType = null;
-            let selectedRowIndex = null;
-            let pendingIssuerData = null;
-            const gridApis = GridModule.getGridApis();
-
-            function openIssuerModal() {
-                console.log('Opening Add Issuer Modal');
-                const modal = document.getElementById('addIssuerModal');
-                modal.style.display = 'flex';
-                document.getElementById('issuerName').value = '';
-                document.getElementById('issuerType').value = 'Public';
-                document.getElementById('ticker').value = '';
-                document.getElementById('isin').value = '';
-                document.getElementById('cusip').value = '';
-                document.getElementById('sedol').value = '';
-                document.getElementById('instrumentType').value = 'Equity';
-                document.getElementById('restrictionCategory').value = '';
-                document.getElementById('startDate').value = '';
-                document.getElementById('restrictionRequestor').value = '';
-                document.getElementById('restrictionNotes').value = '';
-                const select = document.getElementById('allowedTransactionType');
-                const options = Array.from(select.options);
-                options.forEach(option => {
-                    option.selected = option.value === 'None';
-                });
-                console.log('Allowed Transaction Type Dropdown Options:', options.map(o => ({ value: o.value, selected: o.selected })));
-            }
-
-            function closeIssuerModal() {
-                document.getElementById('addIssuerModal').style.display = 'none';
-            }
-
-            function openConfirmIssuerModal(data) {
-                pendingIssuerData = data;
-                const modal = document.getElementById('confirmIssuerModal');
-                const detailsContainer = document.getElementById('confirmIssuerDetails');
-                detailsContainer.innerHTML = `
-                    <p><strong>Issuer Name:</strong> ${data.issuerName || '-'}</p>
-                    <p><strong>Issuer Type:</strong> ${data.issuerType || '-'}</p>
-                    <p><strong>Ticker:</strong> ${data.ticker || '-'}</p>
-                    <p><strong>ISIN:</strong> ${data.isin || '-'}</p>
-                    <p><strong>CUSIP:</strong> ${data.cusip || '-'}</p>
-                    <p><strong>SEDOL:</strong> ${data.sedol || '-'}</p>
-                    <p><strong>Instrument Type:</strong> ${data.instrumentType || '-'}</p>
-                    <p><strong>Restriction Category:</strong> ${data.restrictionCategory || '-'}</p>
-                    <p><strong>Allowed Transaction Type:</strong> ${data.allowedTransactionType || '-'}</p>
-                    <p><strong>Start Date:</strong> ${data.startDate || '-'}</p>
-                    <p><strong>Restriction Requestor:</strong> ${data.restrictionRequestor || '-'}</p>
-                    <p><strong>Restriction Notes:</strong> ${data.restrictionNotes || '-'}</p>
-                `;
-                modal.style.display = 'flex';
-            }
-
-            function closeConfirmIssuerModal() {
-                document.getElementById('confirmIssuerModal').style.display = 'none';
-                pendingIssuerData = null;
-            }
-
-            function openSuccessModal() {
-                document.getElementById('successIssuerModal').style.display = 'flex';
-            }
-
-            function closeSuccessModal() {
-                document.getElementById('successIssuerModal').style.display = 'none';
-            }
-
-            function openErrorModal(message) {
-                document.getElementById('errorMessage').textContent = message;
-                document.getElementById('errorIssuerModal').style.display = 'flex';
-            }
-
-            function closeErrorModal() {
-                document.getElementById('errorIssuerModal').style.display = 'none';
-            }
-
-            function submitIssuerForm() {
-                const select = document.getElementById('allowedTransactionType');
-                const selectedOptions = Array.from(select.selectedOptions).map(opt => opt.value).filter(val => val !== '' && val !== 'selectAll');
-                const allowedTransactionType = selectedOptions.length ? selectedOptions.join(', ') : 'None';
-                const newIssuer = {
-                    issuerName: document.getElementById('issuerName').value || "-",
-                    userEnteredName: "-",
-                    issueType: document.getElementById('issuerType').value || "-",
-                    ticker: document.getElementById('ticker').value || "-",
-                    isin: document.getElementById('isin').value || "-",
-                    cusip: document.getElementById('cusip').value || "-",
-                    sedol: document.getElementById('sedol').value || "-",
-                    ultimateParentName: "-",
-                    restrictionCategory: document.getElementById('restrictionCategory').value || "-",
-                    allowedTransactionType: allowedTransactionType,
-                    startDate: document.getElementById('startDate').value || "-",
-                    restrictionRequestor: document.getElementById('restrictionRequestor').value || "-",
-                    restrictionNotes: document.getElementById('restrictionNotes').value || "-",
-                    restrictedBy: "-",
-                    restrictedOn: "-",
-                    unrestrict: ""
-                };
-                openConfirmIssuerModal(newIssuer);
-                closeIssuerModal();
-            }
-
-            function confirmIssuerSubmission() {
-                if (!pendingIssuerData.issuerName || pendingIssuerData.issuerName === '-') {
-                    openErrorModal('Issuer Name is required.');
-                    closeConfirmIssuerModal();
-                    return;
-                }
-                issuerRowData.push(pendingIssuerData);
-                gridApis.issuerGridApi.setRowData(issuerRowData);
-                closeConfirmIssuerModal();
-                openSuccessModal();
-            }
-
-            function openDeleteModal(gridType, rowIndex) {
-                selectedGridType = gridType;
-                selectedRowIndex = rowIndex;
-                document.getElementById('deleteModal').style.display = 'flex';
-                document.getElementById('deleteDate').value = new Date().toISOString().split('T')[0];
-                document.getElementById('deleteNotes').value = '';
-            }
-
-            function closeDeleteModal() {
-                document.getElementById('deleteModal').style.display = 'none';
-                selectedGridType = null;
-                selectedRowIndex = null;
-            }
-
-            function confirmDelete() {
-                if (selectedGridType === 'category' && selectedRowIndex !== null) {
-                    categoryRowData.splice(selectedRowIndex, 1);
-                    gridApis.categoryGridApi.setRowData(categoryRowData);
-                }
-                closeDeleteModal();
-            }
-
-            function openUnrestrictModal(gridType, rowIndex) {
-                selectedGridType = gridType;
-                selectedRowIndex = rowIndex;
-                document.getElementById('unrestrictModal').style.display = 'flex';
-                document.getElementById('unrestrictDate').value = new Date().toISOString().split('T')[0];
-                document.getElementById('unrestrictNotes').value = '';
-            }
-
-            function closeUnrestrictModal() {
-                document.getElementById('unrestrictModal').style.display = 'none';
-                selectedGridType = null;
-                selectedRowIndex = null;
-            }
-
-            function confirmUnrestrict() {
-                if (selectedGridType === 'issuer' && selectedRowIndex !== null) {
-                    issuerRowData.splice(selectedRowIndex, 1);
-                    gridApis.issuerGridApi.setRowData(issuerRowData);
-                }
-                closeUnrestrictModal();
-            }
-
-            return { 
-                openIssuerModal, 
-                closeIssuerModal, 
-                submitIssuerForm, 
-                openConfirmIssuerModal, 
-                closeConfirmIssuerModal, 
-                confirmIssuerSubmission, 
-                openSuccessModal, 
-                closeSuccessModal, 
-                openErrorModal, 
-                closeErrorModal, 
-                openDeleteModal, 
-                closeDeleteModal, 
-                confirmDelete, 
-                openUnrestrictModal, 
-                closeUnrestrictModal, 
-                confirmUnrestrict 
-            };
-        })();
-
-        // Dropdown event listener for Allowed Transaction Type
-        document.getElementById('allowedTransactionType').addEventListener('change', function() {
-            const select = this;
-            const selectedValues = Array.from(select.selectedOptions).map(option => option.value);
-            const options = Array.from(select.options);
-            const transactionTypes = ['Buy', 'Sell', 'Buy to Cover', 'Sell Short'];
-
-            if (selectedValues.includes('selectAll')) {
-                options.forEach(option => {
-                    option.selected = transactionTypes.includes(option.value);
-                });
-            } else if (selectedValues.includes('None')) {
-                options.forEach(option => {
-                    option.selected = option.value === 'None';
-                });
-            } else if (selectedValues.some(value => transactionTypes.includes(value))) {
-                options.find(option => option.value === 'None').selected = false;
-            }
-        });
-
-        // Event listeners
-        document.getElementById('themeToggle').addEventListener('click', ThemeModule.toggleTheme);
-        document.querySelectorAll('.tabs div').forEach(tab => {
-            tab.addEventListener('click', () => HelpersModule.switchTab(tab.dataset.tab));
-        });
-        const gridApis = GridModule.getGridApis();
-        document.getElementById('issuerSearchInput').addEventListener('input', (e) => gridApis.issuerGridApi.setQuickFilter(e.target.value));
-        document.getElementById('historySearchInput').addEventListener('input', (e) => gridApis.historyGridApi.setQuickFilter(e.target.value));
-        document.getElementById('instrumentsSearchInput').addEventListener('input', (e) => gridApis.instrumentsGridApi.setQuickFilter(e.target.value));
-        document.getElementById('categorySearchInput').addEventListener('input', (e) => gridApis.categoryGridApi.setQuickFilter(e.target.value));
-        document.getElementById('exportIssuerBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.issuerGridApi));
-        document.getElementById('exportHistoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.historyGridApi));
-        document.getElementById('exportInstrumentsBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.instrumentsGridApi));
-        document.getElementById('exportCategoryBtn').addEventListener('click', () => HelpersModule.exportToCSV(gridApis.categoryGridApi));
-        document.getElementById('addIssuerBtn').addEventListener('click', ModalModule.openIssuerModal);
-        document.getElementById('closeIssuerModal').addEventListener('click', ModalModule.closeIssuerModal);
-        document.getElementById('closeIssuerModalBtn').addEventListener('click', ModalModule.closeIssuerModal);
-        document.getElementById('submitIssuerForm').addEventListener('click', ModalModule.submitIssuerForm);
-        document.getElementById('closeConfirmIssuerModal').addEventListener('click', ModalModule.closeConfirmIssuerModal);
-        document.getElementById('cancelConfirmIssuer').addEventListener('click', ModalModule.closeConfirmIssuerModal);
-        document.getElementById('confirmIssuerSubmission').addEventListener('click', ModalModule.confirmIssuerSubmission);
-        document.getElementById('closeSuccessIssuerModal').addEventListener('click', ModalModule.closeSuccessModal);
-        document.getElementById('closeSuccessIssuerModalBtn').addEventListener('click', ModalModule.closeSuccessModal);
-        document.getElementById('closeErrorIssuerModal').addEventListener('click', ModalModule.closeErrorModal);
-        document.getElementById('closeErrorIssuerModalBtn').addEventListener('click', ModalModule.closeErrorModal);
-        document.getElementById('addCategoryBtn').addEventListener('click', CategoryFormModule.showAddCategoryForm);
-        document.getElementById('closeAddCategoryForm').addEventListener('click', CategoryFormModule.hideAddCategoryForm);
-        document.getElementById('submitNewCategory').addEventListener('click', CategoryFormModule.submitNewCategory);
-        document.getElementById('closeDeleteModal').addEventListener('click', ModalModule.closeDeleteModal);
-        document.getElementById('closeDeleteModalBtn').addEventListener('click', ModalModule.closeDeleteModal);
-        document.getElementById('confirmDelete').addEventListener('click', ModalModule.confirmDelete);
-        document.getElementById('closeUnrestrictModal').addEventListener('click', ModalModule.closeUnrestrictModal);
-        document.getElementById('closeUnrestrictModalBtn').addEventListener('click', ModalModule.closeUnrestrictModal);
-        document.getElementById('confirmUnrestrict').addEventListener('click', ModalModule.confirmUnrestrict);
-
-        // Initialize application
-        ThemeModule.initTheme();
-        GridModule.initGrids();
-    </script>
-</body>
-</html>
