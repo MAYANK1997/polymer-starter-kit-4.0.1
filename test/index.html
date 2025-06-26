@@ -1,5 +1,9 @@
-cellRenderer: (params) => {
-    if (!params.value || !Array.isArray(params.value)) return '';
-    return params.value.map(item => item.trim()).join('<br>');
-  }
-}
+autoHeight: true, // Adjust row height based on content
+          cellRenderer: params => {
+            if (Array.isArray(params.value) && params.value.length > 0) {
+              return params.value.join('<br>'); // Join array elements with <br> for new lines
+            }
+            return params.value || 'No items';
+          },
+          cellStyle: { 'white-space': 'pre-wrap' }, // Ensure new lines are rendered
+        },
