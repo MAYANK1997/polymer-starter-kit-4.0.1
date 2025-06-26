@@ -1,1 +1,5 @@
-return params.value.split(',').map(s => s.trim()).join('<br>');
+cellRenderer: (params) => {
+    if (!params.value || !Array.isArray(params.value)) return '';
+    return params.value.map(item => item.trim()).join('<br>');
+  }
+}
