@@ -1,9 +1,47 @@
-autoHeight: true, // Adjust row height based on content
-          cellRenderer: params => {
-            if (Array.isArray(params.value) && params.value.length > 0) {
-              return params.value.join('<br>'); // Join array elements with <br> for new lines
-            }
-            return params.value || 'No items';
-          },
-          cellStyle: { 'white-space': 'pre-wrap' }, // Ensure new lines are rendered
-        },
+Data View tab would display below details
+
+Date field : a field where user can select date from calendar
+
+Fund Type field : It is dropdown and has 2 values; and user should eb able to select any one (The right field need to check with Sunil to filter records)
+
+Volantis
+
+Non-Volantis
+
+Based on filers of date and fund type data should be displayed
+
+The data comes from table [Portfolio].[ops].[OptionsFuturesEodEmail]
+
+The default data would be displayed for today and Volantis fund type
+
+The columns to be displayed are
+
+Trade Id
+
+Description
+
+Ticker
+
+ISIN
+
+SEDOL
+
+Trade Date
+
+Settle Date
+
+Notional Quantity
+
+Trade Price
+
+Gross Commissions
+
+Counterparty
+
+LE Name
+
+Notes
+
+Custodian
+
+Custodian Account Display Name
