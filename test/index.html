@@ -1,47 +1,21 @@
-Data View tab would display below details
+GET /api/options-futures-eod?date=2025-07-01&fundType=Volantis
 
-Date field : a field where user can select date from calendar
-
-Fund Type field : It is dropdown and has 2 values; and user should eb able to select any one (The right field need to check with Sunil to filter records)
-
-Volantis
-
-Non-Volantis
-
-Based on filers of date and fund type data should be displayed
-
-The data comes from table [Portfolio].[ops].[OptionsFuturesEodEmail]
-
-The default data would be displayed for today and Volantis fund type
-
-The columns to be displayed are
-
-Trade Id
-
-Description
-
-Ticker
-
-ISIN
-
-SEDOL
-
-Trade Date
-
-Settle Date
-
-Notional Quantity
-
-Trade Price
-
-Gross Commissions
-
-Counterparty
-
-LE Name
-
-Notes
-
-Custodian
-
-Custodian Account Display Name
+[
+  {
+    "TradeId": "12345",
+    "Description": "Sample Option",
+    "Ticker": "ABC",
+    "ISIN": "US1234567890",
+    "SEDOL": "B1XYZ23",
+    "TradeDate": "2025-07-01",
+    "SettleDate": "2025-07-03",
+    "NotionalQuantity": 1000,
+    "TradePrice": 50.25,
+    "GrossCommissions": 125.50,
+    "Counterparty": "XYZ Bank",
+    "LEName": "LE Example",
+    "Notes": "Urgent",
+    "Custodian": "Custodian Name",
+    "CustodianAccountDisplayName": "Account Display Name"
+  }
+]
