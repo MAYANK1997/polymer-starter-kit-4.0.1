@@ -1,14 +1,46 @@
-"https://bidstats.uk/tenders/?ntype=award"
- 
-https://bidstats.uk/data/more-notices?ntype=award&maxId={max_id}
- 
-START_URL = "https://bidstats.uk/tenders/?ntype=award"
-KEYWORDS =  ["Kier", "TPXimpact", "capita", "Mitie","TPXimpact","Made Tech","Hippo Digital","Olive Jar Digital","1Spatial"]
-MAX_PAGES = 2
- 
-curl -X POST "https://78b43de0-b3cc-49f2-8f4c-a8e9a10537f1-00-3mb7mu3cmxej1.janeway.replit.dev/scrape" \
-     -H "Content-Type: application/json" \
-     -d '{
-  "url": "https://www.parsehub.com/",
-  "keywords": ["scraping"]
-        }'
+import { Tabs, TabList, Tab } from "@chakra-ui/react";
+import { Link, useLocation } from "react-router-dom";
+
+export default function NavigationTabs() {
+  const location = useLocation();
+
+  const tabs = [
+    { path: "/", label: "Restricted Issuers" },
+    { path: "/history", label: "Restricted Issuer History" },
+    { path: "/instruments", label: "Restricted Instruments" },
+    { path: "/categories", label: "Restriction Category" },
+  ];
+
+  return (
+    <Tabs
+      index={tabs.findIndex((tab) => tab.path === location.pathname)}
+      variant="unstyled"
+    >
+      <TabList borderBottom="1px solid" borderColor="gray.700" px={8} pt={4}>
+        {tabs.map((tab) => (
+          <Tab
+            key={tab.path}
+            as={Link}
+            to={tab.path}
+            px={6}
+            py={3}
+            fontSize="sm"
+            fontWeight="medium"
+            borderBottom="2px solid"
+            borderColor={
+              location.pathname === tab.path ? "blue.400" : "transparent"
+            }
+            color={location.pathname === tab.path ? "blue.400" : "gray.400"}
+            _hover={{
+              color: "white",
+              borderColor: "gray.500",
+            }}
+            transition="color 0.2s, border-color 0.2s"
+          >
+            {tab.label}
+          </Tab>
+        ))}
+      </TabList>
+    </Tabs>
+  );
+}
