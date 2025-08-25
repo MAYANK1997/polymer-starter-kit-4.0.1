@@ -1,28 +1,76 @@
-const [location, setLocation] = useLocation()
+import { Box, Button, Flex, HStack, useDisclosure } from '@chakra-ui/react'
+import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi'
+import { DataTable } from '../../components/DataTable'
+import { CreateIssuerModal } from '../../components/CreateIssuerModal'
+import { useRestrictedIssuers } from '../../hooks/useRestrictedIssuers'
+import { restrictedIssuersColumns } from '../../data/columns'
 
-  // Find active tab
-  const activeValue = tabs.find((tab) => tab.path === location)?.path || "/"
+export function RestrictedIssuersPage() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { data: issuers, isLoading } = useRestrictedIssuers()
+
+  const handleExport = () => {
+    // Export functionality will be handled by AG Grid
+    console.log('Export data')
+  }
+
+  const handleClearFilters = () => {
+    // Clear filters functionality
+    console.log('Clear filters')
+  }
 
   return (
-    <Box bg="gray.900" borderBottom="1px" borderColor="gray.700">
-      <Tabs.Root
-        value={activeValue}
-        onValueChange={(val) => setLocation(val)}
-        variant="line"
-      >
-        <Tabs.List px={6} border="none">
-          {tabs.map((tab) => (
-            <Tabs.Trigger
-              key={tab.path}
-              value={tab.path}
-              color="gray.400"
-              _selected={{ color: "blue.400", borderColor: "blue.400" }}
-              _hover={{ color: "gray.200" }}
-              fontSize="sm"
-              py={4}
-            >
-              {tab.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-      </Tabs.Root>
+    <Box>
+      {/* Action Bar */}
+      <Flex justify="space-between" mb={4}>
+        <Button
+          leftIcon={<FiPlus />}
+          onClick={onOpen}
+          bg="gray.700"
+          color="white"
+          _hover={{ bg: 'gray.600' }}
+          size="sm"
+        >
+          Insert New Entry
+        </Button>
+        
+        <HStack>
+          <Button
+            leftIcon={<FiFilter />}
+            onClick={handleClearFilters}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
+          >
+            Clear Filters
+          </Button>
+          <Button
+            leftIcon={<FiDownload />}
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
+          >
+            Export
+          </Button>
+        </HStack>
+      </Flex>
+
+      {/* Data Table */}
+      <DataTable
+        columns={restrictedIssuersColumns}
+        data={issuers || []}
+        loading={isLoading}
+        enableFiltering
+        enableExport
+      />
+
+      {/* Create Modal */}
+      <CreateIssuerModal isOpen={isOpen} onClose={onClose} />
+    </Box>
+  )
+}
