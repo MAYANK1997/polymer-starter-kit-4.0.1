@@ -1,28 +1,23 @@
 import React, { useState } from 'react';
 import {
   Modal,
-  DialogContent,
-  DialogHeader,
-  DialogCloseTrigger,
-  DialogBody,
-  DialogFooter,
-  DialogBackdrop,
-  DialogRoot,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
   Button,
-  Field,
+  FormControl,
+  FormLabel,
   Input,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValueText,
+  Select,
   Textarea,
   Grid,
   VStack,
   Checkbox,
-  CheckboxGroup as ChakraCheckboxGroup,
+  CheckboxGroup,
   Box,
-  Text,
 } from '@chakra-ui/react';
 
 interface RestrictedIssuerFormProps {
@@ -41,7 +36,7 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
     instrumentType: 'Equity',
     restrictionCategory: '',
     allowedTransactionTypes: ['None'],
-    startDate: '08/25/2025',
+    startDate: '2025-08-25',
     restrictionRequester: '',
     restrictionNotes: '',
   });
@@ -49,29 +44,24 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleTransactionTypeChange = (values: string[]) => {
     let newValues = [...values];
-    
-    // If "None" is being selected
+
     if (values.includes('None') && !formData.allowedTransactionTypes.includes('None')) {
-      newValues = ['None']; // Only keep "None"
+      newValues = ['None'];
+    } else if (values.length > 1 && formData.allowedTransactionTypes.includes('None')) {
+      newValues = values.filter(value => value !== 'None');
+    } else if (!values.includes('None') && values.length === 0) {
+      newValues = ['None'];
     }
-    // If any other option is being selected while "None" is already selected
-    else if (values.length > 1 && formData.allowedTransactionTypes.includes('None')) {
-      newValues = values.filter(value => value !== 'None'); // Remove "None"
-    }
-    // If "None" is being deselected and no other options are selected
-    else if (!values.includes('None') && values.length === 0) {
-      newValues = ['None']; // Default back to "None"
-    }
-    
+
     setFormData(prev => ({
       ...prev,
-      allowedTransactionTypes: newValues
+      allowedTransactionTypes: newValues,
     }));
   };
 
@@ -81,20 +71,20 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
   };
 
   return (
-    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()} size="4xl">
-      <DialogBackdrop bg="rgba(0, 0, 0, 0.6)" />
-      <DialogContent bg="#2D3748" color="white" maxW="800px">
-        <DialogHeader fontSize="lg" fontWeight="semibold">
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+      <ModalOverlay bg="rgba(0,0,0,0.6)" />
+      <ModalContent bg="#2D3748" color="white" maxW="800px">
+        <ModalHeader fontSize="lg" fontWeight="semibold">
           Add New Restricted Issuer
-        </DialogHeader>
-        <DialogCloseTrigger />
-        
-        <DialogBody pb="6">
-          <Grid columns={2} gap="6">
+        </ModalHeader>
+        <ModalCloseButton />
+
+        <ModalBody pb="6">
+          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
             {/* Left Column */}
-            <VStack gap="4" align="stretch">
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Issuer Name</Field.Label>
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Issuer Name</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -103,10 +93,10 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.issuerName}
                   onChange={(e) => handleInputChange('issuerName', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Ticker</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Ticker</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -115,10 +105,10 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.ticker}
                   onChange={(e) => handleInputChange('ticker', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">CUSIP</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">CUSIP</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -127,60 +117,42 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.cusip}
                   onChange={(e) => handleInputChange('cusip', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Instrument Type</Field.Label>
-                <SelectRoot
-                  value={[formData.instrumentType]}
-                  onValueChange={(e) => handleInputChange('instrumentType', e.value[0])}
-                >
-                  <SelectTrigger
-                    bg="#4A5568"
-                    border="none"
-                  >
-                    <SelectValueText />
-                  </SelectTrigger>
-                  <SelectContent
-                    bg="#4A5568"
-                  >
-                    <SelectItem item="Equity">Equity</SelectItem>
-                    <SelectItem item="Bond">Bond</SelectItem>
-                    <SelectItem item="Option">Option</SelectItem>
-                  </SelectContent>
-                </SelectRoot>
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Allowed Transaction Type</Field.Label>
-                <SelectRoot>
-                  <SelectTrigger
-                    bg="#4A5568"
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Instrument Type</FormLabel>
+                <Select
+                  bg="#4A5568"
                   border="none"
-                    size="sm"
-                    mb="2"
-                  >
-                    <SelectValueText placeholder="Select Below" />
-                  </SelectTrigger>
-                </SelectRoot>
-                <Box bg="#4A5568" p="3" borderRadius="md" maxH="120px" overflowY="auto">
-                  <ChakraCheckboxGroup
+                  value={formData.instrumentType}
+                  onChange={(e) => handleInputChange('instrumentType', e.target.value)}
+                >
+                  <option value="Equity">Equity</option>
+                  <option value="Bond">Bond</option>
+                  <option value="Option">Option</option>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Allowed Transaction Type</FormLabel>
+                <Box bg="#4A5568" p={3} borderRadius="md" maxH="120px" overflowY="auto">
+                  <CheckboxGroup
                     value={formData.allowedTransactionTypes}
-                    onValueChange={handleTransactionTypeChange}
+                    onChange={(values: any) => handleTransactionTypeChange(values as string[])}
                   >
-                    <VStack align="start" gap="1">
+                    <VStack align="start" spacing={1}>
                       <Checkbox value="Buy" size="sm">Buy</Checkbox>
                       <Checkbox value="Sell" size="sm">Sell</Checkbox>
                       <Checkbox value="Buy to Cover" size="sm">Buy to Cover</Checkbox>
                       <Checkbox value="Sell Short" size="sm">Sell Short</Checkbox>
                       <Checkbox value="None" size="sm">None</Checkbox>
                     </VStack>
-                  </ChakraCheckboxGroup>
+                  </CheckboxGroup>
                 </Box>
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Requester</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Requester</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -189,34 +161,26 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.restrictionRequester}
                   onChange={(e) => handleInputChange('restrictionRequester', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
             </VStack>
 
             {/* Right Column */}
-            <VStack gap="4" align="stretch">
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Issuer Type</Field.Label>
-                <SelectRoot
-                  value={[formData.issuerType]}
-                  onValueChange={(e) => handleInputChange('issuerType', e.value[0])}
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Issuer Type</FormLabel>
+                <Select
+                  bg="#4A5568"
+                  border="none"
+                  value={formData.issuerType}
+                  onChange={(e) => handleInputChange('issuerType', e.target.value)}
                 >
-                  <SelectTrigger
-                    bg="#4A5568"
-                    border="none"
-                  >
-                    <SelectValueText />
-                  </SelectTrigger>
-                  <SelectContent
-                    bg="#4A5568"
-                  >
-                    <SelectItem item="Public">Public</SelectItem>
-                    <SelectItem item="Private">Private</SelectItem>
-                  </SelectContent>
-                </SelectRoot>
-              </Field.Root>
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+                </Select>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">ISIN</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">ISIN</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -225,10 +189,10 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.isin}
                   onChange={(e) => handleInputChange('isin', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">SEDOL</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">SEDOL</FormLabel>
                 <Input
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -237,42 +201,35 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.sedol}
                   onChange={(e) => handleInputChange('sedol', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Category</Field.Label>
-                <SelectRoot
-                  value={formData.restrictionCategory ? [formData.restrictionCategory] : []}
-                  onValueChange={(e) => handleInputChange('restrictionCategory', e.value[0] || '')}
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Category</FormLabel>
+                <Select
+                  bg="#4A5568"
+                  border="none"
+                  placeholder="Select Below"
+                  value={formData.restrictionCategory}
+                  onChange={(e) => handleInputChange('restrictionCategory', e.target.value)}
                 >
-                  <SelectTrigger
-                    bg="#4A5568"
-                    border="none"
-                  >
-                    <SelectValueText placeholder="Select Below" />
-                  </SelectTrigger>
-                  <SelectContent
-                    bg="#4A5568"
-                  >
-                    <SelectItem item="Category 1">Category 1</SelectItem>
-                    <SelectItem item="Category 2">Category 2</SelectItem>
-                  </SelectContent>
-                </SelectRoot>
-              </Field.Root>
+                  <option value="Category 1">Category 1</option>
+                  <option value="Category 2">Category 2</option>
+                </Select>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Start Date</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Start Date</FormLabel>
                 <Input
                   type="date"
                   bg="#4A5568"
                   border="none"
-                  value="2025-08-25"
+                  value={formData.startDate}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
 
-              <Field.Root>
-                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Notes</Field.Label>
+              <FormControl>
+                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Notes</FormLabel>
                 <Textarea
                   placeholder="Enter value"
                   bg="#4A5568"
@@ -282,32 +239,30 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
                   value={formData.restrictionNotes}
                   onChange={(e) => handleInputChange('restrictionNotes', e.target.value)}
                 />
-              </Field.Root>
+              </FormControl>
             </VStack>
           </Grid>
-        </DialogBody>
+        </ModalBody>
 
-        <DialogFooter>
-          <Button 
-            colorPalette="red" 
-            mr="3" 
+        <ModalFooter>
+          <Button
+            mr={3}
             onClick={onClose}
             bg="#E53E3E"
             _hover={{ bg: "#C53030" }}
           >
             Close
           </Button>
-          <Button 
-            colorPalette="blue" 
+          <Button
             onClick={handleSubmit}
             bg="#2B6CB0"
             _hover={{ bg: "#2C5282" }}
           >
             Submit
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </DialogRoot>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
