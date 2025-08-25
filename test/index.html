@@ -1,46 +1,17 @@
-import { Tabs, TabList, Tab } from "@chakra-ui/react";
-import { Link, useLocation } from "react-router-dom";
+import { Route, Switch } from 'wouter'
+import { RestrictedIssuersPage } from '../pages/RestrictedIssuers'
+import { RestrictedHistoryPage } from '../pages/RestrictedHistory'
+import { RestrictedInstrumentsPage } from '../pages/RestrictedInstruments'
+import { RestrictionCategoryPage } from '../pages/RestrictionCategory'
 
-export default function NavigationTabs() {
-  const location = useLocation();
-
-  const tabs = [
-    { path: "/", label: "Restricted Issuers" },
-    { path: "/history", label: "Restricted Issuer History" },
-    { path: "/instruments", label: "Restricted Instruments" },
-    { path: "/categories", label: "Restriction Category" },
-  ];
-
+export function Routes() {
   return (
-    <Tabs
-      index={tabs.findIndex((tab) => tab.path === location.pathname)}
-      variant="unstyled"
-    >
-      <TabList borderBottom="1px solid" borderColor="gray.700" px={8} pt={4}>
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.path}
-            as={Link}
-            to={tab.path}
-            px={6}
-            py={3}
-            fontSize="sm"
-            fontWeight="medium"
-            borderBottom="2px solid"
-            borderColor={
-              location.pathname === tab.path ? "blue.400" : "transparent"
-            }
-            color={location.pathname === tab.path ? "blue.400" : "gray.400"}
-            _hover={{
-              color: "white",
-              borderColor: "gray.500",
-            }}
-            transition="color 0.2s, border-color 0.2s"
-          >
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
-    </Tabs>
-  );
+    <Switch>
+      <Route path="/" component={RestrictedIssuersPage} />
+      <Route path="/history" component={RestrictedHistoryPage} />
+      <Route path="/instruments" component={RestrictedInstrumentsPage} />
+      <Route path="/categories" component={RestrictionCategoryPage} />
+      <Route>404 - Page Not Found</Route>
+    </Switch>
+  )
 }
