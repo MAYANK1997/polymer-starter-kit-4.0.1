@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import {
   Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
+  DialogContent,
+  DialogHeader,
+  DialogCloseTrigger,
+  DialogBody,
+  DialogFooter,
+  DialogBackdrop,
+  DialogRoot,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
-  Select,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
   Textarea,
-  SimpleGrid,
+  Grid,
   VStack,
   Checkbox,
-  CheckboxGroup,
+  CheckboxGroup as ChakraCheckboxGroup,
   Box,
-  useDisclosure,
+  Text,
 } from '@chakra-ui/react';
 
 interface RestrictedIssuerFormProps {
@@ -77,210 +81,233 @@ const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onC
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-      <ModalOverlay bg="blackAlpha.600" />
-      <ModalContent bg="gray.800" color="white" maxW="800px">
-        <ModalHeader fontSize="lg" fontWeight="semibold">
+    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()} size="4xl">
+      <DialogBackdrop bg="rgba(0, 0, 0, 0.6)" />
+      <DialogContent bg="#2D3748" color="white" maxW="800px">
+        <DialogHeader fontSize="lg" fontWeight="semibold">
           Add New Restricted Issuer
-        </ModalHeader>
-        <ModalCloseButton />
+        </DialogHeader>
+        <DialogCloseTrigger />
         
-        <ModalBody pb={6}>
-          <SimpleGrid columns={2} spacing={6}>
+        <DialogBody pb="6">
+          <Grid columns={2} gap="6">
             {/* Left Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Issuer Name</FormLabel>
+            <VStack gap="4" align="stretch">
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Issuer Name</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.issuerName}
                   onChange={(e) => handleInputChange('issuerName', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Ticker</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Ticker</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.ticker}
                   onChange={(e) => handleInputChange('ticker', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">CUSIP</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">CUSIP</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.cusip}
                   onChange={(e) => handleInputChange('cusip', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Instrument Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  value={formData.instrumentType}
-                  onChange={(e) => handleInputChange('instrumentType', e.target.value)}
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Instrument Type</Field.Label>
+                <SelectRoot
+                  value={[formData.instrumentType]}
+                  onValueChange={(e) => handleInputChange('instrumentType', e.value[0])}
                 >
-                  <option value="Equity" style={{ background: '#2D3748' }}>Equity</option>
-                  <option value="Bond" style={{ background: '#2D3748' }}>Bond</option>
-                  <option value="Option" style={{ background: '#2D3748' }}>Option</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Allowed Transaction Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  placeholder="Select Below"
-                  size="sm"
-                  mb={2}
-                >
-                 
-                </Select>
-                <Box bg="gray.700" p={3} borderRadius="md" maxH="120px" overflowY="auto">
-                  <CheckboxGroup
-                    value={formData.allowedTransactionTypes}
-                    onChange={handleTransactionTypeChange}
+                  <SelectTrigger
+                    bg="#4A5568"
+                    border="none"
                   >
-                    <VStack align="start" spacing={1}>
+                    <SelectValueText />
+                  </SelectTrigger>
+                  <SelectContent
+                    bg="#4A5568"
+                  >
+                    <SelectItem item="Equity">Equity</SelectItem>
+                    <SelectItem item="Bond">Bond</SelectItem>
+                    <SelectItem item="Option">Option</SelectItem>
+                  </SelectContent>
+                </SelectRoot>
+              </Field.Root>
+
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Allowed Transaction Type</Field.Label>
+                <SelectRoot>
+                  <SelectTrigger
+                    bg="#4A5568"
+                  border="none"
+                    size="sm"
+                    mb="2"
+                  >
+                    <SelectValueText placeholder="Select Below" />
+                  </SelectTrigger>
+                </SelectRoot>
+                <Box bg="#4A5568" p="3" borderRadius="md" maxH="120px" overflowY="auto">
+                  <ChakraCheckboxGroup
+                    value={formData.allowedTransactionTypes}
+                    onValueChange={handleTransactionTypeChange}
+                  >
+                    <VStack align="start" gap="1">
                       <Checkbox value="Buy" size="sm">Buy</Checkbox>
                       <Checkbox value="Sell" size="sm">Sell</Checkbox>
                       <Checkbox value="Buy to Cover" size="sm">Buy to Cover</Checkbox>
                       <Checkbox value="Sell Short" size="sm">Sell Short</Checkbox>
                       <Checkbox value="None" size="sm">None</Checkbox>
                     </VStack>
-                  </CheckboxGroup>
+                  </ChakraCheckboxGroup>
                 </Box>
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Requester</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Requester</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.restrictionRequester}
                   onChange={(e) => handleInputChange('restrictionRequester', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
             </VStack>
 
             {/* Right Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Issuer Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  value={formData.issuerType}
-                  onChange={(e) => handleInputChange('issuerType', e.target.value)}
+            <VStack gap="4" align="stretch">
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Issuer Type</Field.Label>
+                <SelectRoot
+                  value={[formData.issuerType]}
+                  onValueChange={(e) => handleInputChange('issuerType', e.value[0])}
                 >
-                  <option value="Public" style={{ background: '#2D3748' }}>Public</option>
-                  <option value="Private" style={{ background: '#2D3748' }}>Private</option>
-                </Select>
-              </FormControl>
+                  <SelectTrigger
+                    bg="#4A5568"
+                    border="none"
+                  >
+                    <SelectValueText />
+                  </SelectTrigger>
+                  <SelectContent
+                    bg="#4A5568"
+                  >
+                    <SelectItem item="Public">Public</SelectItem>
+                    <SelectItem item="Private">Private</SelectItem>
+                  </SelectContent>
+                </SelectRoot>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">ISIN</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">ISIN</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.isin}
                   onChange={(e) => handleInputChange('isin', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">SEDOL</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">SEDOL</Field.Label>
                 <Input
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   value={formData.sedol}
                   onChange={(e) => handleInputChange('sedol', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Category</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  placeholder="Select Below"
-                  value={formData.restrictionCategory}
-                  onChange={(e) => handleInputChange('restrictionCategory', e.target.value)}
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Category</Field.Label>
+                <SelectRoot
+                  value={formData.restrictionCategory ? [formData.restrictionCategory] : []}
+                  onValueChange={(e) => handleInputChange('restrictionCategory', e.value[0] || '')}
                 >
-                  <option value="" style={{ background: '#2D3748' }}>Select Below</option>
-                  <option value="Category 1" style={{ background: '#2D3748' }}>Category 1</option>
-                  <option value="Category 2" style={{ background: '#2D3748' }}>Category 2</option>
-                </Select>
-              </FormControl>
+                  <SelectTrigger
+                    bg="#4A5568"
+                    border="none"
+                  >
+                    <SelectValueText placeholder="Select Below" />
+                  </SelectTrigger>
+                  <SelectContent
+                    bg="#4A5568"
+                  >
+                    <SelectItem item="Category 1">Category 1</SelectItem>
+                    <SelectItem item="Category 2">Category 2</SelectItem>
+                  </SelectContent>
+                </SelectRoot>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Start Date</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Start Date</Field.Label>
                 <Input
                   type="date"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
                   value="2025-08-25"
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Notes</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize="sm" color="#CBD5E0">Restriction Notes</Field.Label>
                 <Textarea
                   placeholder="Enter value"
-                  bg="gray.700"
+                  bg="#4A5568"
                   border="none"
-                  _placeholder={{ color: 'gray.500' }}
+                  _placeholder={{ color: "#A0AEC0" }}
                   rows={4}
                   value={formData.restrictionNotes}
                   onChange={(e) => handleInputChange('restrictionNotes', e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
             </VStack>
-          </SimpleGrid>
-        </ModalBody>
+          </Grid>
+        </DialogBody>
 
-        <ModalFooter>
+        <DialogFooter>
           <Button 
-            colorScheme="red" 
-            mr={3} 
+            colorPalette="red" 
+            mr="3" 
             onClick={onClose}
-            bg="red.600"
-            _hover={{ bg: 'red.700' }}
+            bg="#E53E3E"
+            _hover={{ bg: "#C53030" }}
           >
             Close
           </Button>
           <Button 
-            colorScheme="blue" 
+            colorPalette="blue" 
             onClick={handleSubmit}
-            bg="blue.600"
-            _hover={{ bg: 'blue.700' }}
+            bg="#2B6CB0"
+            _hover={{ bg: "#2C5282" }}
           >
             Submit
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 };
 
