@@ -1,287 +1,76 @@
-import React, { useState } from 'react';
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Select,
-  Textarea,
-  SimpleGrid,
-  VStack,
-  Checkbox,
-  CheckboxGroup,
-  Box,
-  useDisclosure,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, useDisclosure } from '@chakra-ui/react'
+import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi'
+import { DataTable } from '../../components/DataTable'
+import { CreateIssuerModal } from '../../components/CreateIssuerModal'
+import { useRestrictedIssuers } from '../../hooks/useRestrictedIssuers'
+import { restrictedIssuersColumns } from '../../data/columns'
 
-interface RestrictedIssuerFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export function RestrictedIssuersPage() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { data: issuers, isLoading } = useRestrictedIssuers()
 
-const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
-    issuerName: '',
-    issuerType: 'Public',
-    ticker: '',
-    isin: '',
-    cusip: '',
-    sedol: '',
-    instrumentType: 'Equity',
-    restrictionCategory: '',
-    allowedTransactionTypes: ['None'],
-    startDate: '08/25/2025',
-    restrictionRequester: '',
-    restrictionNotes: '',
-  });
+  const handleExport = () => {
+    // Export functionality will be handled by AG Grid
+    console.log('Export data')
+  }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleTransactionTypeChange = (values: string[]) => {
-    let newValues = [...values];
-    
-    // If "None" is being selected
-    if (values.includes('None') && !formData.allowedTransactionTypes.includes('None')) {
-      newValues = ['None']; // Only keep "None"
-    }
-    // If any other option is being selected while "None" is already selected
-    else if (values.length > 1 && formData.allowedTransactionTypes.includes('None')) {
-      newValues = values.filter(value => value !== 'None'); // Remove "None"
-    }
-    // If "None" is being deselected and no other options are selected
-    else if (!values.includes('None') && values.length === 0) {
-      newValues = ['None']; // Default back to "None"
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      allowedTransactionTypes: newValues
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    onClose();
-  };
+  const handleClearFilters = () => {
+    // Clear filters functionality
+    console.log('Clear filters')
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-      <ModalOverlay bg="blackAlpha.600" />
-      <ModalContent bg="gray.800" color="white" maxW="800px">
-        <ModalHeader fontSize="lg" fontWeight="semibold">
-          Add New Restricted Issuer
-        </ModalHeader>
-        <ModalCloseButton />
+    <Box>
+      {/* Action Bar */}
+      <Flex justify="space-between" mb={4}>
+        <Button
+          leftIcon={<FiPlus />}
+          onClick={onOpen}
+          bg="gray.700"
+          color="white"
+          _hover={{ bg: 'gray.600' }}
+          size="sm"
+        >
+          Insert New Entry
+        </Button>
         
-        <ModalBody pb={6}>
-          <SimpleGrid columns={2} spacing={6}>
-            {/* Left Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Issuer Name</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.issuerName}
-                  onChange={(e) => handleInputChange('issuerName', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Ticker</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.ticker}
-                  onChange={(e) => handleInputChange('ticker', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">CUSIP</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.cusip}
-                  onChange={(e) => handleInputChange('cusip', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Instrument Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  value={formData.instrumentType}
-                  onChange={(e) => handleInputChange('instrumentType', e.target.value)}
-                >
-                  <option value="Equity" style={{ background: '#2D3748' }}>Equity</option>
-                  <option value="Bond" style={{ background: '#2D3748' }}>Bond</option>
-                  <option value="Option" style={{ background: '#2D3748' }}>Option</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Allowed Transaction Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  placeholder="Select Below"
-                  size="sm"
-                  mb={2}
-                >
-                 
-                </Select>
-                <Box bg="gray.700" p={3} borderRadius="md" maxH="120px" overflowY="auto">
-                  <CheckboxGroup
-                    value={formData.allowedTransactionTypes}
-                    onChange={handleTransactionTypeChange}
-                  >
-                    <VStack align="start" spacing={1}>
-                      <Checkbox value="Buy" size="sm">Buy</Checkbox>
-                      <Checkbox value="Sell" size="sm">Sell</Checkbox>
-                      <Checkbox value="Buy to Cover" size="sm">Buy to Cover</Checkbox>
-                      <Checkbox value="Sell Short" size="sm">Sell Short</Checkbox>
-                      <Checkbox value="None" size="sm">None</Checkbox>
-                    </VStack>
-                  </CheckboxGroup>
-                </Box>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Requester</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.restrictionRequester}
-                  onChange={(e) => handleInputChange('restrictionRequester', e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-
-            {/* Right Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Issuer Type</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  value={formData.issuerType}
-                  onChange={(e) => handleInputChange('issuerType', e.target.value)}
-                >
-                  <option value="Public" style={{ background: '#2D3748' }}>Public</option>
-                  <option value="Private" style={{ background: '#2D3748' }}>Private</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">ISIN</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.isin}
-                  onChange={(e) => handleInputChange('isin', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">SEDOL</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  value={formData.sedol}
-                  onChange={(e) => handleInputChange('sedol', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Category</FormLabel>
-                <Select
-                  bg="gray.700"
-                  border="none"
-                  placeholder="Select Below"
-                  value={formData.restrictionCategory}
-                  onChange={(e) => handleInputChange('restrictionCategory', e.target.value)}
-                >
-                  <option value="" style={{ background: '#2D3748' }}>Select Below</option>
-                  <option value="Category 1" style={{ background: '#2D3748' }}>Category 1</option>
-                  <option value="Category 2" style={{ background: '#2D3748' }}>Category 2</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Start Date</FormLabel>
-                <Input
-                  type="date"
-                  bg="gray.700"
-                  border="none"
-                  value="2025-08-25"
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.300">Restriction Notes</FormLabel>
-                <Textarea
-                  placeholder="Enter value"
-                  bg="gray.700"
-                  border="none"
-                  _placeholder={{ color: 'gray.500' }}
-                  rows={4}
-                  value={formData.restrictionNotes}
-                  onChange={(e) => handleInputChange('restrictionNotes', e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-          </SimpleGrid>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button 
-            colorScheme="red" 
-            mr={3} 
-            onClick={onClose}
-            bg="red.600"
-            _hover={{ bg: 'red.700' }}
+        <HStack>
+          <Button
+            leftIcon={<FiFilter />}
+            onClick={handleClearFilters}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
           >
-            Close
+            Clear Filters
           </Button>
-          <Button 
-            colorScheme="blue" 
-            onClick={handleSubmit}
-            bg="blue.600"
-            _hover={{ bg: 'blue.700' }}
+          <Button
+            leftIcon={<FiDownload />}
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
           >
-            Submit
+            Export
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-};
+        </HStack>
+      </Flex>
 
-export default RestrictedIssuerForm;
+      {/* Data Table */}
+      <DataTable
+        columns={restrictedIssuersColumns}
+        data={issuers || []}
+        loading={isLoading}
+        enableFiltering
+        enableExport
+      />
+
+      {/* Create Modal */}
+      <CreateIssuerModal isOpen={isOpen} onClose={onClose} />
+    </Box>
+  )
+}
