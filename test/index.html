@@ -1,17 +1,18 @@
-import { Route, Switch } from 'wouter'
-import { RestrictedIssuersPage } from '../pages/RestrictedIssuers'
-import { RestrictedHistoryPage } from '../pages/RestrictedHistory'
-import { RestrictedInstrumentsPage } from '../pages/RestrictedInstruments'
-import { RestrictionCategoryPage } from '../pages/RestrictionCategory'
 
-export function Routes() {
-  return (
-    <Switch>
-      <Route path="/" component={RestrictedIssuersPage} />
-      <Route path="/history" component={RestrictedHistoryPage} />
-      <Route path="/instruments" component={RestrictedInstrumentsPage} />
-      <Route path="/categories" component={RestrictionCategoryPage} />
-      <Route>404 - Page Not Found</Route>
-    </Switch>
-  )
-}
+
+<Tabs index={activeIndex} onChange={(index) => setLocation(tabs[index].path)} variant="line">
+        <TabList px={6} border="none">
+          {tabs.map((tab) => (
+            <Tab
+              key={tab.path}
+              color="gray.400"
+              _selected={{ color: 'blue.400', borderColor: 'blue.400' }}
+              _hover={{ color: 'gray.200' }}
+              fontSize="sm"
+              py={4}
+            >
+              {tab.label}
+            </Tab>
+          ))}
+        </TabList>
+      </Tabs>
