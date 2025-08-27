@@ -1,269 +1,32 @@
-import React, { useState } from 'react';
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Select,
-  Textarea,
-  Grid,
-  VStack,
-  Checkbox,
-  CheckboxGroup,
-  Box,
-} from '@chakra-ui/react';
+// enable Master / Detail
+const masterDetail = true;
 
-interface RestrictedIssuerFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+// the first Column is configured to use agGroupCellRenderer
+const [columnDefs, setColumnDefs] = useState([
+    { field: 'name', cellRenderer: 'agGroupCellRenderer' },
+    { field: 'account' }
+]);
 
-const RestrictedIssuerForm: React.FC<RestrictedIssuerFormProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
-    issuerName: '',
-    issuerType: 'Public',
-    ticker: '',
-    isin: '',
-    cusip: '',
-    sedol: '',
-    instrumentType: 'Equity',
-    restrictionCategory: '',
-    allowedTransactionTypes: ['None'],
-    startDate: '2025-08-25',
-    restrictionRequester: '',
-    restrictionNotes: '',
-  });
+// provide Detail Cell Renderer Params
+const detailCellRendererParams = useMemo(() => { 
+	return {
+        // provide the Grid Options to use on the Detail Grid
+        detailGridOptions: {
+            columnDefs: [
+                { field: 'callId' },
+                { field: 'direction' },
+                { field: 'number'}
+            ]
+        },
+        // get the rows for each Detail Grid
+        getDetailRowData: params => {
+            params.successCallback(params.data.callRecords);
+        }
+    };
+}, []);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleTransactionTypeChange = (values: string[]) => {
-    let newValues = [...values];
-
-    if (values.includes('None') && !formData.allowedTransactionTypes.includes('None')) {
-      newValues = ['None'];
-    } else if (values.length > 1 && formData.allowedTransactionTypes.includes('None')) {
-      newValues = values.filter(value => value !== 'None');
-    } else if (!values.includes('None') && values.length === 0) {
-      newValues = ['None'];
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      allowedTransactionTypes: newValues,
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    onClose();
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-      <ModalOverlay bg="rgba(0,0,0,0.6)" />
-      <ModalContent bg="#2D3748" color="white" maxW="800px">
-        <ModalHeader fontSize="lg" fontWeight="semibold">
-          Add New Restricted Issuer
-        </ModalHeader>
-        <ModalCloseButton />
-
-        <ModalBody pb="6">
-          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-            {/* Left Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Issuer Name</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.issuerName}
-                  onChange={(e) => handleInputChange('issuerName', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Ticker</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.ticker}
-                  onChange={(e) => handleInputChange('ticker', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">CUSIP</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.cusip}
-                  onChange={(e) => handleInputChange('cusip', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Instrument Type</FormLabel>
-                <Select
-                  bg="#4A5568"
-                  border="none"
-                  value={formData.instrumentType}
-                  onChange={(e) => handleInputChange('instrumentType', e.target.value)}
-                >
-                  <option value="Equity">Equity</option>
-                  <option value="Bond">Bond</option>
-                  <option value="Option">Option</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Allowed Transaction Type</FormLabel>
-                <Box bg="#4A5568" p={3} borderRadius="md" maxH="120px" overflowY="auto">
-                  <CheckboxGroup
-                    value={formData.allowedTransactionTypes}
-                    onChange={(values: any) => handleTransactionTypeChange(values as string[])}
-                  >
-                    <VStack align="start" spacing={1}>
-                      <Checkbox value="Buy" size="sm">Buy</Checkbox>
-                      <Checkbox value="Sell" size="sm">Sell</Checkbox>
-                      <Checkbox value="Buy to Cover" size="sm">Buy to Cover</Checkbox>
-                      <Checkbox value="Sell Short" size="sm">Sell Short</Checkbox>
-                      <Checkbox value="None" size="sm">None</Checkbox>
-                    </VStack>
-                  </CheckboxGroup>
-                </Box>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Requester</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.restrictionRequester}
-                  onChange={(e) => handleInputChange('restrictionRequester', e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-
-            {/* Right Column */}
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Issuer Type</FormLabel>
-                <Select
-                  bg="#4A5568"
-                  border="none"
-                  value={formData.issuerType}
-                  onChange={(e) => handleInputChange('issuerType', e.target.value)}
-                >
-                  <option value="Public">Public</option>
-                  <option value="Private">Private</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">ISIN</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.isin}
-                  onChange={(e) => handleInputChange('isin', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">SEDOL</FormLabel>
-                <Input
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  value={formData.sedol}
-                  onChange={(e) => handleInputChange('sedol', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Category</FormLabel>
-                <Select
-                  bg="#4A5568"
-                  border="none"
-                  placeholder="Select Below"
-                  value={formData.restrictionCategory}
-                  onChange={(e) => handleInputChange('restrictionCategory', e.target.value)}
-                >
-                  <option value="Category 1">Category 1</option>
-                  <option value="Category 2">Category 2</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Start Date</FormLabel>
-                <Input
-                  type="date"
-                  bg="#4A5568"
-                  border="none"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontSize="sm" color="#CBD5E0">Restriction Notes</FormLabel>
-                <Textarea
-                  placeholder="Enter value"
-                  bg="#4A5568"
-                  border="none"
-                  _placeholder={{ color: "#A0AEC0" }}
-                  rows={4}
-                  value={formData.restrictionNotes}
-                  onChange={(e) => handleInputChange('restrictionNotes', e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-          </Grid>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button
-            mr={3}
-            onClick={onClose}
-            bg="#E53E3E"
-            _hover={{ bg: "#C53030" }}
-          >
-            Close
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            bg="#2B6CB0"
-            _hover={{ bg: "#2C5282" }}
-          >
-            Submit
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-};
-
-export default RestrictedIssuerForm;
+<AgGridReact
+    masterDetail={masterDetail}
+    columnDefs={columnDefs}
+    detailCellRendererParams={detailCellRendererParams}
+/>
