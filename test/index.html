@@ -1,32 +1,307 @@
-// enable Master / Detail
-const masterDetail = true;
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  HStack,
+  useToast,
+  Checkbox,
+  VStack,
+  Box,
+} from '@chakra-ui/react'
+import { useForm } from 'react-hook-form'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createRestrictedIssuer } from '../../api/restrictedIssuers'
 
-// the first Column is configured to use agGroupCellRenderer
-const [columnDefs, setColumnDefs] = useState([
-    { field: 'name', cellRenderer: 'agGroupCellRenderer' },
-    { field: 'account' }
-]);
+interface CreateIssuerModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
 
-// provide Detail Cell Renderer Params
-const detailCellRendererParams = useMemo(() => { 
-	return {
-        // provide the Grid Options to use on the Detail Grid
-        detailGridOptions: {
-            columnDefs: [
-                { field: 'callId' },
-                { field: 'direction' },
-                { field: 'number'}
-            ]
-        },
-        // get the rows for each Detail Grid
-        getDetailRowData: params => {
-            params.successCallback(params.data.callRecords);
-        }
-    };
-}, []);
+interface IssuerFormData {
+  issuerName: string
+  issuerType: string
+  ticker: string
+  isin: string
+  cusip: string
+  sedol: string
+  instrumentType: string
+  restrictionCategory: string
+  allowedTransactionTypes: string[]
+  startDate: string
+  restrictionRequestor: string
+  restrictionNotes: string
+}
 
-<AgGridReact
-    masterDetail={masterDetail}
-    columnDefs={columnDefs}
-    detailCellRendererParams={detailCellRendererParams}
-/>
+export function CreateIssuerModal({ isOpen, onClose }: CreateIssuerModalProps) {
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<IssuerFormData>({
+    defaultValues: {
+      allowedTransactionTypes: ['None']
+    }
+  })
+  const queryClient = useQueryClient()
+  const toast = useToast()
+
+  const allowedTransactionTypes = watch('allowedTransactionTypes') || ['None']
+
+  const handleTransactionTypeChange = (value: string, checked: boolean) => {
+    let newTypes = [...allowedTransactionTypes]
+    
+    if (checked) {
+      if (!newTypes.includes(value)) {
+        newTypes.push(value)
+      }
+      // If selecting something other than None, remove None
+      if (value !== 'None' && newTypes.includes('None')) {
+        newTypes = newTypes.filter(type => type !== 'None')
+      }
+    } else {
+      newTypes = newTypes.filter(type => type !== value)
+      // If no types selected, default to None
+      if (newTypes.length === 0) {
+        newTypes = ['None']
+      }
+    }
+    
+    // If selecting None, clear all other selections
+    if (value === 'None' && checked) {
+      newTypes = ['None']
+    }
+    
+    setValue('allowedTransactionTypes', newTypes)
+  }
+  const createMutation = useMutation({
+    mutationFn: createRestrictedIssuer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restricted-issuers'] })
+      toast({
+        title: 'Restricted Issuer Created',
+        description: 'The new restricted issuer has been added successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+      reset()
+      onClose()
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create restricted issuer.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    },
+  })
+
+  const onSubmit = (data: IssuerFormData) => {
+    const submitData = {
+      ...data,
+      allowedTransactionType: data.allowedTransactionTypes.join(', ')
+    }
+    createMutation.mutate(submitData)
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+      <ModalOverlay />
+      <ModalContent bg="gray.800" color="white">
+        <ModalHeader>Add New Restricted Issuer</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <HStack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm">Issuer Name</FormLabel>
+                <Input
+                  {...register('issuerName', { required: 'Issuer name is required' })}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">Issuer Type</FormLabel>
+                <Select
+                  {...register('issuerType')}
+                  placeholder="Public"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                >
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+                </Select>
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm">Ticker</FormLabel>
+                <Input
+                  {...register('ticker')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">ISIN</FormLabel>
+                <Input
+                  {...register('isin')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm">CUSIP</FormLabel>
+                <Input
+                  {...register('cusip')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">SEDOL</FormLabel>
+                <Input
+                  {...register('sedol')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm">Instrument Type</FormLabel>
+                <Select
+                  {...register('instrumentType')}
+                  placeholder="Equity"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                >
+                  <option value="Equity">Equity</option>
+                  <option value="Bond">Bond</option>
+                  <option value="Derivative">Derivative</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">Restriction Category</FormLabel>
+                <Select
+                  {...register('restrictionCategory')}
+                  placeholder="Select Below"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                >
+                  <option value="Exclusion_Policy_Restrictions">Exclusion_Policy_Restrictions</option>
+                  <option value="ESG RL">ESG RL</option>
+                </Select>
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm">Allowed Transaction Type</FormLabel>
+                <Box
+                  bg="gray.700"
+                  border="1px solid"
+                  borderColor="gray.600"
+                  borderRadius="md"
+                  p={3}
+                  maxH="120px"
+                  overflowY="auto"
+                >
+                  <VStack align="flex-start" spacing={2}>
+                    {['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None'].map((type) => (
+                      <Checkbox
+                        key={type}
+                        isChecked={allowedTransactionTypes.includes(type)}
+                        onChange={(e) => handleTransactionTypeChange(type, e.target.checked)}
+                        colorScheme="blue"
+                        size="sm"
+                      >
+                        {type}
+                      </Checkbox>
+                    ))}
+                  </VStack>
+                </Box>
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">Start Date</FormLabel>
+                <Input
+                  {...register('startDate')}
+                  type="date"
+                  defaultValue="2025-08-25"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={4} mb={6}>
+              <FormControl>
+                <FormLabel fontSize="sm">Restriction Requestor</FormLabel>
+                <Input
+                  {...register('restrictionRequestor')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="sm">Restriction Notes</FormLabel>
+                <Input
+                  {...register('restrictionNotes')}
+                  placeholder="Enter value"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: 'gray.600' }}
+                />
+              </FormControl>
+            </HStack>
+
+            <HStack justify="flex-end" spacing={3}>
+              <Button 
+                onClick={onClose}
+                variant="outline"
+                colorScheme="red"
+              >
+                Close
+              </Button>
+              <Button
+                type="submit"
+                isLoading={createMutation.isPending}
+                colorScheme="blue"
+              >
+                Submit
+              </Button>
+            </HStack>
+          </form>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  )
+}
