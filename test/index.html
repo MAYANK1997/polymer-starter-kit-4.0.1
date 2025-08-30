@@ -1,85 +1,106 @@
-import { Box, Button, Flex } from '@chakra-ui/react'
-import { FiPlus } from 'react-icons/fi'
-import { DataTable } from '../../components/DataTable'
-import { CreateCategoryModal } from '../../components/CreateCategoryModal'
-import { DeleteCategoryModal } from '../../components/DeleteCategoryModal'
-import { useRestrictionCategories } from '../../hooks/useRestrictionCategories'
-import { restrictionCategoryColumns } from '../../data/columns'
-import { useState } from 'react'
-import { useDisclosure } from '@chakra-ui/react'
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogCloseTrigger,
+} from '@chakra-ui/react'
+import { Button, Text, HStack, useToast, Alert, AlertIcon } from '@chakra-ui/react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-export function RestrictionCategoryPage() {
-  const createDialog = useDisclosure()
-  const editDialog = useDisclosure()
-  const deleteDialog = useDisclosure()
-  const { data: categories, isLoading } = useRestrictionCategories()
-  const [selectedCategory, setSelectedCategory] = useState<any>(null)
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+interface Category {
+  id: string
+  restrictionCategoryName: string
+}
 
-  // Handlers accessible from DataTable actions
-  window.handleEditCategory = (category: any) => {
-    setSelectedCategory(category)
-    setModalMode('edit')
-    editDialog.onOpen()
+interface DeleteCategoryModalProps {
+  isOpen: boolean
+  onClose: () => void
+  category?: Category | null
+}
+
+export function DeleteCategoryModal({ isOpen, onClose, category }: DeleteCategoryModalProps) {
+  const queryClient = useQueryClient()
+  const toast = useToast()
+
+  const deleteMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return categoryId
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
+      toast({
+        title: 'Category Deleted',
+        description: 'The restriction category has been deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+      onClose()
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete restriction category.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    },
+  })
+
+  const handleDelete = () => {
+    if (category?.id) {
+      deleteMutation.mutate(category.id)
+    }
   }
 
-  window.handleDeleteCategory = (category: any) => {
-    setSelectedCategory(category)
-    deleteDialog.onOpen()
-  }
-
-  const handleCreateNew = () => {
-    setSelectedCategory(null)
-    setModalMode('create')
-    createDialog.onOpen()
-  }
+  if (!category) return null
 
   return (
-    <Box>
-      {/* Action Bar */}
-      <Flex justify="flex-start" mb={4}>
-        <Button
-          leftIcon={<FiPlus />}
-          onClick={handleCreateNew}
-          bg="gray.700"
-          color="white"
-          _hover={{ bg: 'gray.600' }}
-          size="sm"
-        >
-          Add New Restriction Category
-        </Button>
-      </Flex>
+    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
+      <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
+        <DialogHeader>
+          <DialogTitle>Delete Restriction Category</DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
 
-      {/* Data Table */}
-      <DataTable
-        columns={restrictionCategoryColumns}
-        data={categories || []}
-        loading={isLoading}
-        enableFiltering
-        enableExport
-      />
+        <DialogBody>
+          <Alert status="warning" bg="orange.900" borderRadius="md" mb={4}>
+            <AlertIcon />
+            <Text fontSize="sm">
+              This action cannot be undone. This will permanently delete the restriction category.
+            </Text>
+          </Alert>
 
-      {/* Create Dialog */}
-      <CreateCategoryModal
-        isOpen={createDialog.isOpen}
-        onClose={createDialog.onClose}
-        mode="create"
-      />
+          <Text mb={4}>
+            Are you sure you want to delete the restriction category:
+          </Text>
 
-      {/* Edit Dialog */}
-      <CreateCategoryModal
-        isOpen={editDialog.isOpen}
-        onClose={editDialog.onClose}
-        category={selectedCategory}
-        mode="edit"
-      />
+          <Text fontWeight="bold" color="red.300" mb={6}>
+            "{category.restrictionCategoryName}"
+          </Text>
+        </DialogBody>
 
-      {/* Delete Dialog */}
-      <DeleteCategoryModal
-        isOpen={deleteDialog.isOpen}
-        onClose={deleteDialog.onClose}
-        category={selectedCategory}
-      />
-    </Box>
+        <DialogFooter>
+          <HStack justify="flex-end" spacing={3}>
+            <Button onClick={onClose} variant="outline" colorScheme="gray">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              isLoading={deleteMutation.isPending}
+              colorScheme="red"
+            >
+              Delete Category
+            </Button>
+          </HStack>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   )
 }
