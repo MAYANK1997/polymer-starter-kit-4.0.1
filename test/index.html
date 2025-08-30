@@ -1,123 +1,17 @@
-import {
-  DialogRoot,
-  DialogContent,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-  DialogTitle,
-  DialogCloseTrigger,
-  Button,
-  Text,
-  HStack,
-} from '@chakra-ui/react'
-import {
-  AlertRoot,
-  AlertIndicator,
-  AlertTitle,
-  AlertDescription,
-} from '@chakra-ui/react/alert'
-import { Toaster, toaster } from '@chakra-ui/react/toaster'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { ChakraProvider } from '@chakra-ui/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import App from './App'
 
-interface Category {
-  id: string
-  restrictionCategoryName: string
-}
+const queryClient = new QueryClient()
 
-interface DeleteCategoryModalProps {
-  isOpen: boolean
-  onClose: () => void
-  category?: Category | null
-}
-
-export function DeleteCategoryModal({ isOpen, onClose, category }: DeleteCategoryModalProps) {
-  const queryClient = useQueryClient()
-
-  const deleteMutation = useMutation({
-    mutationFn: async (categoryId: string) => {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return categoryId
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
-      toaster.create({
-        title: 'Category Deleted',
-        description: 'The restriction category has been deleted successfully.',
-        type: 'success',
-        duration: 3000,
-      })
-      onClose()
-    },
-    onError: () => {
-      toaster.create({
-        title: 'Error',
-        description: 'Failed to delete restriction category.',
-        type: 'error',
-        duration: 3000,
-      })
-    },
-  })
-
-  const handleDelete = () => {
-    if (category?.id) {
-      deleteMutation.mutate(category.id)
-    }
-  }
-
-  if (!category) return null
-
-  return (
-    <>
-      <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
-        <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
-          <DialogHeader>
-            <DialogTitle>Delete Restriction Category</DialogTitle>
-            <DialogCloseTrigger />
-          </DialogHeader>
-
-          <DialogBody>
-            <AlertRoot
-              status="warning"
-              bg="orange.900"
-              borderRadius="md"
-              mb={4}
-              variant="subtle"
-            >
-              <AlertIndicator />
-              <AlertDescription fontSize="sm">
-                This action cannot be undone. This will permanently delete the restriction category.
-              </AlertDescription>
-            </AlertRoot>
-
-            <Text mb={4}>
-              Are you sure you want to delete the restriction category:
-            </Text>
-
-            <Text fontWeight="bold" color="red.300" mb={6}>
-              "{category.restrictionCategoryName}"
-            </Text>
-          </DialogBody>
-
-          <DialogFooter>
-            <HStack justify="flex-end" spacing={3}>
-              <Button onClick={onClose} variant="outline" colorScheme="gray">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDelete}
-                isLoading={deleteMutation.isPending}
-                colorScheme="red"
-              >
-                Delete Category
-              </Button>
-            </HStack>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
-
-      {/* Best practice: move <Toaster /> to App.tsx once globally */}
-      <Toaster />
-    </>
-  )
-}
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ChakraProvider>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </ChakraProvider>
+  </React.StrictMode>,
+)
