@@ -1,11 +1,85 @@
-declare global {
-  interface Window {
-    handleUnrestrict: (id: string) => void;
-    clearGridFilters: (() => void) | null;
-    exportGridData: (() => void) | null;
-    handleEditCategory: (category: any) => void;
-    handleDeleteCategory: (category: any) => void;
-  }
-}
+import { Box, Button, Flex } from '@chakra-ui/react'
+import { FiPlus } from 'react-icons/fi'
+import { DataTable } from '../../components/DataTable'
+import { CreateCategoryModal } from '../../components/CreateCategoryModal'
+import { DeleteCategoryModal } from '../../components/DeleteCategoryModal'
+import { useRestrictionCategories } from '../../hooks/useRestrictionCategories'
+import { restrictionCategoryColumns } from '../../data/columns'
+import { useState } from 'react'
+import { useDisclosure } from '@chakra-ui/react'
 
-export {}
+export function RestrictionCategoryPage() {
+  const createDialog = useDisclosure()
+  const editDialog = useDisclosure()
+  const deleteDialog = useDisclosure()
+  const { data: categories, isLoading } = useRestrictionCategories()
+  const [selectedCategory, setSelectedCategory] = useState<any>(null)
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+
+  // Handlers accessible from DataTable actions
+  window.handleEditCategory = (category: any) => {
+    setSelectedCategory(category)
+    setModalMode('edit')
+    editDialog.onOpen()
+  }
+
+  window.handleDeleteCategory = (category: any) => {
+    setSelectedCategory(category)
+    deleteDialog.onOpen()
+  }
+
+  const handleCreateNew = () => {
+    setSelectedCategory(null)
+    setModalMode('create')
+    createDialog.onOpen()
+  }
+
+  return (
+    <Box>
+      {/* Action Bar */}
+      <Flex justify="flex-start" mb={4}>
+        <Button
+          leftIcon={<FiPlus />}
+          onClick={handleCreateNew}
+          bg="gray.700"
+          color="white"
+          _hover={{ bg: 'gray.600' }}
+          size="sm"
+        >
+          Add New Restriction Category
+        </Button>
+      </Flex>
+
+      {/* Data Table */}
+      <DataTable
+        columns={restrictionCategoryColumns}
+        data={categories || []}
+        loading={isLoading}
+        enableFiltering
+        enableExport
+      />
+
+      {/* Create Dialog */}
+      <CreateCategoryModal
+        isOpen={createDialog.isOpen}
+        onClose={createDialog.onClose}
+        mode="create"
+      />
+
+      {/* Edit Dialog */}
+      <CreateCategoryModal
+        isOpen={editDialog.isOpen}
+        onClose={editDialog.onClose}
+        category={selectedCategory}
+        mode="edit"
+      />
+
+      {/* Delete Dialog */}
+      <DeleteCategoryModal
+        isOpen={deleteDialog.isOpen}
+        onClose={deleteDialog.onClose}
+        category={selectedCategory}
+      />
+    </Box>
+  )
+}
