@@ -37,6 +37,13 @@ import { toaster } from '@loim/loim-ui';
     const deleteMutation = useMutation({
       mutationFn: async (categoryId: string) => {
         // Mock API call
+http://nycuapp03.biz.lodh.com:8787/RestrictionCategory/+ id
+ method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+
+          }
         await new Promise(resolve => setTimeout(resolve, 1000))
         return categoryId
       },
