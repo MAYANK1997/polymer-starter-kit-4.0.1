@@ -1,130 +1,137 @@
 import {
-    DialogRoot,
-    DialogContent,
-    DialogHeader,
-    DialogBody,
-    DialogFooter,
-    DialogTitle,
-    DialogCloseTrigger,
-    Button,
-    Text,
-    HStack,
-  } from '@chakra-ui/react'
-  import {
-    AlertRoot,
-    AlertIndicator,
-    AlertTitle,
-    AlertDescription,
-  } from '@chakra-ui/react/alert';
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogCloseTrigger,
+  Button,
+  Text,
+  HStack,
+} from "@chakra-ui/react";
 
-import { toaster } from '@loim/loim-ui';
-  import { useMutation, useQueryClient } from '@tanstack/react-query'
-  
-  interface Category {
-    id: string
-    name: string
-  }
-  
-  interface DeleteCategoryModalProps {
-    open: boolean
-    onClose: () => void
-    category?: Category | null
-  }
-  
-  export function DeleteCategoryModal({ open, onClose, category }: DeleteCategoryModalProps) {
-    const queryClient = useQueryClient()
-  
-    const deleteMutation = useMutation({
-      mutationFn: async (categoryId: string) => {
-        // Mock API call
-http://nycuapp03.biz.lodh.com:8787/RestrictionCategory/+ id
- method: 'DELETE',
-          credentials: 'include',
+import {
+  AlertRoot,
+  AlertIndicator,
+  AlertDescription,
+} from "@chakra-ui/react/alert";
+
+import { toaster } from "@loim/loim-ui";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface DeleteCategoryModalProps {
+  open: boolean;
+  onClose: () => void;
+  category?: Category | null;
+}
+
+export function DeleteCategoryModal({
+  open,
+  onClose,
+  category,
+}: DeleteCategoryModalProps) {
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const res = await fetch(
+        `http://nycuapp03.biz.lodh.com:8787/RestrictionCategory/${categoryId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-          }
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        return categoryId
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
-        toaster.create({
-          title: 'Category Deleted',
-          description: 'The restriction category has been deleted successfully.',
-          type: 'success',
-          duration: 3000,
-        })
-        onClose()
-      },
-      onError: () => {
-        toaster.create({
-          title: 'Error',
-          description: 'Failed to delete restriction category.',
-          type: 'error',
-          duration: 3000,
-        })
-      },
-    })
-  
-    const handleDelete = () => {
-      if (category?.id) {
-        deleteMutation.mutate(category.id)
+      if (!res.ok) {
+        throw new Error("Failed to delete restriction category");
       }
+
+      return categoryId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restriction-categories"] });
+      toaster.create({
+        title: "Category Deleted",
+        description: "The restriction category has been deleted successfully.",
+        type: "success",
+        duration: 3000,
+      });
+      onClose();
+    },
+    onError: () => {
+      toaster.create({
+        title: "Error",
+        description: "Failed to delete restriction category.",
+        type: "error",
+        duration: 3000,
+      });
+    },
+  });
+
+  const handleDelete = () => {
+    if (category?.id) {
+      deleteMutation.mutate(category.id);
     }
-  
-    if (!category) return null
-  
-    return (
-      <>
-        <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
-          <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
-            <DialogHeader>
-              <DialogTitle>Delete Restriction Category</DialogTitle>
-              <DialogCloseTrigger />
-            </DialogHeader>
-  
-            <DialogBody>
-              <AlertRoot
-                status="warning"
-                bg="orange.900"
-                borderRadius="md"
-                mb={4}
-                variant="subtle"
-              >
-                <AlertIndicator />
-                <AlertDescription fontSize="sm">
-                  This action cannot be undone. This will permanently delete the restriction category.
-                </AlertDescription>
-              </AlertRoot>
-  
-              <Text mb={4}>
-                Are you sure you want to delete the restriction category:
-              </Text>
-  
-              <Text fontWeight="bold" color="red.300" mb={6}>
-                "{category.name}"
-              </Text>
-            </DialogBody>
-  
-            <DialogFooter>
-              <HStack justify="flex-end" gap={3}>
-                <Button onClick={onClose} variant="outline" colorScheme="gray">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDelete}
-                  loading={deleteMutation.isPending}
-                  colorScheme="red"
-                >
-                  Delete Category
-                </Button>
-              </HStack>
-            </DialogFooter>
-          </DialogContent>
-        </DialogRoot>
-  
-        
-      </>
-    )
-  }
+  };
+
+  if (!category) return null;
+
+  return (
+    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
+      <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
+        <DialogHeader>
+          <DialogTitle>Delete Restriction Category</DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
+
+        <DialogBody>
+          <AlertRoot
+            status="warning"
+            bg="orange.900"
+            borderRadius="md"
+            mb={4}
+            variant="subtle"
+          >
+            <AlertIndicator />
+            <AlertDescription fontSize="sm">
+              This action cannot be undone. This will permanently delete the
+              restriction category.
+            </AlertDescription>
+          </AlertRoot>
+
+          <Text mb={4}>
+            Are you sure you want to delete the restriction category:
+          </Text>
+
+          <Text fontWeight="bold" color="red.300" mb={6}>
+            "{category.name}"
+          </Text>
+        </DialogBody>
+
+        <DialogFooter>
+          <HStack justify="flex-end" gap={3}>
+            <Button onClick={onClose} variant="outline" colorScheme="gray">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              isLoading={deleteMutation.isPending}
+              colorScheme="red"
+            >
+              Delete Category
+            </Button>
+          </HStack>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+  );
+}
