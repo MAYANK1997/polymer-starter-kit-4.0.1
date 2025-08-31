@@ -1,106 +1,277 @@
+import { useState, useEffect } from "react"
 import {
-  DialogRoot,
+  Button,
+  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogBody,
+  DialogDescription,
   DialogFooter,
-  DialogCloseTrigger,
-  Button,
-  Fieldset,
+  DialogBody,
+  FormControl,
+  FormLabel,
   Input,
+  Textarea,
+  Checkbox,
   Stack,
-  Text,
-  toaster,
-  AlertRoot,
-  AlertIndicator,
-} from '@chakra-ui/react'
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+  Select,
+  useToast,
+} from "@chakra-ui/react"
+import { useForm } from "react-hook-form"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface CreateCategoryModalProps {
   isOpen: boolean
   onClose: () => void
+  category?: any
+  mode?: "create" | "edit"
 }
 
-export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
+interface CategoryFormData {
+  restrictionCategoryName: string
+  description: string
+  fundGroup: string
+  fundNames: string[]
+  availableFor: string[]
+}
+
+// Mock API functions for dependent data
+const fetchFundNames = async (fundGroup: string) => {
+  await new Promise(resolve => setTimeout(resolve, 500))
+  const fundNamesByGroup: Record<string, string[]> = {
+    Volantis: ["1798 Volantis Catalyst", "Volantis Growth Fund", "Volantis Value Fund"],
+    "LOIM IT": ["LOIM Technology Fund", "LOIM Innovation Fund", "LOIM Digital Fund"],
+    "ESG Funds": ["ESG Global Fund", "ESG Sustainable Fund", "ESG Impact Fund"],
+  }
+  return fundNamesByGroup[fundGroup] || []
+}
+
+const fetchAvailableFor = async (fundGroup: string) => {
+  await new Promise(resolve => setTimeout(resolve, 500))
+  const availableForByGroup: Record<string, string[]> = {
+    Volantis: ["Developers", "Portfolio Managers", "Risk Managers"],
+    "LOIM IT": ["LOAM IT", "Portfolio Managers", "System Administrators"],
+    "ESG Funds": ["ESG Team", "Compliance", "Audit"],
+  }
+  return availableForByGroup[fundGroup] || []
+}
+
+export function CreateCategoryModal({
+  isOpen,
+  onClose,
+  category,
+  mode = "create",
+}: CreateCategoryModalProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CategoryFormData>({
+    defaultValues: {
+      restrictionCategoryName: "",
+      description: "",
+      fundGroup: "",
+      fundNames: [],
+      availableFor: [],
+    },
+  })
+
   const queryClient = useQueryClient()
-  const [categoryName, setCategoryName] = useState('')
+  const toast = useToast()
+  const [selectedFundGroup, setSelectedFundGroup] = useState("")
+  const fundGroup = watch("fundGroup")
+  const selectedFundNames = watch("fundNames") || []
+  const selectedAvailableFor = watch("availableFor") || []
+
+  // Fetch fund names
+  const { data: fundNames = [] } = useQuery({
+    queryKey: ["fund-names", fundGroup],
+    queryFn: () => fetchFundNames(fundGroup),
+    enabled: !!fundGroup,
+  })
+
+  // Fetch availableFor
+  const { data: availableForOptions = [] } = useQuery({
+    queryKey: ["available-for", fundGroup],
+    queryFn: () => fetchAvailableFor(fundGroup),
+    enabled: !!fundGroup,
+  })
+
+  // Reset when fund group changes
+  useEffect(() => {
+    if (fundGroup !== selectedFundGroup) {
+      setValue("fundNames", [])
+      setValue("availableFor", [])
+      setSelectedFundGroup(fundGroup)
+    }
+  }, [fundGroup, selectedFundGroup, setValue])
+
+  // Populate edit mode
+  useEffect(() => {
+    if (mode === "edit" && category && isOpen) {
+      reset({
+        restrictionCategoryName: category.restrictionCategoryName || "",
+        description: category.description || "",
+        fundGroup: category.fundGroup || "",
+        fundNames: category.fundName ? category.fundName.split(", ") : [],
+        availableFor: category.availableFor ? category.availableFor.split(", ") : [],
+      })
+      setSelectedFundGroup(category.fundGroup || "")
+    } else if (mode === "create" && isOpen) {
+      reset({
+        restrictionCategoryName: "",
+        description: "",
+        fundGroup: "",
+        fundNames: [],
+        availableFor: [],
+      })
+      setSelectedFundGroup("")
+    }
+  }, [mode, category, isOpen, reset])
 
   const createMutation = useMutation({
-    mutationFn: async (name: string) => {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      return { id: Math.random().toString(), restrictionCategoryName: name }
+    mutationFn: async (data: CategoryFormData) => {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return {
+        ...data,
+        id: mode === "edit" ? category?.id : Date.now().toString(),
+        fundName: data.fundNames.join(", "),
+        availableFor: data.availableFor.join(", "),
+        lastModifiedBy: "current_user",
+        lastModifiedOn: new Date().toISOString().split("T")[0],
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
-      toaster.success({
-        title: 'Category Created',
-        description: 'The restriction category has been created successfully.',
+      queryClient.invalidateQueries({ queryKey: ["restriction-categories"] })
+      toast({
+        title: mode === "edit" ? "Category Updated" : "Category Created",
+        description: `The restriction category has been ${
+          mode === "edit" ? "updated" : "created"
+        } successfully.`,
+        status: "success",
         duration: 3000,
+        isClosable: true,
       })
-      setCategoryName('')
+      reset()
       onClose()
     },
     onError: () => {
-      toaster.error({
-        title: 'Error',
-        description: 'Failed to create restriction category.',
+      toast({
+        title: "Error",
+        description: `Failed to ${mode} restriction category.`,
+        status: "error",
         duration: 3000,
+        isClosable: true,
       })
     },
   })
 
-  const handleSubmit = () => {
-    if (categoryName.trim()) {
-      createMutation.mutate(categoryName.trim())
-    }
+  const onSubmit = (data: CategoryFormData) => {
+    createMutation.mutate(data)
   }
 
   return (
-    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
-      <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
-        <DialogHeader>
-          <DialogTitle>Create Restriction Category</DialogTitle>
-          <DialogCloseTrigger />
-        </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle>
+              {mode === "edit" ? "Edit Restriction Category" : "Create Restriction Category"}
+            </DialogTitle>
+            <DialogDescription>
+              {mode === "edit"
+                ? "Update details of the restriction category."
+                : "Fill in details to create a new restriction category."}
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogBody>
-          <Stack spacing={4}>
-            <Fieldset.Root>
-              <Fieldset.Label>Category Name</Fieldset.Label>
+          <DialogBody>
+            <FormControl isInvalid={!!errors.restrictionCategoryName}>
+              <FormLabel>Category Name</FormLabel>
               <Input
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Enter restriction category"
+                {...register("restrictionCategoryName", { required: "Category Name is required" })}
               />
-            </Fieldset.Root>
+            </FormControl>
 
-            {createMutation.isError && (
-              <AlertRoot status="error" borderRadius="md">
-                <AlertIndicator />
-                <Text fontSize="sm">Failed to create category. Please try again.</Text>
-              </AlertRoot>
+            <FormControl mt={3}>
+              <FormLabel>Description</FormLabel>
+              <Textarea {...register("description")} />
+            </FormControl>
+
+            <FormControl mt={3}>
+              <FormLabel>Fund Group</FormLabel>
+              <Select placeholder="Select fund group" {...register("fundGroup")}>
+                <option value="Volantis">Volantis</option>
+                <option value="LOIM IT">LOIM IT</option>
+                <option value="ESG Funds">ESG Funds</option>
+              </Select>
+            </FormControl>
+
+            {fundNames.length > 0 && (
+              <FormControl mt={3}>
+                <FormLabel>Fund Names</FormLabel>
+                <Stack>
+                  {fundNames.map(name => (
+                    <Checkbox
+                      key={name}
+                      isChecked={selectedFundNames.includes(name)}
+                      onChange={e => {
+                        const checked = e.target.checked
+                        const newFundNames = checked
+                          ? [...selectedFundNames, name]
+                          : selectedFundNames.filter(n => n !== name)
+                        setValue("fundNames", newFundNames)
+                      }}
+                    >
+                      {name}
+                    </Checkbox>
+                  ))}
+                </Stack>
+              </FormControl>
             )}
-          </Stack>
-        </DialogBody>
 
-        <DialogFooter>
-          <Stack direction="row" justify="flex-end" spacing={3}>
+            {availableForOptions.length > 0 && (
+              <FormControl mt={3}>
+                <FormLabel>Available For</FormLabel>
+                <Stack>
+                  {availableForOptions.map(option => (
+                    <Checkbox
+                      key={option}
+                      isChecked={selectedAvailableFor.includes(option)}
+                      onChange={e => {
+                        const checked = e.target.checked
+                        const newAvailableFor = checked
+                          ? [...selectedAvailableFor, option]
+                          : selectedAvailableFor.filter(n => n !== option)
+                        setValue("availableFor", newAvailableFor)
+                      }}
+                    >
+                      {option}
+                    </Checkbox>
+                  ))}
+                </Stack>
+              </FormControl>
+            )}
+          </DialogBody>
+
+          <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button
-              onClick={handleSubmit}
-              loading={createMutation.isPending}
+              type="submit"
+              ml={3}
+              isLoading={createMutation.isPending}
               colorScheme="blue"
             >
-              Create
+              {mode === "edit" ? "Update" : "Create"}
             </Button>
-          </Stack>
-        </DialogFooter>
+          </DialogFooter>
+        </form>
       </DialogContent>
-    </DialogRoot>
+    </Dialog>
   )
 }
