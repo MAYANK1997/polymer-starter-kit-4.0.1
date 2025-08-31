@@ -1,85 +1,106 @@
-import { Box, Button, Flex } from '@chakra-ui/react'
-import { FiPlus } from 'react-icons/fi'
-import { DataTable } from '../../components/DataTable'
-import { CreateCategoryModal } from '../../components/CreateCategoryModal'
-import { DeleteCategoryModal } from '../../components/DeleteCategoryModal'
-import { useRestrictionCategories } from '../../hooks/useRestrictionCategories'
-import { restrictionCategoryColumns } from '../../data/columns'
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+  Button,
+  Fieldset,
+  Input,
+  Stack,
+  Text,
+  toaster,
+  AlertRoot,
+  AlertIndicator,
+} from '@chakra-ui/react'
 import { useState } from 'react'
-import { useDisclosure } from '@chakra-ui/react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-export function RestrictionCategoryPage() {
-  const createDialog = useDisclosure()
-  const editDialog = useDisclosure()
-  const deleteDialog = useDisclosure()
-  const { data: categories, isLoading } = useRestrictionCategories()
-  const [selectedCategory, setSelectedCategory] = useState<any>(null)
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+interface CreateCategoryModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
 
-  // Handlers accessible from DataTable actions
-  window.handleEditCategory = (category: any) => {
-    setSelectedCategory(category)
-    setModalMode('edit')
-    editDialog.onOpen()
-  }
+export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
+  const queryClient = useQueryClient()
+  const [categoryName, setCategoryName] = useState('')
 
-  window.handleDeleteCategory = (category: any) => {
-    setSelectedCategory(category)
-    deleteDialog.onOpen()
-  }
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
+      // Mock API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return { id: Math.random().toString(), restrictionCategoryName: name }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
+      toaster.success({
+        title: 'Category Created',
+        description: 'The restriction category has been created successfully.',
+        duration: 3000,
+      })
+      setCategoryName('')
+      onClose()
+    },
+    onError: () => {
+      toaster.error({
+        title: 'Error',
+        description: 'Failed to create restriction category.',
+        duration: 3000,
+      })
+    },
+  })
 
-  const handleCreateNew = () => {
-    setSelectedCategory(null)
-    setModalMode('create')
-    createDialog.onOpen()
+  const handleSubmit = () => {
+    if (categoryName.trim()) {
+      createMutation.mutate(categoryName.trim())
+    }
   }
 
   return (
-    <Box>
-      {/* Action Bar */}
-      <Flex justify="flex-start" mb={4}>
-        <Button
-          leftIcon={<FiPlus />}
-          onClick={handleCreateNew}
-          bg="gray.700"
-          color="white"
-          _hover={{ bg: 'gray.600' }}
-          size="sm"
-        >
-          Add New Restriction Category
-        </Button>
-      </Flex>
+    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
+      <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
+        <DialogHeader>
+          <DialogTitle>Create Restriction Category</DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
 
-      {/* Data Table */}
-      <DataTable
-        columns={restrictionCategoryColumns}
-        data={categories || []}
-        loading={isLoading}
-        enableFiltering
-        enableExport
-      />
+        <DialogBody>
+          <Stack spacing={4}>
+            <Fieldset.Root>
+              <Fieldset.Label>Category Name</Fieldset.Label>
+              <Input
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder="Enter restriction category"
+              />
+            </Fieldset.Root>
 
-      {/* Create Dialog */}
-      <CreateCategoryModal
-        isOpen={createDialog.isOpen}
-        onClose={createDialog.onClose}
-        mode="create"
-      />
+            {createMutation.isError && (
+              <AlertRoot status="error" borderRadius="md">
+                <AlertIndicator />
+                <Text fontSize="sm">Failed to create category. Please try again.</Text>
+              </AlertRoot>
+            )}
+          </Stack>
+        </DialogBody>
 
-      {/* Edit Dialog */}
-      <CreateCategoryModal
-        isOpen={editDialog.isOpen}
-        onClose={editDialog.onClose}
-        category={selectedCategory}
-        mode="edit"
-      />
-
-      {/* Delete Dialog */}
-      <DeleteCategoryModal
-        isOpen={deleteDialog.isOpen}
-        onClose={deleteDialog.onClose}
-        category={selectedCategory}
-      />
-    </Box>
+        <DialogFooter>
+          <Stack direction="row" justify="flex-end" spacing={3}>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              loading={createMutation.isPending}
+              colorScheme="blue"
+            >
+              Create
+            </Button>
+          </Stack>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   )
 }
