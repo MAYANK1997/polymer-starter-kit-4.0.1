@@ -1,37 +1,66 @@
-  <FormControl isInvalid={!!errors.restrictionCategoryName}>
-              <FormLabel>Category Name</FormLabel>
-              <Input
-                {...register("restrictionCategoryName", { required: "Category Name is required" })}
-              />
-            </FormControl>
+<DialogRoot open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent rounded="xl" shadow="xl" p={6}>
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "edit" ? "Edit Restriction Category" : "Create Restriction Category"}
+          </DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
 
-            <FormControl mt={3}>
-              <FormLabel>Description</FormLabel>
-              <Textarea {...register("description")} />
-            </FormControl>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogBody>
+            {/* Category Name */}
+            <Fieldset.Root>
+              <Fieldset.Content>
+                <Field
+                  label="Category Name"
+                  invalid={!!errors.restrictionCategoryName}
+                  errorText={errors.restrictionCategoryName?.message}
+                >
+                  <Input
+                    {...register("restrictionCategoryName", {
+                      required: "Category Name is required",
+                    })}
+                  />
+                </Field>
+              </Fieldset.Content>
+            </Fieldset.Root>
 
-            <FormControl mt={3}>
-              <FormLabel>Fund Group</FormLabel>
-              <Select placeholder="Select fund group" {...register("fundGroup")}>
-                <option value="Volantis">Volantis</option>
-                <option value="LOIM IT">LOIM IT</option>
-                <option value="ESG Funds">ESG Funds</option>
-              </Select>
-            </FormControl>
+            {/* Description */}
+            <Fieldset.Root mt={4}>
+              <Fieldset.Content>
+                <Field label="Description">
+                  <Textarea {...register("description")} />
+                </Field>
+              </Fieldset.Content>
+            </Fieldset.Root>
 
+            {/* Fund Group */}
+            <Fieldset.Root mt={4}>
+              <Fieldset.Content>
+                <Field label="Fund Group">
+                  <Select placeholder="Select fund group" {...register("fundGroup")}>
+                    <option value="Volantis">Volantis</option>
+                    <option value="LOIM IT">LOIM IT</option>
+                    <option value="ESG Funds">ESG Funds</option>
+                  </Select>
+                </Field>
+              </Fieldset.Content>
+            </Fieldset.Root>
+
+            {/* Fund Names */}
             {fundNames.length > 0 && (
-              <FormControl mt={3}>
-                <FormLabel>Fund Names</FormLabel>
+              <Fieldset.Root mt={4}>
+                <Fieldset.Legend>Fund Names</Fieldset.Legend>
                 <Stack>
-                  {fundNames.map(name => (
+                  {fundNames.map((name) => (
                     <Checkbox
                       key={name}
-                      isChecked={selectedFundNames.includes(name)}
-                      onChange={e => {
-                        const checked = e.target.checked
+                      checked={selectedFundNames.includes(name)}
+                      onCheckedChange={(checked) => {
                         const newFundNames = checked
                           ? [...selectedFundNames, name]
-                          : selectedFundNames.filter(n => n !== name)
+                          : selectedFundNames.filter((n) => n !== name)
                         setValue("fundNames", newFundNames)
                       }}
                     >
@@ -39,22 +68,22 @@
                     </Checkbox>
                   ))}
                 </Stack>
-              </FormControl>
+              </Fieldset.Root>
             )}
 
+            {/* Available For */}
             {availableForOptions.length > 0 && (
-              <FormControl mt={3}>
-                <FormLabel>Available For</FormLabel>
+              <Fieldset.Root mt={4}>
+                <Fieldset.Legend>Available For</Fieldset.Legend>
                 <Stack>
-                  {availableForOptions.map(option => (
+                  {availableForOptions.map((option) => (
                     <Checkbox
                       key={option}
-                      isChecked={selectedAvailableFor.includes(option)}
-                      onChange={e => {
-                        const checked = e.target.checked
+                      checked={selectedAvailableFor.includes(option)}
+                      onCheckedChange={(checked) => {
                         const newAvailableFor = checked
                           ? [...selectedAvailableFor, option]
-                          : selectedAvailableFor.filter(n => n !== option)
+                          : selectedAvailableFor.filter((n) => n !== option)
                         setValue("availableFor", newAvailableFor)
                       }}
                     >
@@ -62,10 +91,11 @@
                     </Checkbox>
                   ))}
                 </Stack>
-              </FormControl>
+              </Fieldset.Root>
             )}
           </DialogBody>
 
+          {/* Footer */}
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Cancel
@@ -82,3 +112,5 @@
         </form>
       </DialogContent>
     </DialogRoot>
+  )
+}
