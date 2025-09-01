@@ -1,11 +1,180 @@
-<Button
-          leftIcon={<FiPlus />}
-          onClick={handleCreateNew}
-          bg="gray.700"
-          color="white"
-          _hover={{ bg: 'gray.600' }}
-          size="sm"
-        >
-          Add New Restriction Category
-        </Button>
-      </Flex>
+import React, { useState } from "react"
+import {
+  Button,
+  Stack,
+  Input,
+  Textarea,
+} from "@chakra-ui/react"
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseTrigger,
+  DialogBody,
+  DialogFooter,
+} from "@chakra-ui/react/dialog"
+import {
+  Field,
+  FieldLabel,
+  FieldErrorMessage,
+} from "@chakra-ui/react/field"
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+} from "@chakra-ui/react/select"
+import {
+  CheckboxRoot,
+  Checkbox,
+  CheckboxControl,
+  CheckboxLabel,
+} from "@chakra-ui/react/checkbox"
+import { useForm } from "react-hook-form"
+
+type FormData = {
+  restrictionCategoryName: string
+  description?: string
+  fundGroup?: string
+  fundNames: string[]
+  availableFor: string[]
+}
+
+type AddCategoryDialogProps = {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({ isOpen, onClose }) => {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      restrictionCategoryName: "",
+      description: "",
+      fundGroup: "",
+      fundNames: [],
+      availableFor: [],
+    },
+  })
+
+  const [fundNames, setFundNames] = useState<string[]>(["Fund A", "Fund B", "Fund C"])
+  const [availableForOptions] = useState<string[]>(["Option 1", "Option 2", "Option 3"])
+
+  const onSubmit = (data: FormData) => {
+    console.log("Form Submitted ✅", data)
+    onClose()
+  }
+
+  return (
+    <DialogRoot open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Restriction Category</DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogBody>
+            {/* Category Name */}
+            <Field>
+              <FieldLabel>Category Name</FieldLabel>
+              <Input
+                {...register("restrictionCategoryName", {
+                  required: "Category Name is required",
+                })}
+              />
+              <FieldErrorMessage>
+                {errors.restrictionCategoryName?.message}
+              </FieldErrorMessage>
+            </Field>
+
+            {/* Description */}
+            <Field mt={3}>
+              <FieldLabel>Description</FieldLabel>
+              <Textarea {...register("description")} />
+            </Field>
+
+            {/* Fund Group Select */}
+            <Field mt={3}>
+              <FieldLabel>Fund Group</FieldLabel>
+              <SelectRoot
+                value={watch("fundGroup")}
+                onValueChange={(e) => setValue("fundGroup", e.value)}
+                collection={["Volantis", "LOIM IT", "ESG Funds"]}
+              >
+                <SelectTrigger>
+                  <SelectValueText placeholder="Select fund group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem item="Volantis">Volantis</SelectItem>
+                  <SelectItem item="LOIM IT">LOIM IT</SelectItem>
+                  <SelectItem item="ESG Funds">ESG Funds</SelectItem>
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+
+            {/* Fund Names */}
+            {fundNames.length > 0 && (
+              <Field mt={3}>
+                <FieldLabel>Fund Names</FieldLabel>
+                <CheckboxRoot
+                  value={watch("fundNames")}
+                  onValueChange={(newFundNames: string[]) => {
+                    setValue("fundNames", newFundNames)
+                  }}
+                >
+                  <Stack>
+                    {fundNames.map((name) => (
+                      <Checkbox key={name} value={name}>
+                        <CheckboxControl />
+                        <CheckboxLabel>{name}</CheckboxLabel>
+                      </Checkbox>
+                    ))}
+                  </Stack>
+                </CheckboxRoot>
+              </Field>
+            )}
+
+            {/* Available For */}
+            {availableForOptions.length > 0 && (
+              <Field mt={3}>
+                <FieldLabel>Available For</FieldLabel>
+                <CheckboxRoot
+                  value={watch("availableFor")}
+                  onValueChange={(newAvailableFor: string[]) => {
+                    setValue("availableFor", newAvailableFor)
+                  }}
+                >
+                  <Stack>
+                    {availableForOptions.map((option) => (
+                      <Checkbox key={option} value={option}>
+                        <CheckboxControl />
+                        <CheckboxLabel>{option}</CheckboxLabel>
+                      </Checkbox>
+                    ))}
+                  </Stack>
+                </CheckboxRoot>
+              </Field>
+            )}
+          </DialogBody>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" ml={3}>
+              Save
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </DialogRoot>
+  )
+}
