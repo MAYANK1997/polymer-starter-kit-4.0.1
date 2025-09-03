@@ -1,3 +1,39 @@
+import {
+  Box,
+  Button,
+  Checkbox,
+  CheckboxGroup,
+  Dialog,
+  Field,
+  Fieldset,
+  HStack,
+  Input,
+  NativeSelect,
+  Stack,
+  Textarea,
+  createToaster,
+} from '@chakra-ui/react'
+import { useForm } from 'react-hook-form'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { config } from '@/config'
+
+interface CreateCategoryModalProps {
+  isOpen: boolean
+  onClose: () => void
+  category?: any // For edit mode
+  mode?: 'create' | 'edit'
+}
+
+interface CategoryFormData {
+  restrictionCategoryName: string
+  description: string
+  fundGroup: string
+  fundNames: string[]
+  availableFor: string[]
+}
+
+// ------- Mock API helpers -------
 const fetchFundNames = async (fundGroup: string) => {
   await new Promise((r) => setTimeout(r, 500))
   const fundNamesByGroup: Record<string, string[]> = {
@@ -8,6 +44,326 @@ const fetchFundNames = async (fundGroup: string) => {
   return fundNamesByGroup[fundGroup] || []
 }
 
-    http://nycuapp03.biz.lodh.com:8787/FundGroups
+const fetchAvailableFor = async () => {
+  try {
+    const response = await fetch(`${config.apis.mdmApi}/EntitlementGroups`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch available for options");
+    }
+    const data: string[] = await response.json();
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching Available For:", error);
+    return [];
+  }
+};
 
-    [{"fundGroupName":"Volantis","funds":[{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst II Ltd","enfusionFundId":460374},{"fundGroupName":"Volantis","fundName":"Progeny 3","enfusionFundId":658054},{"fundGroupName":"Volantis","fundName":"Notre Dame","enfusionFundId":710383},{"fundGroupName":"Volantis","fundName":"LMAP Epsilon Limited","enfusionFundId":460363},{"fundGroupName":"Volantis","fundName":"LOF IV Volantis UK Small Cap","enfusionFundId":825705},{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst I Ltd","enfusionFundId":460373},{"fundGroupName":"Volantis","fundName":"Qube-Volantis","enfusionFundId":834475},{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst III Ltd","enfusionFundId":632111},{"fundGroupName":"Volantis","fundName":"1798 UK Small Cap Best Ideas Ltd","enfusionFundId":460375},{"fundGroupName":"Volantis","fundName":"Delfinco LP","enfusionFundId":602392},{"fundGroupName":"Volantis","fundName":"IMCO - IMAP Cayman SPC","enfusionFundId":565382},{"fundGroupName":"Volantis","fundName":"1798 Volantis Fund Ltd","enfusionFundId":460372},{"fundGroupName":"Volantis","fundName":"The Strathclyde Pension Fund","enfusionFundId":460366},{"fundGroupName":"Volantis","fundName":"1798 TP Fund","enfusionFundId":899038}]},{"fundGroupName":"Core","funds":[{"fundGroupName":"Core","fundName":"1798 Bear Convexity Master Fund Ltd","enfusionFundId":585401},{"fundGroupName":"Core","fundName":"1798 Cedrus Master Fund - MultiStrat","enfusionFundId":645032},{"fundGroupName":"Core","fundName":"1798 US Consumer Master Fund Ltd","enfusionFundId":488572},{"fundGroupName":"Core","fundName":"1798 Sagebrush Master Fund","enfusionFundId":496780},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Portable Alpha (US) Trust","enfusionFundId":919411},{"fundGroupName":"Core","fundName":"LMAP D - Credit Convexity","enfusionFundId":538064},{"fundGroupName":"Core","fundName":"Qube-SageBrush","enfusionFundId":833703},{"fundGroupName":"Core","fundName":"LMAP Q Fund","enfusionFundId":548897},{"fundGroupName":"Core","fundName":"1798 Torgos Master Fund Ltd","enfusionFundId":611161},{"fundGroupName":"Core","fundName":"1798 Q Master Fund Ltd","enfusionFundId":516920},{"fundGroupName":"Core","fundName":"CPP Carbon","enfusionFundId":818792},{"fundGroupName":"Core","fundName":"LOF Event Convexity Fund","enfusionFundId":522951},{"fundGroupName":"Core","fundName":"1798 Adapt Master Fund","enfusionFundId":552376},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Master Fund","enfusionFundId":676288},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Fund Ltd.","enfusionFundId":919412},{"fundGroupName":"Core","fundName":"1798 Center Master Fund Ltd","enfusionFundId":522189},{"fundGroupName":"Core","fundName":"Atom Investments LP - Consumer","enfusionFundId":546973},{"fundGroupName":"Core","fundName":"1798 Cedrus Master Fund","enfusionFundId":645032},{"fundGroupName":"Core","fundName":"1798 Credit Convexity Master Fund Ltd","enfusionFundId":445172},{"fundGroupName":"Core","fundName":"1798 Merger Master Fund Ltd","enfusionFundId":507533},{"fundGroupName":"Core","fundName":"LOF TerreNeuve","enfusionFundId":510951},{"fundGroupName":"Core","fundName":"Global Carbon Opportunity (Cayman) Fund Ltd.","enfusionFundId":686776},{"fundGroupName":"Core","fundName":"Eagle Harbor","enfusionFundId":823276},{"fundGroupName":"Core","fundName":"CRO ARC LOIM – ALOHA BEAR","enfusionFundId":632400},{"fundGroupName":"Core","fundName":"1798 Event Convexity Master Fund Ltd","enfusionFundId":458992},{"fundGroupName":"Core","fundName":"Beijing Lyra Investment Corporation","enfusionFundId":688113}]}]
+// Create a toaster instance (v3)
+const toaster = createToaster({});
+
+export function CreateCategoryModal({
+  isOpen,
+  onClose,
+  category,
+  mode = 'create',
+}: CreateCategoryModalProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CategoryFormData>({
+    defaultValues: {
+      restrictionCategoryName: '',
+      description: '',
+      fundGroup: '',
+      fundNames: [],
+      availableFor: [],
+    },
+  })
+
+  const queryClient = useQueryClient()
+  const [selectedFundGroup, setSelectedFundGroup] = useState('')
+
+  const [selectedFundNames, setSelectedFundNames] = useState<string[]>([]);
+  const fundGroup = watch('fundGroup')
+
+  const selectedAvailableFor = watch('availableFor') || []
+
+  // Dependent data
+  const { data: fundNames = [] } = useQuery({
+    queryKey: ['fund-names', fundGroup],
+    queryFn: () => fetchFundNames(fundGroup),
+    enabled: !!fundGroup,
+  })
+
+  const { data: availableForOptions = [] } = useQuery({
+    queryKey: ['available-for'],
+    queryFn: fetchAvailableFor,
+  });
+
+
+  // Reset dependent fields when fund group changes
+  useEffect(() => {
+    if (fundGroup !== selectedFundGroup) {
+      setValue('fundNames', [])
+      setValue('availableFor', [])
+      setSelectedFundGroup(fundGroup)
+    }
+  }, [fundGroup, selectedFundGroup, setValue])
+
+  // Populate when editing
+  useEffect(() => {
+    if (mode === 'edit' && category && isOpen) {
+      reset({
+        restrictionCategoryName: category.restrictionCategoryName || '',
+        description: category.description || '',
+        fundGroup: category.fundGroup || '',
+        fundNames: category.fundName ? category.fundName.split(', ') : [],
+        availableFor: category.availableFor ? category.availableFor.split(', ') : [],
+      })
+      setSelectedFundGroup(category.fundGroup || '')
+    } else if (mode === 'create' && isOpen) {
+      reset({
+        restrictionCategoryName: '',
+        description: '',
+        fundGroup: '',
+        fundNames: [],
+        availableFor: [],
+      })
+      setSelectedFundGroup('')
+    }
+  }, [mode, category, isOpen, reset])
+
+  // Mutate (create/update)
+  const createMutation = useMutation({
+    mutationFn: async (data: CategoryFormData) => {
+      await new Promise((r) => setTimeout(r, 1000))
+      return {
+        ...data,
+        id: mode === 'edit' ? category?.id : Date.now().toString(),
+        fundName: data.fundNames.join(', '),
+        availableFor: data.availableFor.join(', '),
+        lastModifiedBy: 'current_user',
+        lastModifiedOn: new Date().toISOString().split('T')[0],
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
+      toaster.create({
+        type: 'success',
+        title: mode === 'edit' ? 'Category Updated' : 'Category Created',
+        description: `The restriction category has been ${mode === 'edit' ? 'updated' : 'created'
+          } successfully.`,
+        duration: 3000,
+      })
+      reset()
+      onClose()
+    },
+    onError: () => {
+      toaster.create({
+        type: 'error',
+        title: 'Error',
+        description: `Failed to ${mode} restriction category.`,
+        duration: 3000,
+      })
+    },
+  })
+
+  const onSubmit = (data: CategoryFormData) => {
+    createMutation.mutate(data)
+  }
+
+  // Helpers for multi-select checkboxes
+  const handleChange = (option: string) => {
+
+
+    console.log(option);
+  }
+
+  const handleFundNameChange = (name: string, checked: boolean) => {
+    const next = checked
+      ? [...selectedFundNames, name]
+      : selectedFundNames.filter((n) => n !== name)
+    setValue('fundNames', next, { shouldDirty: true })
+  }
+
+  const handleAvailableForChange = (opt: string, checked: boolean) => {
+    const next = checked
+      ? [...selectedAvailableFor, opt]
+      : selectedAvailableFor.filter((n) => n !== opt)
+    setValue('availableFor', next, { shouldDirty: true })
+  }
+
+  return (
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(e) => {
+        if (!e.open) onClose()
+      }}
+    >
+
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content maxW="720px">
+          <Dialog.Header>
+            <Dialog.Title>
+              {mode === 'edit' ? 'Edit Restriction Category' : 'Add New Restriction Category'}
+            </Dialog.Title>
+            <Dialog.CloseTrigger />
+          </Dialog.Header>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Dialog.Body>
+              <Stack gap="4">
+                {/* Category Name */}
+                <Field.Root invalid={!!errors.restrictionCategoryName}>
+                  <Field.Label>Category Name</Field.Label>
+                  <Input
+                    {...register('restrictionCategoryName', {
+                      required: 'Category Name is required',
+                    })}
+                    placeholder="Restriction Category Name"
+                  />
+                  <Field.ErrorText>
+                    {errors.restrictionCategoryName?.message}
+                  </Field.ErrorText>
+                </Field.Root>
+
+                {/* Description */}
+                <Field.Root>
+                  <Field.Label>Description</Field.Label>
+                  <Textarea {...register('description')} placeholder="Description" />
+                </Field.Root>
+
+                {/* Fund Group (Native select) */}
+                <Field.Root>
+                  <Field.Label>Fund Group</Field.Label>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      placeholder="Select fund group"
+                      {...register('fundGroup')}
+                    >
+
+                      <option value="Volantis">Volantis</option>
+                      <option value="LOIM IT">LOIM IT</option>
+                      <option value="ESG Funds">ESG Funds</option>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Field.Root>
+
+                {/* Dependent columns */}
+                {fundGroup && (
+                  <HStack align="flex-start" gap="4">
+                    {/* Fund Names */}
+
+                    <Fieldset.Root flex="1">
+                      <CheckboxGroup name="fundNames">
+                        <Fieldset.Legend>
+                          Fund Names
+                        </Fieldset.Legend>
+                       
+                        <Box
+                          borderWidth="1px"
+                          rounded="md"
+                          p="3"
+                          maxH="160px"
+                          overflowY="auto"
+                        >
+                          <Fieldset.Content>
+                            {fundNames.length > 0 ? (
+                              fundNames.map((name) => {
+                               
+                                return (
+                                  <Checkbox.Root
+                                    key={name}
+                                    value={name}
+                                    onCheckedChange={() => handleChange(name)}
+                                  >
+                                    <Checkbox.HiddenInput />
+                                    <Checkbox.Control />
+                                    <Checkbox.Label>{name}</Checkbox.Label>
+                                  </Checkbox.Root>
+                                )
+                              })
+                            ) : (
+                              <Box color="fg.muted" fontSize="sm">
+                                Loading...
+                              </Box>
+                              
+                            )}
+                          </Fieldset.Content>
+                        </Box>
+                        </CheckboxGroup> 
+                    </Fieldset.Root>
+
+
+                    {/* Available For */}
+                    <Fieldset.Root flex="1">
+                    <CheckboxGroup name="availabeFor">
+                        <Fieldset.Legend>
+                            Available For
+                        </Fieldset.Legend>
+                      
+                      <Box
+                        borderWidth="1px"
+                        rounded="md"
+                        p="3"
+                        maxH="160px"
+                        overflowY="auto"
+                      >
+                        <Fieldset.Content>
+                          {availableForOptions.length > 0 ? (
+                            availableForOptions.map((opt) => {
+                              
+                              return (
+                                <Checkbox.Root
+                                  key={opt}
+                                  value={opt}
+                                  
+                                  onCheckedChange={() => handleChange(opt)}
+                                >
+                                  <Checkbox.HiddenInput />
+                                  <Checkbox.Control />
+                                  <Checkbox.Label>{opt}</Checkbox.Label>
+                                </Checkbox.Root>
+                              )
+                            })
+                          ) : (
+                            <Box color="fg.muted" fontSize="sm">
+                              Loading...
+                            </Box>
+                          )}
+                        </Fieldset.Content>
+                      </Box>
+                      </CheckboxGroup>
+                    </Fieldset.Root>
+                  </HStack>
+                )}
+              </Stack>
+            </Dialog.Body>
+
+            <Dialog.Footer>
+              <HStack justify="flex-end" gap="3" w="full">
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  loading={createMutation.isPending}
+                  colorPalette="blue"
+                >
+                  {mode === 'edit' ? 'Update' : 'Create'}
+                </Button>
+              </HStack>
+            </Dialog.Footer>
+          </form>
+        </Dialog.Content>
+      </Dialog.Positioner>
+
+    </Dialog.Root>
+  )
+}
