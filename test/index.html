@@ -11,3 +11,8 @@ const fetchAvailableFor = async () => {
     return [];
   }
 };
+
+const { data: availableForOptions = [] } = useQuery({
+  queryKey: ['available-for'],
+  queryFn: fetchAvailableFor,
+});
