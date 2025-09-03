@@ -1,1 +1,13 @@
-const [selectedFundNames, setSelectedFundNames] = useState<string[]>([])
+const fetchAvailableFor = async (fundGroup: string) => {
+  await new Promise((r) => setTimeout(r, 500))
+  const availableForByGroup: Record<string, string[]> = {
+    Volantis: ['Developers', 'Portfolio Managers', 'Risk Managers'],
+    'LOIM IT': ['LOAM IT', 'Portfolio Managers', 'System Administrators'],
+    'ESG Funds': ['ESG Team', 'Compliance', 'Audit'],
+  }
+  return availableForByGroup[fundGroup] || []
+}
+
+    http://nycuapp03.biz.lodh.com:8787/EntitlementGroups
+
+    ["AllFundPmPortal","Audit","BRM","Compliance","Developers","Developers Geneva","Developes India","HR","LOAM IT","Operation Users","Portfolio Managers","Portfolio Managers - Credit","Risk Power User","Risk Users","Support","Test","Traders","Volantis Users"]
