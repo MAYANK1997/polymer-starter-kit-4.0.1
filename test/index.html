@@ -1,18 +1,13 @@
-const fetchAvailableFor = async () => {
-  try {
-    const response = await fetch("http://nycuapp03.biz.lodh.com:8787/EntitlementGroups");
-    if (!response.ok) {
-      throw new Error("Failed to fetch available for options");
-    }
-    const data: string[] = await response.json();
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching Available For:", error);
-    return [];
+const fetchFundNames = async (fundGroup: string) => {
+  await new Promise((r) => setTimeout(r, 500))
+  const fundNamesByGroup: Record<string, string[]> = {
+    Volantis: ['1798 Volantis Catalyst', 'Volantis Growth Fund', 'Volantis Value Fund'],
+    'LOIM IT': ['LOIM Technology Fund', 'LOIM Innovation Fund', 'LOIM Digital Fund'],
+    'ESG Funds': ['ESG Global Fund', 'ESG Sustainable Fund', 'ESG Impact Fund'],
   }
-};
+  return fundNamesByGroup[fundGroup] || []
+}
 
-const { data: availableForOptions = [] } = useQuery({
-  queryKey: ['available-for'],
-  queryFn: fetchAvailableFor,
-});
+    http://nycuapp03.biz.lodh.com:8787/FundGroups
+
+    [{"fundGroupName":"Volantis","funds":[{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst II Ltd","enfusionFundId":460374},{"fundGroupName":"Volantis","fundName":"Progeny 3","enfusionFundId":658054},{"fundGroupName":"Volantis","fundName":"Notre Dame","enfusionFundId":710383},{"fundGroupName":"Volantis","fundName":"LMAP Epsilon Limited","enfusionFundId":460363},{"fundGroupName":"Volantis","fundName":"LOF IV Volantis UK Small Cap","enfusionFundId":825705},{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst I Ltd","enfusionFundId":460373},{"fundGroupName":"Volantis","fundName":"Qube-Volantis","enfusionFundId":834475},{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst III Ltd","enfusionFundId":632111},{"fundGroupName":"Volantis","fundName":"1798 UK Small Cap Best Ideas Ltd","enfusionFundId":460375},{"fundGroupName":"Volantis","fundName":"Delfinco LP","enfusionFundId":602392},{"fundGroupName":"Volantis","fundName":"IMCO - IMAP Cayman SPC","enfusionFundId":565382},{"fundGroupName":"Volantis","fundName":"1798 Volantis Fund Ltd","enfusionFundId":460372},{"fundGroupName":"Volantis","fundName":"The Strathclyde Pension Fund","enfusionFundId":460366},{"fundGroupName":"Volantis","fundName":"1798 TP Fund","enfusionFundId":899038}]},{"fundGroupName":"Core","funds":[{"fundGroupName":"Core","fundName":"1798 Bear Convexity Master Fund Ltd","enfusionFundId":585401},{"fundGroupName":"Core","fundName":"1798 Cedrus Master Fund - MultiStrat","enfusionFundId":645032},{"fundGroupName":"Core","fundName":"1798 US Consumer Master Fund Ltd","enfusionFundId":488572},{"fundGroupName":"Core","fundName":"1798 Sagebrush Master Fund","enfusionFundId":496780},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Portable Alpha (US) Trust","enfusionFundId":919411},{"fundGroupName":"Core","fundName":"LMAP D - Credit Convexity","enfusionFundId":538064},{"fundGroupName":"Core","fundName":"Qube-SageBrush","enfusionFundId":833703},{"fundGroupName":"Core","fundName":"LMAP Q Fund","enfusionFundId":548897},{"fundGroupName":"Core","fundName":"1798 Torgos Master Fund Ltd","enfusionFundId":611161},{"fundGroupName":"Core","fundName":"1798 Q Master Fund Ltd","enfusionFundId":516920},{"fundGroupName":"Core","fundName":"CPP Carbon","enfusionFundId":818792},{"fundGroupName":"Core","fundName":"LOF Event Convexity Fund","enfusionFundId":522951},{"fundGroupName":"Core","fundName":"1798 Adapt Master Fund","enfusionFundId":552376},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Master Fund","enfusionFundId":676288},{"fundGroupName":"Core","fundName":"1798 Tail Systematic Fund Ltd.","enfusionFundId":919412},{"fundGroupName":"Core","fundName":"1798 Center Master Fund Ltd","enfusionFundId":522189},{"fundGroupName":"Core","fundName":"Atom Investments LP - Consumer","enfusionFundId":546973},{"fundGroupName":"Core","fundName":"1798 Cedrus Master Fund","enfusionFundId":645032},{"fundGroupName":"Core","fundName":"1798 Credit Convexity Master Fund Ltd","enfusionFundId":445172},{"fundGroupName":"Core","fundName":"1798 Merger Master Fund Ltd","enfusionFundId":507533},{"fundGroupName":"Core","fundName":"LOF TerreNeuve","enfusionFundId":510951},{"fundGroupName":"Core","fundName":"Global Carbon Opportunity (Cayman) Fund Ltd.","enfusionFundId":686776},{"fundGroupName":"Core","fundName":"Eagle Harbor","enfusionFundId":823276},{"fundGroupName":"Core","fundName":"CRO ARC LOIM – ALOHA BEAR","enfusionFundId":632400},{"fundGroupName":"Core","fundName":"1798 Event Convexity Master Fund Ltd","enfusionFundId":458992},{"fundGroupName":"Core","fundName":"Beijing Lyra Investment Corporation","enfusionFundId":688113}]}]
