@@ -58,3 +58,7 @@ const createOrUpdateMutation = useMutation({
     });
   },
 });
+
+const onSubmit = (data: CategoryFormData) => {
+  createOrUpdateMutation.mutate(data);
+};
