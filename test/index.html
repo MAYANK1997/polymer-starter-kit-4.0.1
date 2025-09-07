@@ -1,375 +1,60 @@
-import {
-  Box,
-  Button,
-  Checkbox,
-  CheckboxGroup,
-  Dialog,
-  Field,
-  Fieldset,
-  HStack,
-  Input,
-  Stack,
-  Textarea,
-  createToaster,
-} from '@chakra-ui/react'
-import { useForm } from 'react-hook-form'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-import { config } from '@/config'
+// ---------------- MUTATION ----------------
+const createOrUpdateMutation = useMutation({
+  mutationFn: async (data: CategoryFormData) => {
+    // Transform the form data into backend payload format
+    const payload = {
+      id: mode === "edit" ? category?.id : undefined, // include id only in edit mode
+      name: data.restrictionCategoryName,
+      description: data.description,
+      groupNames: data.availableFor, // Entitlement Groups
+      funds: fundGroups
+        .filter((fg) => data.fundGroup.includes(fg.fundGroupName)) // keep only selected groups
+        .flatMap((fg) =>
+          fg.funds
+            .filter((f) => data.fundNames.includes(f.fundName)) // keep only selected funds
+            .map((f) => ({
+              fundGroupName: fg.fundGroupName,
+              fundName: f.fundName,
+              enfusionFundId: f.enfusionFundId, // use the actual ID from backend
+            }))
+        ),
+    };
 
-// ---------------- API HELPERS ----------------
-const fetchFundGroups = async (): Promise<
-  { fundGroupName: string; funds: { fundName: string }[] }[]
-> => {
-  try {
-    const response = await fetch(`${config.apis.mdmApi}/FundGroups`);
-    if (!response.ok) throw new Error("Failed to fetch FundGroups");
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching FundGroups:", error);
-    return [];
-  }
-};
+    console.log("Payload sent to backend:", payload);
 
-const fetchAvailableFor = async (): Promise<string[]> => {
-  try {
-    const response = await fetch(`${config.apis.mdmApi}/EntitlementGroups`);
-    if (!response.ok) throw new Error("Failed to fetch EntitlementGroups");
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching AvailableFor:", error);
-    return [];
-  }
-};
+    const response = await fetch(`${config.apis.mdmApi}/RestrictionCategory`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-// ---------------- TYPES ----------------
-interface CreateCategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: any; // for edit mode
-  mode?: "create" | "edit";
-}
-
-interface CategoryFormData {
-  restrictionCategoryName: string;
-  description: string;
-  fundGroup: string[];
-  fundNames: string[];
-  availableFor: string[];
-}
-
-// ---------------- TOASTER ----------------
-const toaster = createToaster({});
-
-// ---------------- COMPONENT ----------------
-export function CreateCategoryModal({
-  isOpen,
-  onClose,
-  category,
-  mode = "create",
-}: CreateCategoryModalProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<CategoryFormData>({
-    defaultValues: {
-      restrictionCategoryName: "",
-      description: "",
-      fundGroup: [],
-      fundNames: [],
-      availableFor: [],
-    },
-  });
-
-  const queryClient = useQueryClient();
-
-  const [selectedFundGroups, setSelectedFundGroups] = useState<string[]>([]);
-  const [selectedFundNames, setSelectedFundNames] = useState<string[]>([]);
-  const [selectedAvailableFor, setSelectedAvailableFor] = useState<string[]>([]);
-
-  // Fund Groups & AvailableFor queries
-  const { data: fundGroups = [] } = useQuery({
-    queryKey: ["fund-groups"],
-    queryFn: fetchFundGroups,
-  });
-
-  const { data: availableForOptions = [] } = useQuery({
-    queryKey: ["available-for"],
-    queryFn: fetchAvailableFor,
-  });
-
-  // Compute FundNames based on selected FundGroups
-  const computedFundNames = fundGroups
-    .filter((g) => selectedFundGroups.includes(g.fundGroupName))
-    .flatMap((g) => g.funds.map((f) => f.fundName));
-
-  // Reset form when modal opens/closes or in edit mode
-  useEffect(() => {
-    if (mode === "edit" && category && isOpen) {
-      console.log(category);
-      const groups = category.fundGroupNamesViewOnly || [];
-      const names = category.fundNamesViewOnly || [];
-      const available = category.groupNames || [];
-
-      reset({
-
-        restrictionCategoryName: category.name || "",
-        description: category.description || "",
-        fundGroup: groups,
-        fundNames: names,
-        availableFor: available,
-      });
-
-      setSelectedFundGroups(groups);
-      setSelectedFundNames(names);
-      setSelectedAvailableFor(available);
-    } else if (mode === "create" && isOpen) {
-      reset({
-        restrictionCategoryName: "",
-        description: "",
-        fundGroup: [],
-        fundNames: [],
-        availableFor: [],
-      });
-      setSelectedFundGroups([]);
-      setSelectedFundNames([]);
-      setSelectedAvailableFor([]);
+    if (!response.ok) {
+      throw new Error("Failed to save Restriction Category");
     }
-  }, [mode, category, isOpen, reset]);
-
-  // Mutation for create/edit
-  const createMutation = useMutation({
-    mutationFn: async (data: CategoryFormData) => {
-      await new Promise((r) => setTimeout(r, 1000));
-      return {
-        ...data,
-        id: mode === "edit" ? category?.id : Date.now().toString(),
-        fundGroup: data.fundGroup.join(", "),
-        fundNames: data.fundNames.join(", "),
-        availableFor: data.availableFor.join(", "),
-        lastModifiedBy: "current_user",
-        lastModifiedOn: new Date().toISOString().split("T")[0],
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restriction-categories"] });
-      toaster.create({
-        type: "success",
-        title: mode === "edit" ? "Category Updated" : "Category Created",
-        description: `The restriction category has been ${
-          mode === "edit" ? "updated" : "created"
-        } successfully.`,
-        duration: 3000,
-      });
-      reset();
-      onClose();
-    },
-    onError: () => {
-      toaster.create({
-        type: "error",
-        title: "Error",
-        description: `Failed to ${mode} restriction category.`,
-        duration: 3000,
-      });
-    },
-  });
-
-  const onSubmit = (data: CategoryFormData) => {
-    console.log(data);
-    createMutation.mutate(data);
-  };
-
-  return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
-      }}
-    >
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content maxW="720px">
-          <Dialog.Header>
-            <Dialog.Title>
-              {mode === "edit"
-                ? "Edit Restriction Category"
-                : "Add New Restriction Category"}
-            </Dialog.Title>
-            <Dialog.CloseTrigger />
-          </Dialog.Header>
-
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Dialog.Body>
-              <Stack gap="4">
-                {/* Category Name */}
-                <Field.Root invalid={!!errors.restrictionCategoryName}>
-                  <Field.Label>Category Name</Field.Label>
-                  <Input
-                    {...register("restrictionCategoryName", {
-                      required: "Category Name is required",
-                    })}
-                    placeholder="Restriction Category Name"
-                  />
-                  <Field.ErrorText>
-                    {errors.restrictionCategoryName?.message}
-                  </Field.ErrorText>
-                </Field.Root>
-
-                {/* Description */}
-                <Field.Root>
-                  <Field.Label>Description</Field.Label>
-                  <Textarea {...register("description")} placeholder="Description" />
-                </Field.Root>
-
-                <HStack align="flex-start" gap="4">
-                  {/* Fund Groups */}
-                  <Fieldset.Root flex="1">
-                    <CheckboxGroup name="fundGroup">
-                      <Fieldset.Legend>Fund Groups</Fieldset.Legend>
-                      <Box
-                        borderWidth="1px"
-                        rounded="md"
-                        p="3"
-                        maxH="160px"
-                        overflowY="auto"
-                      >
-                        <Fieldset.Content>
-                          {fundGroups.length > 0 ? (
-                            fundGroups.map((group) => (
-                              <Checkbox.Root
-                                key={group.fundGroupName}
-                                checked={selectedFundGroups.includes(group.fundGroupName)}
-                                onCheckedChange={(e) => {
-                                  const next = e.checked
-                                    ? [...selectedFundGroups, group.fundGroupName]
-                                    : selectedFundGroups.filter(
-                                        (g) => g !== group.fundGroupName
-                                      );
-                                  setSelectedFundGroups(next);
-                                  setValue("fundGroup", next, { shouldDirty: true });
-                                  setSelectedFundNames([]); // reset funds
-                                }}
-                              >
-                                <Checkbox.HiddenInput />
-                                <Checkbox.Control />
-                                <Checkbox.Label>
-                                  {group.fundGroupName}
-                                </Checkbox.Label>
-                              </Checkbox.Root>
-                            ))
-                          ) : (
-                            <Box color="fg.muted" fontSize="sm">
-                              Loading...
-                            </Box>
-                          )}
-                        </Fieldset.Content>
-                      </Box>
-                    </CheckboxGroup>
-                  </Fieldset.Root>
-
-                  {/* Fund Names */}
-                  <Fieldset.Root flex="1">
-                    <CheckboxGroup name="fundNames">
-                      <Fieldset.Legend>Fund Names</Fieldset.Legend>
-                      <Box
-                        borderWidth="1px"
-                        rounded="md"
-                        p="3"
-                        maxH="160px"
-                        overflowY="auto"
-                      >
-                        <Fieldset.Content>
-                          {computedFundNames.length > 0 ? (
-                            computedFundNames.map((name) => (
-                              <Checkbox.Root
-                                key={name}
-                                checked={selectedFundNames.includes(name)}
-                                onCheckedChange={(e) => {
-                                  const next = e.checked
-                                    ? [...selectedFundNames, name]
-                                    : selectedFundNames.filter((n) => n !== name);
-                                  setSelectedFundNames(next);
-                                  setValue("fundNames", next, { shouldDirty: true });
-                                }}
-                              >
-                                <Checkbox.HiddenInput />
-                                <Checkbox.Control />
-                                <Checkbox.Label>{name}</Checkbox.Label>
-                              </Checkbox.Root>
-                            ))
-                          ) : (
-                            <Box color="fg.muted" fontSize="sm">
-                              No funds available
-                            </Box>
-                          )}
-                        </Fieldset.Content>
-                      </Box>
-                    </CheckboxGroup>
-                  </Fieldset.Root>
-                </HStack>
-
-                {/* Available For */}
-                <Fieldset.Root>
-                  <CheckboxGroup name="availableFor">
-                    <Fieldset.Legend>Available For</Fieldset.Legend>
-                    <Box
-                      borderWidth="1px"
-                      rounded="md"
-                      p="3"
-                      maxH="160px"
-                      overflowY="auto"
-                    >
-                      <Fieldset.Content>
-                        {availableForOptions.length > 0 ? (
-                          availableForOptions.map((opt) => (
-                            <Checkbox.Root
-                              key={opt}
-                              checked={selectedAvailableFor.includes(opt)}
-                              onCheckedChange={(e) => {
-                                const next = e.checked
-                                  ? [...selectedAvailableFor, opt]
-                                  : selectedAvailableFor.filter((n) => n !== opt);
-                                setSelectedAvailableFor(next);
-                                setValue("availableFor", next, { shouldDirty: true });
-                              }}
-                            >
-                              <Checkbox.HiddenInput />
-                              <Checkbox.Control />
-                              <Checkbox.Label>{opt}</Checkbox.Label>
-                            </Checkbox.Root>
-                          ))
-                        ) : (
-                          <Box color="fg.muted" fontSize="sm">
-                            Loading...
-                          </Box>
-                        )}
-                      </Fieldset.Content>
-                    </Box>
-                  </CheckboxGroup>
-                </Fieldset.Root>
-              </Stack>
-            </Dialog.Body>
-
-            <Dialog.Footer>
-              <HStack justify="flex-end" gap="3" w="full">
-                <Button variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  loading={createMutation.isPending}
-                  colorPalette="blue"
-                >
-                  {mode === "edit" ? "Update" : "Create"}
-                </Button>
-              </HStack>
-            </Dialog.Footer>
-          </form>
-        </Dialog.Content>
-      </Dialog.Positioner>
-    </Dialog.Root>
-  );
-}
+    return response.json();
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["restriction-categories"] });
+    toaster.create({
+      type: "success",
+      title: mode === "edit" ? "Category Updated" : "Category Created",
+      description: `The restriction category has been ${
+        mode === "edit" ? "updated" : "created"
+      } successfully.`,
+      duration: 3000,
+    });
+    reset();
+    onClose();
+  },
+  onError: () => {
+    toaster.create({
+      type: "error",
+      title: "Error",
+      description: `Failed to ${mode} restriction category.`,
+      duration: 3000,
+    });
+  },
+});
