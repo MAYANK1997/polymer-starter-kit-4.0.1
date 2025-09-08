@@ -1,281 +1,316 @@
-
-import { Box, Checkbox, CheckboxGroup, createListCollection, Field, Fieldset, For, HStack, Input, NativeSelect, Portal, Select, Spinner, Stack, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Checkbox,
+  CheckboxGroup,
+  createListCollection,
+  Dialog,
+  Field,
+  Fieldset,
+  For,
+  HStack,
+  Input,
+  NativeSelect,
+  Select,
+  Spinner,
+  Stack,
+  createToaster,
+} from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from "react";
-import { useAsync } from "react-use"
 import { config } from '@/config';
 
+// ---------------- TYPES ----------------
 interface IssuerFormData {
-  issuerName: string
-  issuerType: string
-  ticker: string
-  isin: string
-  cusip: string
-  sedol: string
-  instrumentType: string
-  restrictionCategory: string
-  allowedTransactionTypes: string[]
-  startDate: string
-  restrictionRequestor: string
-  restrictionNotes: string
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+  instrumentType: string;
+  restrictionCategory: string;
+  allowedTransactionTypes: string[];
+  startDate: string;
+  restrictionRequestor: string;
+  restrictionNotes: string;
 }
 
 interface RestrictionCategories {
-  name: string
-  
+  name: string;
 }
 
-const CreateIssuerModal = () => {
+// ---------------- TOASTER ----------------
+const toaster = createToaster({});
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<IssuerFormData>({
+// ---------------- API HELPERS ----------------
+const fetchRestrictionCategories = async (): Promise<RestrictionCategories[]> => {
+  const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`);
+  if (!response.ok) throw new Error("Failed to fetch restriction categories");
+  return response.json();
+};
+
+// ---------------- COMPONENT ----------------
+interface CreateIssuerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function CreateIssuerModal({ isOpen, onClose }: CreateIssuerModalProps) {
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<IssuerFormData>({
     defaultValues: {
-      allowedTransactionTypes: ['None']
+      allowedTransactionTypes: ['None'],
     }
   });
 
-    const state = useAsync(async (): Promise<RestrictionCategories[]> => {
-    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`)
-    const data = await response.json()
-    return data
-  }, [])
-  
+  const queryClient = useQueryClient();
+
+  // Restriction Categories Query
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ["restriction-categories-entitled"],
+    queryFn: fetchRestrictionCategories,
+  });
+
+  // Dropdown collection
   const collection = useMemo(() => {
     return createListCollection({
-      items: state.value ?? [],
-      itemToString: (categories) => categories.name,
-      itemToValue: (categories) => categories.name,
-    })
-  }, [state.value])
-  
-  const allowedTransactionTypes = watch('allowedTransactionTypes') || ['None']
-  const [selected, setSelected] = useState(["None"]);
-  
-  const handleChange = (option: string) => {
-    console.log(option);
-    if (option === "None") {
-      setSelected(["None"]); // only None
-    } else {
-      let newSelected = selected.includes(option)
-        ? selected.filter((item: string) => item !== option) // uncheck
-        : [...selected.filter((item: string) => item !== "None"), option]; // check + remove None
+      items: categories ?? [],
+      itemToString: (c) => c.name,
+      itemToValue: (c) => c.name,
+    });
+  }, [categories]);
 
-      if (newSelected.length === 0) {
-        newSelected = ["None"]; // fallback
-      }
-      setSelected(newSelected);
+  // Allowed Transaction Types
+  const allowedTransactionTypes = watch('allowedTransactionTypes') || ['None'];
+  const [selected, setSelected] = useState(["None"]);
+
+  const handleChange = (option: string) => {
+    if (option === "None") {
+      setSelected(["None"]);
+      setValue("allowedTransactionTypes", ["None"], { shouldDirty: true });
+    } else {
+      let next = selected.includes(option)
+        ? selected.filter((item) => item !== option)
+        : [...selected.filter((item) => item !== "None"), option];
+
+      if (next.length === 0) next = ["None"];
+      setSelected(next);
+      setValue("allowedTransactionTypes", next, { shouldDirty: true });
     }
   };
 
+  // Mutation for Create Issuer
+  const createIssuerMutation = useMutation({
+    mutationFn: async (data: IssuerFormData) => {
+      const payload = {
+        ...data,
+        allowedTransactionTypes: data.allowedTransactionTypes, // backend expects array
+      };
+      console.log("Payload sent to backend:", payload);
+
+      const response = await fetch(`${config.apis.mdmApi}/Issuer`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to create Issuer");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["issuers"] });
+      toaster.create({
+        type: "success",
+        title: "Issuer Created",
+        description: "The issuer has been created successfully.",
+        duration: 3000,
+      });
+      reset();
+      onClose();
+    },
+    onError: () => {
+      toaster.create({
+        type: "error",
+        title: "Error",
+        description: "Failed to create issuer.",
+        duration: 3000,
+      });
+    },
+  });
+
   const onSubmit = (data: IssuerFormData) => {
-    const submitData = {
-      ...data,
-      allowedTransactionType: data.allowedTransactionTypes.join(', ')
-    }
-   
-  }
+    createIssuerMutation.mutate(data);
+  };
 
-    return (
-     
-      <form onSubmit={handleSubmit(onSubmit)}>
-      
+  return (
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(e) => {
+        if (!e.open) onClose();
+      }}
+    >
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content maxW="720px">
+          <Dialog.Header>
+            <Dialog.Title>Create Issuer</Dialog.Title>
+            <Dialog.CloseTrigger />
+          </Dialog.Header>
 
-        <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Issuer Name</Field.Label>
-          <Input
-            {...register('issuerName', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-           
-          />
-       
-        </Field.Root>
-        <Field.Root>
-        <Field.Label>Issuer Type</Field.Label>
-        <NativeSelect.Root>
-          <NativeSelect.Field
-                  {...register('issuerType')}
-                  
-                 
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Dialog.Body>
+              <Stack gap="4">
+                {/* Issuer Name + Type */}
+                <HStack gap={4}>
+                  <Field.Root invalid={!!errors.issuerName}>
+                    <Field.Label>Issuer Name</Field.Label>
+                    <Input
+                      {...register("issuerName", { required: "Issuer name is required" })}
+                      placeholder="Enter issuer name"
+                    />
+                    <Field.ErrorText>{errors.issuerName?.message}</Field.ErrorText>
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>Issuer Type</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field {...register("issuerType")}>
+                        <option value="Public">Public</option>
+                        <option value="Private">Private</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </Field.Root>
+                </HStack>
+
+                {/* Identifiers */}
+                <HStack gap={4}>
+                  <Field.Root>
+                    <Field.Label>Ticker</Field.Label>
+                    <Input {...register("ticker")} placeholder="Enter ticker" />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>ISIN</Field.Label>
+                    <Input {...register("isin")} placeholder="Enter ISIN" />
+                  </Field.Root>
+                </HStack>
+
+                <HStack gap={4}>
+                  <Field.Root>
+                    <Field.Label>CUSIP</Field.Label>
+                    <Input {...register("cusip")} placeholder="Enter CUSIP" />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>SEDOL</Field.Label>
+                    <Input {...register("sedol")} placeholder="Enter SEDOL" />
+                  </Field.Root>
+                </HStack>
+
+                {/* Instrument Type + Restriction Category */}
+                <HStack gap={4}>
+                  <Field.Root>
+                    <Field.Label>Instrument Type</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field {...register("instrumentType")}>
+                        <option value="Equity">Equity</option>
+                        <option value="ADR">ADR</option>
+                        <option value="Index">Index</option>
+                        <option value="Govt">Govt</option>
+                        <option value="Corporate Bond">Corporate Bond</option>
+                        <option value="Convertible Bond">Convertible Bond</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>Restriction Category</Field.Label>
+                    <Select.Root collection={collection} {...register("restrictionCategory")}>
+                      <Select.HiddenSelect />
+                      <Select.Control>
+                        <Select.Trigger>
+                          <Select.ValueText placeholder="Select Category" />
+                        </Select.Trigger>
+                        <Select.IndicatorGroup>
+                          {isLoading && <Spinner size="xs" />}
+                          <Select.Indicator />
+                        </Select.IndicatorGroup>
+                      </Select.Control>
+                      <Select.Positioner>
+                        <Select.Content>
+                          {collection.items.map((cat) => (
+                            <Select.Item item={cat} key={cat.name}>
+                              {cat.name}
+                              <Select.ItemIndicator />
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Positioner>
+                    </Select.Root>
+                  </Field.Root>
+                </HStack>
+
+                {/* Allowed Transaction Types */}
+                <Fieldset.Root>
+                  <CheckboxGroup name="allowedTransactionTypes">
+                    <Fieldset.Legend>Allowed Transaction Types</Fieldset.Legend>
+                    <Box borderWidth="1px" rounded="md" p={3}>
+                      <Fieldset.Content>
+                        <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
+                          {(value) => (
+                            <Checkbox.Root
+                              key={value}
+                              checked={allowedTransactionTypes.includes(value)}
+                              onCheckedChange={() => handleChange(value)}
+                            >
+                              <Checkbox.HiddenInput />
+                              <Checkbox.Control />
+                              <Checkbox.Label>{value}</Checkbox.Label>
+                            </Checkbox.Root>
+                          )}
+                        </For>
+                      </Fieldset.Content>
+                    </Box>
+                  </CheckboxGroup>
+                </Fieldset.Root>
+
+                {/* Dates & Requestor */}
+                <HStack gap={4}>
+                  <Field.Root>
+                    <Field.Label>Start Date</Field.Label>
+                    <Input type="date" {...register("startDate")} />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Restriction Requestor</Field.Label>
+                    <Input {...register("restrictionRequestor")} placeholder="Enter requestor" />
+                  </Field.Root>
+                </HStack>
+
+                {/* Notes */}
+                <Field.Root>
+                  <Field.Label>Restriction Notes</Field.Label>
+                  <Input {...register("restrictionNotes")} placeholder="Enter notes" />
+                </Field.Root>
+              </Stack>
+            </Dialog.Body>
+
+            <Dialog.Footer>
+              <HStack justify="flex-end" gap="3" w="full">
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button
+                  type="submit"
+                  loading={createIssuerMutation.isPending}
+                  colorPalette="blue"
                 >
-                  <option value="Public">Public</option>
-                  <option value="Private">Private</option>
-         
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-        </Field.Root>
-        </HStack>
-        <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Ticker</Field.Label>
-          <Input
-            {...register('ticker', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-           
-          />
-       
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>ISIN</Field.Label>
-          <Input
-            {...register('isin', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-           
-          />
-       
-        </Field.Root>
-        </HStack>
-        <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>CUSIP</Field.Label>
-          <Input
-            {...register('cusip', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-            
-          />
-       
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>SEDOL</Field.Label>
-          <Input
-            {...register('sedol', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-           
-          />
-       
-        </Field.Root>
-        </HStack>
-        <HStack gap={4} mb={4}>
-        <Field.Root>
-        <Field.Label>Instrument Type</Field.Label>
-        <NativeSelect.Root>
-          <NativeSelect.Field
-                  {...register('instrumentType')}
-                  
-                 
-                >
-               <option value="Equity">Equity</option>
-               <option value="ADR">ADR</option>
-               <option value="Index">Index</option>
-               <option value="Govt">Govt</option>
-               <option value="Corporate Bond">Corporate Bond</option>
-               <option value="Convertible Bond">Convertible Bond</option>
-
-               </NativeSelect.Field>
-          <NativeSelect.Indicator />
-
-        </NativeSelect.Root>
-        </Field.Root>
-
-      <Select.Root collection={collection}>
-      <Select.HiddenSelect />
-      <Select.Label>Restriction Category</Select.Label>
-      <Select.Control>
-        <Select.Trigger>
-          <Select.ValueText placeholder="Select Below" />
-        </Select.Trigger>
-        <Select.IndicatorGroup>
-          {state.loading && (
-            <Spinner size="xs" borderWidth="1.5px" color="fg.muted" />
-          )}
-          <Select.Indicator />
-        </Select.IndicatorGroup>
-      </Select.Control>
-   
-        <Select.Positioner>
-          <Select.Content>
-            {collection.items.map((categories) => (
-              <Select.Item item={categories} key={categories.name}>
-                {categories.name}
-                <Select.ItemIndicator />
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select.Positioner>
-     
-    </Select.Root>
- </HStack>
-
- <HStack gap={4} mb={4}>
-
- <Fieldset.Root>
-      <CheckboxGroup 
-      name="transactionType">
-        <Fieldset.Legend >
-        Allowed Transaction Type
-        </Fieldset.Legend>
-        <Box
-                  
-                  border="1px solid"
-                  borderColor="gray.600"
-                  borderRadius="md"
-                  p={3}
-                 
-                 
-          >
-        <Fieldset.Content>
-          <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
-            {(value) => (
-              <Checkbox.Root  
-              checked={allowedTransactionTypes.includes(value)}
-              onCheckedChange={() => handleChange(value)}
-              key={value}
-              value={value}
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>{value}</Checkbox.Label>
-              </Checkbox.Root>
-            )}
-          </For>
-        </Fieldset.Content>
-        </Box>
-      </CheckboxGroup>
-    </Fieldset.Root>
-    </HStack>
-    <HStack gap={4} mb={4}>
-    <Field.Root>
-          <Field.Label>Start Date</Field.Label>
-          <Input
-                  {...register('startDate')}
-                  type="date"
-                  defaultValue="2025-08-25"
-                
-                />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>Restriction Requester</Field.Label>
-          <Input
-                  {...register('restrictionRequestor')}
-                  placeholder="Enter value"
-                  
-                />
-        
-        </Field.Root>
-   </HStack>
-
-   <HStack gap={4} mb={4}>
-    <Field.Root>
-
-   <Field.Label>Restriction Notes</Field.Label>
-   <Input
-                  {...register('restrictionNotes')}
-                  placeholder="Enter value"
-                
-                />
-        </Field.Root>
-   </HStack>
-
-        
-        </form>
-     
-
-    );
-};
-   
-
- 
-
-export default CreateIssuerModal;
-
+                  Create
+                </Button>
+              </HStack>
+            </Dialog.Footer>
+          </form>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
+  );
+}
