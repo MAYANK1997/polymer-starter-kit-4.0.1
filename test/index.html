@@ -1,17 +1,11 @@
-const payload = {
-      id: mode === "edit" ? category?.id : undefined, // include id only in edit mode
-      name: data.restrictionCategoryName,
-      description: data.description,
-      groupNames: data.availableFor, // Entitlement Groups
-      funds: fundGroups
-        .filter((fg) => data.fundGroup.includes(fg.fundGroupName)) // keep only selected groups
-        .flatMap((fg) =>
-          fg.funds
-            .filter((f) => data.fundNames.includes(f.fundName)) // keep only selected funds
-            .map((f) => ({
-              fundGroupName: fg.fundGroupName,
-              fundName: f.fundName,
-              enfusionFundId: f.enfusionFundId, // use the actual ID from backend
-            }))
-        ),
-    };
+Let url = ${config.apis.mdmApi}/RestrictionCategory
+return fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+
+      },
+     
+
+      {"name":"ASDRL","description":"ASD","groupNames":["Developers","Developes India"],"funds":[{"fundGroupName":"Volantis","fundName":"1798 Volantis Catalyst II Ltd","enfusionFundId":460374}]}
