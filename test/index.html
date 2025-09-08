@@ -1,38 +1,281 @@
-// ---------------- Mutation ----------------
-const createOrUpdateMutation = useMutation({
-  mutationFn: async (data: CategoryFormData) => {
-    // Transform the form data into backend payload format
-    const payload = {
-      ...(mode === "edit" && { id: category?.id }), // include id only in edit
-      name: data.restrictionCategoryName,
-      description: data.description,
-      groupNames: data.availableFor,
-      funds: fundGroups
-        .filter((fg) => data.fundGroup.includes(fg.fundGroupName))
-        .flatMap((fg) =>
-          fg.funds
-            .filter((f) => data.fundNames.includes(f.fundName))
-            .map((f) => ({
-              fundGroupName: fg.fundGroupName,
-              fundName: f.fundName,
-              enfusionFundId: f.enfusionFundId,
-            }))
-        ),
-    };
 
-    const response = await fetch(`${config.apis.mdmApi}/RestrictionCategory`, {
-      method: mode === "edit" ? "PUT" : "POST", // 👈 switch dynamically
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+import { Box, Checkbox, CheckboxGroup, createListCollection, Field, Fieldset, For, HStack, Input, NativeSelect, Portal, Select, Spinner, Stack, VStack } from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from "react";
+import { useAsync } from "react-use"
+import { config } from '@/config';
 
-    if (!response.ok) {
-      throw new Error("Failed to save Restriction Category");
+interface IssuerFormData {
+  issuerName: string
+  issuerType: string
+  ticker: string
+  isin: string
+  cusip: string
+  sedol: string
+  instrumentType: string
+  restrictionCategory: string
+  allowedTransactionTypes: string[]
+  startDate: string
+  restrictionRequestor: string
+  restrictionNotes: string
+}
+
+interface RestrictionCategories {
+  name: string
+  
+}
+
+const CreateIssuerModal = () => {
+
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<IssuerFormData>({
+    defaultValues: {
+      allowedTransactionTypes: ['None']
     }
-    return response.json();
-  },
-  ...
-});
+  });
+
+    const state = useAsync(async (): Promise<RestrictionCategories[]> => {
+    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`)
+    const data = await response.json()
+    return data
+  }, [])
+  
+  const collection = useMemo(() => {
+    return createListCollection({
+      items: state.value ?? [],
+      itemToString: (categories) => categories.name,
+      itemToValue: (categories) => categories.name,
+    })
+  }, [state.value])
+  
+  const allowedTransactionTypes = watch('allowedTransactionTypes') || ['None']
+  const [selected, setSelected] = useState(["None"]);
+  
+  const handleChange = (option: string) => {
+    console.log(option);
+    if (option === "None") {
+      setSelected(["None"]); // only None
+    } else {
+      let newSelected = selected.includes(option)
+        ? selected.filter((item: string) => item !== option) // uncheck
+        : [...selected.filter((item: string) => item !== "None"), option]; // check + remove None
+
+      if (newSelected.length === 0) {
+        newSelected = ["None"]; // fallback
+      }
+      setSelected(newSelected);
+    }
+  };
+
+  const onSubmit = (data: IssuerFormData) => {
+    const submitData = {
+      ...data,
+      allowedTransactionType: data.allowedTransactionTypes.join(', ')
+    }
+   
+  }
+
+    return (
+     
+      <form onSubmit={handleSubmit(onSubmit)}>
+      
+
+        <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Issuer Name</Field.Label>
+          <Input
+            {...register('issuerName', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+           
+          />
+       
+        </Field.Root>
+        <Field.Root>
+        <Field.Label>Issuer Type</Field.Label>
+        <NativeSelect.Root>
+          <NativeSelect.Field
+                  {...register('issuerType')}
+                  
+                 
+                >
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+         
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+        </Field.Root>
+        </HStack>
+        <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Ticker</Field.Label>
+          <Input
+            {...register('ticker', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+           
+          />
+       
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>ISIN</Field.Label>
+          <Input
+            {...register('isin', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+           
+          />
+       
+        </Field.Root>
+        </HStack>
+        <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>CUSIP</Field.Label>
+          <Input
+            {...register('cusip', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+            
+          />
+       
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>SEDOL</Field.Label>
+          <Input
+            {...register('sedol', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+           
+          />
+       
+        </Field.Root>
+        </HStack>
+        <HStack gap={4} mb={4}>
+        <Field.Root>
+        <Field.Label>Instrument Type</Field.Label>
+        <NativeSelect.Root>
+          <NativeSelect.Field
+                  {...register('instrumentType')}
+                  
+                 
+                >
+               <option value="Equity">Equity</option>
+               <option value="ADR">ADR</option>
+               <option value="Index">Index</option>
+               <option value="Govt">Govt</option>
+               <option value="Corporate Bond">Corporate Bond</option>
+               <option value="Convertible Bond">Convertible Bond</option>
+
+               </NativeSelect.Field>
+          <NativeSelect.Indicator />
+
+        </NativeSelect.Root>
+        </Field.Root>
+
+      <Select.Root collection={collection}>
+      <Select.HiddenSelect />
+      <Select.Label>Restriction Category</Select.Label>
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder="Select Below" />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          {state.loading && (
+            <Spinner size="xs" borderWidth="1.5px" color="fg.muted" />
+          )}
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+   
+        <Select.Positioner>
+          <Select.Content>
+            {collection.items.map((categories) => (
+              <Select.Item item={categories} key={categories.name}>
+                {categories.name}
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+     
+    </Select.Root>
+ </HStack>
+
+ <HStack gap={4} mb={4}>
+
+ <Fieldset.Root>
+      <CheckboxGroup 
+      name="transactionType">
+        <Fieldset.Legend >
+        Allowed Transaction Type
+        </Fieldset.Legend>
+        <Box
+                  
+                  border="1px solid"
+                  borderColor="gray.600"
+                  borderRadius="md"
+                  p={3}
+                 
+                 
+          >
+        <Fieldset.Content>
+          <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
+            {(value) => (
+              <Checkbox.Root  
+              checked={allowedTransactionTypes.includes(value)}
+              onCheckedChange={() => handleChange(value)}
+              key={value}
+              value={value}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>{value}</Checkbox.Label>
+              </Checkbox.Root>
+            )}
+          </For>
+        </Fieldset.Content>
+        </Box>
+      </CheckboxGroup>
+    </Fieldset.Root>
+    </HStack>
+    <HStack gap={4} mb={4}>
+    <Field.Root>
+          <Field.Label>Start Date</Field.Label>
+          <Input
+                  {...register('startDate')}
+                  type="date"
+                  defaultValue="2025-08-25"
+                
+                />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Restriction Requester</Field.Label>
+          <Input
+                  {...register('restrictionRequestor')}
+                  placeholder="Enter value"
+                  
+                />
+        
+        </Field.Root>
+   </HStack>
+
+   <HStack gap={4} mb={4}>
+    <Field.Root>
+
+   <Field.Label>Restriction Notes</Field.Label>
+   <Input
+                  {...register('restrictionNotes')}
+                  placeholder="Enter value"
+                
+                />
+        </Field.Root>
+   </HStack>
+
+        
+        </form>
+     
+
+    );
+};
+   
+
+ 
+
+export default CreateIssuerModal;
+
