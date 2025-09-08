@@ -1,53 +1,49 @@
-
+import { useState } from 'react';
 import RestrictedIssuerTable from './RestrictedIssuerTable';
 import { Box, Button, CloseButton, Dialog, Flex, HStack, Portal } from '@chakra-ui/react';
 import { FiDownload, FiFilter, FiPlus } from 'react-icons/fi';
 import CreateIssuerModal from '@/components/modals/CreateIssuerModal';
 
-
 const RestrictedIssuersPage = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  
   return (
-   <>
-    <Box>
-    {/* Action Bar */}
-    <Flex justify="space-between" mb={4}>
-    <Dialog.Root
+    <>
+      <Box>
+        {/* Action Bar */}
+        <Flex justify="space-between" mb={4}>
+          <Dialog.Root
             key="center"
             placement="center"
             motionPreset="slide-in-bottom"
             size="lg"
+            open={isOpen}
+            onOpenChange={(e) => setIsOpen(e.open)}
           >
             <Dialog.Trigger asChild>
-      <Button
-        bg="gray.700"
-        color="white"
-        _hover={{ bg: 'gray.600' }}
-        size="sm"
-      >
-         <FiPlus />
-        Insert New Entry
-      </Button>
-      </Dialog.Trigger>
-      <Portal>
+              <Button
+                bg="gray.700"
+                color="white"
+                _hover={{ bg: 'gray.600' }}
+                size="sm"
+              >
+                <FiPlus />
+                Insert New Entry
+              </Button>
+            </Dialog.Trigger>
+
+            <Portal>
               <Dialog.Backdrop />
               <Dialog.Positioner>
                 <Dialog.Content>
                   <Dialog.Header>
                     <Dialog.Title>Add New Restricted Issuer</Dialog.Title>
                   </Dialog.Header>
+
                   <Dialog.Body>
-                         <CreateIssuerModal isOpen={false} onClose={function (): void {
-                      throw new Error('Function not implemented.');
-                    } }/>
+                    <CreateIssuerModal onClose={() => setIsOpen(false)} />
                   </Dialog.Body>
-                  <Dialog.Footer>
-                    <Dialog.ActionTrigger asChild>
-                      <Button variant="outline">Cancel</Button>
-                    </Dialog.ActionTrigger>
-                    <Button>Save</Button>
-                  </Dialog.Footer>
+
                   <Dialog.CloseTrigger asChild>
                     <CloseButton size="sm" />
                   </Dialog.CloseTrigger>
@@ -55,38 +51,33 @@ const RestrictedIssuersPage = () => {
               </Dialog.Positioner>
             </Portal>
           </Dialog.Root>
-      <HStack>
-        <Button
-      
-          variant="outline"
-          size="sm"
-          color="gray.400"
-          borderColor="gray.600"
-          _hover={{ borderColor: 'gray.500', color: 'white' }}
 
-        >
-          <FiFilter />
-          Clear Filters
-        </Button>
-        <Button
-          
-          variant="outline"
-          size="sm"
-          color="gray.400"
-          borderColor="gray.600"
-          _hover={{ borderColor: 'gray.500', color: 'white' }}
-        >
-          <FiDownload />
-          Export
-        </Button>
-      </HStack>
-    </Flex>
-        
- 
+          <HStack>
+            <Button
+              variant="outline"
+              size="sm"
+              color="gray.400"
+              borderColor="gray.600"
+              _hover={{ borderColor: 'gray.500', color: 'white' }}
+            >
+              <FiFilter />
+              Clear Filters
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              color="gray.400"
+              borderColor="gray.600"
+              _hover={{ borderColor: 'gray.500', color: 'white' }}
+            >
+              <FiDownload />
+              Export
+            </Button>
+          </HStack>
+        </Flex>
+      </Box>
 
-    </Box>
-    <RestrictedIssuerTable />
-    
+      <RestrictedIssuerTable />
     </>
   );
 };
