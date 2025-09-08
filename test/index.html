@@ -1,8 +1,4 @@
-// ---------------- MUTATION ----------------
-const createOrUpdateMutation = useMutation({
-  mutationFn: async (data: CategoryFormData) => {
-    // Transform the form data into backend payload format
-    const payload = {
+const payload = {
       id: mode === "edit" ? category?.id : undefined, // include id only in edit mode
       name: data.restrictionCategoryName,
       description: data.description,
@@ -19,46 +15,3 @@ const createOrUpdateMutation = useMutation({
             }))
         ),
     };
-
-    console.log("Payload sent to backend:", payload);
-
-    const response = await fetch(`${config.apis.mdmApi}/RestrictionCategory`, {
-      method: "PUT",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to save Restriction Category");
-    }
-    return response.json();
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["restriction-categories"] });
-    toaster.create({
-      type: "success",
-      title: mode === "edit" ? "Category Updated" : "Category Created",
-      description: `The restriction category has been ${
-        mode === "edit" ? "updated" : "created"
-      } successfully.`,
-      duration: 3000,
-    });
-    reset();
-    onClose();
-  },
-  onError: () => {
-    toaster.create({
-      type: "error",
-      title: "Error",
-      description: `Failed to ${mode} restriction category.`,
-      duration: 3000,
-    });
-  },
-});
-
-const onSubmit = (data: CategoryFormData) => {
-  createOrUpdateMutation.mutate(data);
-};
