@@ -1,45 +1,138 @@
-{/* Transaction types - dropdown with checkboxes (appears only on click) */}
-<HStack gap={4} mb={4}>
-  <Fieldset.Root>
-    <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
+Step1: On Restricted List, we would need a new tab called ““Wall-crossed Issuers”
 
-    <Popover placement="bottom-start" closeOnBlur={true}>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          size="sm"
-          rightIcon={<FiChevronDown />}
-          // show selected text inside the trigger:
-        >
-          {transactionTypes && transactionTypes.length && !transactionTypes.includes('None')
-            ? transactionTypes.join(', ')
-            : 'None'}
-        </Button>
-      </PopoverTrigger>
+Upon clicking on tab, user should be taken to new page
 
-      <PopoverContent w="auto" minW="240px" p={0} borderRadius="md" overflow="hidden">
-        <PopoverBody p={3}>
-          <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={2}>
-            <Fieldset.Content>
-              <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
-                {(value) => (
-                  <Box key={value} mb={2}>
-                    <Checkbox.Root
-                      checked={transactionTypes.includes(value)}
-                      onCheckedChange={() => handleTransactionToggle(value)}
-                      value={value}
-                    >
-                      <Checkbox.HiddenInput />
-                      <Checkbox.Control />
-                      <Checkbox.Label>{value}</Checkbox.Label>
-                    </Checkbox.Root>
-                  </Box>
-                )}
-              </For>
-            </Fieldset.Content>
-          </Box>
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
-  </Fieldset.Root>
-</HStack>
+There should be below options as we have on “Restricted Issuers” tab
+
+Insert New Entry
+
+Clear Filter
+
+Export option
+
+
+Step2: On Wall-crossed Issuers, when user clicks on “Insert new entry“, user should see a pop-up window with input fields as below
+
+The pop-up should have title “Enter Issuer details“. Display a note in bracket (At least ISIN or Ticker is mandatory)
+
+Issuer Name - Text field to accept Issuer name
+
+Issuer Type - It is dropdown with values - Public/Private
+
+Ticker
+
+ISIN
+
+CUSIP
+
+SEDOL
+
+Button - “Fetch Issuer Details”
+
+When user clicks on “Fetch Issuer Details button“
+
+Need to validate if user has entered valid ISIN or Ticker
+
+And if yes, then fetch the details using SAPI and display in fields on pop-up window
+
+If the data is not entered in above field or entered data is invalid, throw an error message -
+
+“Please enter valid ISIN or Ticker, the details entered may not be valid“ and have close option to close the window
+
+
+
+
+Step3: This is next step after IT-3812: Restricted List - Wall-crossed Issuers - Insert New Entry
+In Progress
+
+When user enters valid details, and we can fetch the details from SAPI or source we decide, those would be displayed on pop-up
+
+The “Fetch the Issuer Details“ button should be turned as “Search Issuer Holdings”
+
+Compliance user can validate the details displayed an clicks on “Search Issuer Holdings”
+
+Then, we should send the request to Sirius and get all the details and receive holding details from Sirius
+
+The holding details can be split in two sections
+
+Holdings - It should display below details
+
+Instrument Name
+
+Instrument Type
+
+Quantity
+
+Account
+
+Investment Manager
+
+We should be displaying all positions/holdings
+
+Trade History
+
+Trade Date
+
+Instrument
+
+Quantity
+
+Account
+
+Investment Manager
+
+We should display last 90 trade transactions
+
+And user should see below buttons
+
+Proceed to Wall cross
+
+Refuse Wall cross
+
+
+Step4: On previous page, if user clicks on “Proceed to Wall cross“ button,
+
+User should be displayed with pop-up for “Add new Restricted Issuer“ pop-up which comes upon clicking “Insert new entry” button on “Restricted Issuers“ page
+
+The popup should display all previously fetched values like Issuer Name, Type, ISIN, Ticker, SEDOL, CUSIP
+
+And should allow to user update and enter details in all fields including Restriction Category
+
+Once user enters all valid details, the restricted issuer should be added to restricted list mentioned and flow should work as is
+
+
+After user submits it, the entry should be displayed on Wall-crossed Issuer tab
+
+Each record would have details for below columns
+
+Validated Issuer Name
+
+User entered Issuer Name
+
+Issuer Type
+
+Ticker
+
+ISIN
+
+CUSIP
+
+SEDOL
+
+Reason - Not applicable for Wall crossed Issuers
+
+Wall Crossed Date - date should be captured based on event
+
+Wall Crossed By - User details to be captured based on login detail
+
+Step5: At the end of Step in 
+  if user clicks on “Refuse Wall cross“ then,
+
+User should be popped up with field called “Reason“
+
+This is text box and mandatory field
+
+User should be able to enter reason and submit
+
+The entry should be displayed as the entry in acceptance flow is displayed
+
