@@ -1,22 +1,11 @@
-import { Controller, useForm } from 'react-hook-form';
-
-// ... inside your component
-const { register, handleSubmit, control } = useForm<IssuerFormData>({
-  defaultValues: {
-    transactionTypes: ['None'],
-    categoryName: "",
-  }
-});
-
-// ---------- Restriction Category FIX ----------
 <Controller
   name="categoryName"
   control={control}
   render={({ field }) => (
     <Select.Root
       collection={collection}
-      value={field.value}
-      onValueChange={(val) => field.onChange(val)}
+      value={field.value || ""}   // always a string
+      onValueChange={field.onChange}
     >
       <Select.HiddenSelect />
       <Select.Label>Restriction Category</Select.Label>
@@ -25,7 +14,9 @@ const { register, handleSubmit, control } = useForm<IssuerFormData>({
           <Select.ValueText placeholder="Select Below" />
         </Select.Trigger>
         <Select.IndicatorGroup>
-          {state.loading && <Spinner size="xs" borderWidth="1.5px" color="fg.muted" />}
+          {state.loading && (
+            <Spinner size="xs" borderWidth="1.5px" color="fg.muted" />
+          )}
           <Select.Indicator />
         </Select.IndicatorGroup>
       </Select.Control>
@@ -33,7 +24,7 @@ const { register, handleSubmit, control } = useForm<IssuerFormData>({
       <Select.Positioner>
         <Select.Content>
           {collection.items.map((categories) => (
-            <Select.Item item={categories.name} key={categories.name}>
+            <Select.Item value={categories.name} key={categories.name}>
               {categories.name}
               <Select.ItemIndicator />
             </Select.Item>
@@ -41,41 +32,5 @@ const { register, handleSubmit, control } = useForm<IssuerFormData>({
         </Select.Content>
       </Select.Positioner>
     </Select.Root>
-  )}
-/>
-
-// ---------- Transaction Types FIX ----------
-<Controller
-  name="transactionTypes"
-  control={control}
-  render={({ field }) => (
-    <Fieldset.Root>
-      <CheckboxGroup
-        value={field.value}
-        onChange={(val) => {
-          // handle "None" logic here
-          if (val.includes("None")) {
-            field.onChange(["None"]);
-          } else if (val.length === 0) {
-            field.onChange(["None"]);
-          } else {
-            field.onChange(val.filter((v) => v !== "None"));
-          }
-        }}
-      >
-        <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
-        <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={3}>
-          <Fieldset.Content>
-            {['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None'].map((value) => (
-              <Checkbox.Root key={value} value={value}>
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>{value}</Checkbox.Label>
-              </Checkbox.Root>
-            ))}
-          </Fieldset.Content>
-        </Box>
-      </CheckboxGroup>
-    </Fieldset.Root>
   )}
 />
