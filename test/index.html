@@ -2,21 +2,18 @@ import {
   Box,
   Button,
   Checkbox,
-  CheckboxGroup,
-  createListCollection,
   Field,
   Fieldset,
+  For,
   HStack,
   Input,
   NativeSelect,
-  Select,
-  Spinner,
-} from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useMemo } from "react";
-import { useAsync } from "react-use";
-import { config } from "@/config";
-import { useMutation } from "@tanstack/react-query";
+} from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';
+import { useAsync } from 'react-use';
+
+import { config } from '@/config';
+import { useMutation } from '@tanstack/react-query';
 
 interface IssuerFormData {
   issuerName: string;
@@ -26,8 +23,8 @@ interface IssuerFormData {
   cusip: string;
   sedol: string;
   instrumentType: string;
-  categoryName: string;
-  transactionTypes: string[];
+  categoryName: string; // string, sent to backend
+  transactionTypes: string[]; // values: e.g. ["Buy","Sell"] or ["None"]
   dateRestricted: string;
   requester: string;
   notes: string;
@@ -38,40 +35,62 @@ interface RestrictionCategories {
 }
 
 const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
-  const { register, handleSubmit, control } = useForm<IssuerFormData>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<IssuerFormData>({
     defaultValues: {
-      transactionTypes: ["None"],
+      transactionTypes: ['None'], // default
+      categoryName: '',
     },
   });
 
-  // Fetch Restriction Categories
+  // fetch categories
   const state = useAsync(async (): Promise<RestrictionCategories[]> => {
-    const response = await fetch(
-      `${config.apis.mdmApi}/EntitledRestrictionCategories`
-    );
-    const data = await response.json();
-    return data;
+    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`);
+    if (!response.ok) return [];
+    return response.json();
   }, []);
 
-  const collection = useMemo(() => {
-    return createListCollection({
-      items: state.value ?? [],
-      itemToString: (categories) => categories.name,
-      itemToValue: (categories) => categories.name,
-    });
-  }, [state.value]);
+  // transaction types are synced with form via watch() and setValue()
+  const transactionTypes = watch('transactionTypes') || ['None'];
 
-  // Mutation to create issuer
+  // handle checkbox toggle and keep form value in sync
+  const handleTransactionToggle = (option: string) => {
+    // compute next selection based on current form value
+    const current = watch('transactionTypes') || ['None'];
+    let next: string[];
+    if (option === 'None') {
+      next = ['None'];
+    } else {
+      const has = current.includes(option);
+      if (has) {
+        next = current.filter((v) => v !== option);
+      } else {
+        next = [...current.filter((v) => v !== 'None'), option];
+      }
+      if (next.length === 0) next = ['None'];
+    }
+    setValue('transactionTypes', next, { shouldDirty: true, shouldValidate: true });
+  };
+
+  // mutation to create issuer
   const mutation = useMutation({
     mutationFn: async (payload: IssuerFormData) => {
       const url = `${config.apis.mdmApi}/RestrictedIssuer`;
       const res = await fetch(url, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to create issuer");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Failed to create issuer: ${res.status} ${txt}`);
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -80,24 +99,30 @@ const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
   });
 
   const onSubmit = (data: IssuerFormData) => {
-    mutation.mutate(data);
+    // ensure transactionTypes is taken from form (already synced)
+    const payload = {
+      ...data,
+      transactionTypes: data.transactionTypes?.length ? data.transactionTypes : ['None'],
+    };
+    mutation.mutate(payload);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {/* Issuer Name + Type */}
       <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>Issuer Name</Field.Label>
           <Input
-            {...register("issuerName", { required: "Issuer name is required" })}
+            {...register('issuerName', { required: 'Issuer name is required' })}
             placeholder="Enter value"
           />
         </Field.Root>
+
         <Field.Root>
           <Field.Label>Issuer Type</Field.Label>
           <NativeSelect.Root>
-            <NativeSelect.Field {...register("issuerType")}>
+            <NativeSelect.Field {...register('issuerType')}>
+              <option value="">Select type</option>
               <option value="Public">Public</option>
               <option value="Private">Private</option>
             </NativeSelect.Field>
@@ -106,36 +131,34 @@ const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
         </Field.Root>
       </HStack>
 
-      {/* Ticker + ISIN */}
       <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>Ticker</Field.Label>
-          <Input {...register("ticker")} placeholder="Enter value" />
+          <Input {...register('ticker')} placeholder="Enter value" />
         </Field.Root>
         <Field.Root>
           <Field.Label>ISIN</Field.Label>
-          <Input {...register("isin")} placeholder="Enter value" />
+          <Input {...register('isin')} placeholder="Enter value" />
         </Field.Root>
       </HStack>
 
-      {/* CUSIP + SEDOL */}
       <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>CUSIP</Field.Label>
-          <Input {...register("cusip")} placeholder="Enter value" />
+          <Input {...register('cusip')} placeholder="Enter value" />
         </Field.Root>
         <Field.Root>
           <Field.Label>SEDOL</Field.Label>
-          <Input {...register("sedol")} placeholder="Enter value" />
+          <Input {...register('sedol')} placeholder="Enter value" />
         </Field.Root>
       </HStack>
 
-      {/* Instrument Type + Restriction Category */}
       <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>Instrument Type</Field.Label>
           <NativeSelect.Root>
-            <NativeSelect.Field {...register("instrumentType")}>
+            <NativeSelect.Field {...register('instrumentType')}>
+              <option value="">Select instrument</option>
               <option value="Equity">Equity</option>
               <option value="ADR">ADR</option>
               <option value="Index">Index</option>
@@ -147,126 +170,76 @@ const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
           </NativeSelect.Root>
         </Field.Root>
 
-        {/* Restriction Category Dropdown */}
-        <Controller
-          name="categoryName"
-          control={control}
-          render={({ field }) => (
-            <Select.Root
-              collection={collection}
-              value={
-                collection.items.find((c) => c.name === field.value) || null
-              }
-              onValueChange={(item) => field.onChange(item?.name)}
-            >
-              <Select.HiddenSelect />
-              <Select.Label>Restriction Category</Select.Label>
-              <Select.Control>
-                <Select.Trigger>
-                  <Select.ValueText placeholder="Select Below" />
-                </Select.Trigger>
-                <Select.IndicatorGroup>
-                  {state.loading && (
-                    <Spinner
-                      size="xs"
-                      borderWidth="1.5px"
-                      color="fg.muted"
-                    />
-                  )}
-                  <Select.Indicator />
-                </Select.IndicatorGroup>
-              </Select.Control>
-              <Select.Positioner>
-                <Select.Content>
-                  {collection.items.map((categories) => (
-                    <Select.Item
-                      key={categories.name}
-                      item={categories}
-                    >
-                      {categories.name}
-                      <Select.ItemIndicator />
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Positioner>
-            </Select.Root>
-          )}
-        />
+        {/* ===== RESTRICTION CATEGORY (NativeSelect) =====
+            Simpler and robust: bind to form directly using register.
+         */}
+        <Field.Root>
+          <Field.Label>Restriction Category</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('categoryName')}>
+              <option value="">Select category</option>
+              {state.value?.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
       </HStack>
 
-      {/* Allowed Transaction Types Dropdown */}
-      <Controller
-        name="transactionTypes"
-        control={control}
-        render={({ field }) => (
-          <Select.Root
-            multiple
-            value={field.value || []}
-            onValueChange={(values) => {
-              if (values.includes("None")) {
-                field.onChange(["None"]);
-              } else if (values.length === 0) {
-                field.onChange(["None"]);
-              } else {
-                field.onChange(values.filter((v) => v !== "None"));
-              }
-            }}
+      {/* Transaction types - synced with form state */}
+      <HStack gap={4} mb={4}>
+      <Fieldset.Root>
+  <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
+  <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={3}>
+    <Fieldset.Content>
+      <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
+        {(value) => (
+          <Checkbox.Root
+            key={value}
+            checked={transactionTypes.includes(value)}
+            onCheckedChange={() => handleTransactionToggle(value)}
+            value={value}
           >
-            <Select.HiddenSelect />
-            <Select.Label>Allowed Transaction Type</Select.Label>
-            <Select.Control>
-              <Select.Trigger>
-                <Select.ValueText placeholder="Select transaction types" />
-              </Select.Trigger>
-              <Select.IndicatorGroup>
-                <Select.Indicator />
-              </Select.IndicatorGroup>
-            </Select.Control>
-            <Select.Positioner>
-              <Select.Content>
-                <CheckboxGroup value={field.value || []}>
-                  {["Buy", "Sell", "Buy to Cover", "Sell Short", "None"].map(
-                    (type) => (
-                      <Checkbox.Root key={type} value={type}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>{type}</Checkbox.Label>
-                      </Checkbox.Root>
-                    )
-                  )}
-                </CheckboxGroup>
-              </Select.Content>
-            </Select.Positioner>
-          </Select.Root>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <Checkbox.Label>{value}</Checkbox.Label>
+          </Checkbox.Root>
         )}
-      />
+      </For>
+    </Fieldset.Content>
+  </Box>
+</Fieldset.Root>
+      </HStack>
 
-      {/* Date + Requester */}
-      <HStack gap={4} mb={4} mt={6}>
+      <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>Start Date</Field.Label>
-          <Input {...register("dateRestricted")} type="date" />
+          <Input {...register('dateRestricted')} type="date" defaultValue="2025-08-25" />
         </Field.Root>
+
         <Field.Root>
           <Field.Label>Restriction Requester</Field.Label>
-          <Input {...register("requester")} placeholder="Enter value" />
+          <Input {...register('requester')} placeholder="Enter value" />
         </Field.Root>
       </HStack>
 
-      {/* Notes */}
       <HStack gap={4} mb={4}>
         <Field.Root>
           <Field.Label>Restriction Notes</Field.Label>
-          <Input {...register("notes")} placeholder="Enter value" />
+          <Input {...register('notes')} placeholder="Enter value" />
         </Field.Root>
       </HStack>
 
-      {/* Action Buttons */}
       <HStack justify="flex-end" mt={6}>
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" colorScheme="blue" isLoading={mutation.isPending}>
+
+        {/* use mutation.isPending (TSQ v5) or mutation.isLoading (v4) as appropriate */}
+        <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
           Save
         </Button>
       </HStack>
