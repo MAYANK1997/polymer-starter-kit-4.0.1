@@ -1,36 +1,56 @@
-import { useState } from 'react'
-import {
-  Box,
-  Button,
-  CloseButton,
-  Dialog,
-  Flex,
-  HStack,
-} from '@chakra-ui/react'
-import { FiDownload, FiFilter, FiPlus } from 'react-icons/fi'
-import RestrictedIssuerTable from './RestrictedIssuerTable'
-import CreateIssuerModal from '@/components/modals/CreateIssuerModal'
+import { useState } from 'react';
+import RestrictedIssuerTable from './RestrictedIssuerTable';
+import { Box, Button, CloseButton, Dialog, Flex, HStack, Portal } from '@chakra-ui/react';
+import { FiDownload, FiFilter, FiPlus } from 'react-icons/fi';
+import CreateIssuerModal from '@/components/modals/CreateIssuerModal';
 
 const RestrictedIssuersPage = () => {
-  // CONTROL THE DIALOG
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
       <Box>
         {/* Action Bar */}
         <Flex justify="space-between" mb={4}>
-          {/* Open dialog with state */}
-          <Button
-            bg="gray.700"
-            color="white"
-            _hover={{ bg: 'gray.600' }}
-            size="sm"
-            leftIcon={<FiPlus />}
-            onClick={() => setIsOpen(true)}
+          <Dialog.Root
+            key="center"
+            placement="center"
+            motionPreset="slide-in-bottom"
+            size="lg"
+            open={isOpen}
+            onOpenChange={(e) => setIsOpen(e.open)}
           >
-            Insert New Entry
-          </Button>
+            <Dialog.Trigger asChild>
+              <Button
+                bg="gray.700"
+                color="white"
+                _hover={{ bg: 'gray.600' }}
+                size="sm"
+              >
+                <FiPlus />
+                Insert New Entry
+              </Button>
+            </Dialog.Trigger>
+
+            <Portal>
+              <Dialog.Backdrop />
+              <Dialog.Positioner>
+                <Dialog.Content>
+                  <Dialog.Header>
+                    <Dialog.Title>Add New Restricted Issuer</Dialog.Title>
+                  </Dialog.Header>
+
+                  <Dialog.Body>
+                    <CreateIssuerModal onClose={() => setIsOpen(false)} />
+                  </Dialog.Body>
+
+                  <Dialog.CloseTrigger asChild>
+                    <CloseButton size="sm" />
+                  </Dialog.CloseTrigger>
+                </Dialog.Content>
+              </Dialog.Positioner>
+            </Portal>
+          </Dialog.Root>
 
           <HStack>
             <Button
@@ -39,8 +59,8 @@ const RestrictedIssuersPage = () => {
               color="gray.400"
               borderColor="gray.600"
               _hover={{ borderColor: 'gray.500', color: 'white' }}
-              leftIcon={<FiFilter />}
             >
+              <FiFilter />
               Clear Filters
             </Button>
             <Button
@@ -49,54 +69,17 @@ const RestrictedIssuersPage = () => {
               color="gray.400"
               borderColor="gray.600"
               _hover={{ borderColor: 'gray.500', color: 'white' }}
-              leftIcon={<FiDownload />}
             >
+              <FiDownload />
               Export
             </Button>
           </HStack>
         </Flex>
       </Box>
 
-      {/* Controlled Dialog */}
-      <Dialog.Root
-        open={isOpen}
-        onOpenChange={(e) => setIsOpen(e.open)}
-        placement="center"
-        motionPreset="slide-in-bottom"
-        size="lg"
-      >
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Add New Restricted Issuer</Dialog.Title>
-            </Dialog.Header>
-
-            <Dialog.Body>
-              {/* Pass a real onClose that flips the state */}
-              <CreateIssuerModal onClose={() => setIsOpen(false)} />
-            </Dialog.Body>
-
-            <Dialog.Footer>
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
-              {/* If CreateIssuerModal handles its own Save, you can remove this.
-                  Otherwise wire it to submit via a ref or move the Save button into
-                  CreateIssuerModal. */}
-              {/* <Button type="submit" form="create-issuer-form-id">Save</Button> */}
-            </Dialog.Footer>
-
-            <Dialog.CloseTrigger asChild>
-              <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Dialog.Root>
-
       <RestrictedIssuerTable />
     </>
-  )
-}
+  );
+};
 
-export default RestrictedIssuersPage
+export default RestrictedIssuersPage;
