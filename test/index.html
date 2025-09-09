@@ -1,63 +1,45 @@
-import { useState } from 'react'
-import {
-  Box,
-  Button,
-  Checkbox,
-  Fieldset,
-  For,
-  HStack,
-  Select,
-} from '@chakra-ui/react'
-
-// inside your component (replace current transactionTypes section):
-
-// local state for dropdown open/close
-const [isTxDropdownOpen, setTxDropdownOpen] = useState(false)
-
-...
-
+{/* Transaction types - dropdown with checkboxes (appears only on click) */}
 <HStack gap={4} mb={4}>
   <Fieldset.Root>
     <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
 
-    {/* Dropdown wrapper */}
-    <Select.Root
-      open={isTxDropdownOpen}
-      onOpenChange={setTxDropdownOpen}
-    >
-      <Select.Trigger>
-        <Select.ValueText placeholder="Select transaction types" />
-        <Select.Indicator />
-      </Select.Trigger>
+    <Popover placement="bottom-start" closeOnBlur={true}>
+      <PopoverTrigger>
+        <Button
+          variant="outline"
+          size="sm"
+          rightIcon={<FiChevronDown />}
+          // show selected text inside the trigger:
+        >
+          {transactionTypes && transactionTypes.length && !transactionTypes.includes('None')
+            ? transactionTypes.join(', ')
+            : 'None'}
+        </Button>
+      </PopoverTrigger>
 
-      <Select.Positioner>
-        <Select.Content>
-          <Box
-            border="1px solid"
-            borderColor="gray.600"
-            borderRadius="md"
-            p={3}
-            bg="white"
-          >
+      <PopoverContent w="auto" minW="240px" p={0} borderRadius="md" overflow="hidden">
+        <PopoverBody p={3}>
+          <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={2}>
             <Fieldset.Content>
               <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
                 {(value) => (
-                  <Checkbox.Root
-                    key={value}
-                    checked={transactionTypes.includes(value)}
-                    onCheckedChange={() => handleTransactionToggle(value)}
-                    value={value}
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control />
-                    <Checkbox.Label>{value}</Checkbox.Label>
-                  </Checkbox.Root>
+                  <Box key={value} mb={2}>
+                    <Checkbox.Root
+                      checked={transactionTypes.includes(value)}
+                      onCheckedChange={() => handleTransactionToggle(value)}
+                      value={value}
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>{value}</Checkbox.Label>
+                    </Checkbox.Root>
+                  </Box>
                 )}
               </For>
             </Fieldset.Content>
           </Box>
-        </Select.Content>
-      </Select.Positioner>
-    </Select.Root>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
   </Fieldset.Root>
 </HStack>
