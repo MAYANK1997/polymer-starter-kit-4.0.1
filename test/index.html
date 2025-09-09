@@ -1,61 +1,45 @@
-import { Controller, useForm } from "react-hook-form";
-import {
-  Select,
-  Spinner,
-  createListCollection,
-} from "@chakra-ui/react";
-
-// inside your component...
-const { control } = useForm<IssuerFormData>();
-
-// build collection from your categories
-const collection = createListCollection({
-  items: state.value ?? [],
-  itemToString: (item) => item.name,
-  itemToValue: (item) => item.name,
-});
-
 <Controller
   name="categoryName"
   control={control}
-  render={({ field }) => (
-    <Select.Root
-      collection={collection}
-      value={collection.items.find(
-        (c) => c.name === field.value
-      )}
-      onValueChange={(item) => field.onChange(item?.name)}
-    >
-      <Select.HiddenSelect />
-      <Select.Label>Restriction Category</Select.Label>
-      <Select.Control>
-        <Select.Trigger>
-          <Select.ValueText placeholder="Select Below" />
-        </Select.Trigger>
-        <Select.IndicatorGroup>
-          {state.loading && (
-            <Spinner
-              size="xs"
-              borderWidth="1.5px"
-              color="fg.muted"
-            />
-          )}
-          <Select.Indicator />
-        </Select.IndicatorGroup>
-      </Select.Control>
-      <Select.Positioner>
-        <Select.Content>
-          {collection.items.map((categories) => (
-            <Select.Item
-              item={categories} // ✅ pass the whole object, not string
-              key={categories.name}
-            >
-              {categories.name}
-              <Select.ItemIndicator />
-            </Select.Item>
-          ))}
-        </Select.Content>
-      </Select.Positioner>
-    </Select.Root>
-  )}
+  render={({ field }) => {
+    // find the selected item (object) from the collection
+    const selectedItem =
+      collection.items.find((c) => c.name === field.value) ?? null;
+
+    return (
+      <Select.Root
+        collection={collection}
+        value={selectedItem ? [selectedItem] : []} // ✅ expects an array of items
+        onValueChange={(items) => {
+          // items is an array of selected objects
+          const first = items[0];
+          field.onChange(first?.name ?? "");
+        }}
+      >
+        <Select.HiddenSelect />
+        <Select.Label>Restriction Category</Select.Label>
+        <Select.Control>
+          <Select.Trigger>
+            <Select.ValueText placeholder="Select Below" />
+          </Select.Trigger>
+          <Select.IndicatorGroup>
+            {state.loading && (
+              <Spinner size="xs" borderWidth="1.5px" color="fg.muted" />
+            )}
+            <Select.Indicator />
+          </Select.IndicatorGroup>
+        </Select.Control>
+        <Select.Positioner>
+          <Select.Content>
+            {collection.items.map((categories) => (
+              <Select.Item item={categories} key={categories.name}>
+                {categories.name}
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+      </Select.Root>
+    );
+  }}
 />
