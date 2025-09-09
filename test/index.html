@@ -1,285 +1,61 @@
+import { Controller, useForm } from "react-hook-form";
 import {
-  Box,
-  Button,
-  Checkbox,
-  CheckboxGroup,
-  createListCollection,
-  Field,
-  Fieldset,
-  For,
-  HStack,
-  Input,
-  NativeSelect,
   Select,
   Spinner,
+  createListCollection,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useMemo, useState } from "react";
-import { useAsync } from "react-use";
-import { config } from "@/config";
-import { useMutation } from "@tanstack/react-query";
 
-interface IssuerFormData {
-  issuerName: string;
-  issuerType: string;
-  ticker: string;
-  isin: string;
-  cusip: string;
-  sedol: string;
-  instrumentType: string;
-  categoryName: string; // FIXED: ensure it's a string
-  transactionTypes: string[];
-  dateRestricted: string;
-  requester: string;
-  notes: string;
-}
+// inside your component...
+const { control } = useForm<IssuerFormData>();
 
-interface RestrictionCategories {
-  name: string;
-}
+// build collection from your categories
+const collection = createListCollection({
+  items: state.value ?? [],
+  itemToString: (item) => item.name,
+  itemToValue: (item) => item.name,
+});
 
-const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
-  const { register, handleSubmit, control } = useForm<IssuerFormData>({
-    defaultValues: {
-      transactionTypes: ["None"], // FIXED: default is None
-    },
-  });
-
-  // Fetch restriction categories
-  const state = useAsync(async (): Promise<RestrictionCategories[]> => {
-    const response = await fetch(
-      `${config.apis.mdmApi}/EntitledRestrictionCategories`
-    );
-    const data = await response.json();
-    return data;
-  }, []);
-
-  const collection = useMemo(() => {
-    return createListCollection({
-      items: state.value ?? [],
-      itemToString: (categories) => categories.name,
-      itemToValue: (categories) => categories.name,
-    });
-  }, [state.value]);
-
-  // Transaction types state
-  const [selected, setSelected] = useState<string[]>(["None"]);
-
-  const handleChange = (option: string) => {
-    if (option === "None") {
-      setSelected(["None"]);
-    } else {
-      let newSelected = selected.includes(option)
-        ? selected.filter((item) => item !== option)
-        : [...selected.filter((item) => item !== "None"), option];
-
-      if (newSelected.length === 0) {
-        newSelected = ["None"];
-      }
-      setSelected(newSelected);
-    }
-  };
-
-  // Mutation for saving issuer
-  const mutation = useMutation({
-    mutationFn: async (payload: IssuerFormData) => {
-      const url = `${config.apis.mdmApi}/RestrictedIssuer`;
-      const res = await fetch(url, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Failed to create issuer");
-      return res.json();
-    },
-    onSuccess: () => {
-      onClose();
-    },
-  });
-
-  const onSubmit = (data: IssuerFormData) => {
-    const submitData = {
-      ...data,
-      transactionTypes: selected, // FIXED: use selected state
-    };
-    mutation.mutate(submitData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Issuer Name</Field.Label>
-          <Input
-            {...register("issuerName", { required: "Issuer name is required" })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>Issuer Type</Field.Label>
-          <NativeSelect.Root>
-            <NativeSelect.Field {...register("issuerType")}>
-              <option value="Public">Public</option>
-              <option value="Private">Private</option>
-            </NativeSelect.Field>
-            <NativeSelect.Indicator />
-          </NativeSelect.Root>
-        </Field.Root>
-      </HStack>
-
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Ticker</Field.Label>
-          <Input
-            {...register("ticker", { required: "Ticker is required" })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>ISIN</Field.Label>
-          <Input
-            {...register("isin", { required: "ISIN is required" })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
-      </HStack>
-
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>CUSIP</Field.Label>
-          <Input
-            {...register("cusip", { required: "CUSIP is required" })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>SEDOL</Field.Label>
-          <Input
-            {...register("sedol", { required: "SEDOL is required" })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
-      </HStack>
-
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Instrument Type</Field.Label>
-          <NativeSelect.Root>
-            <NativeSelect.Field {...register("instrumentType")}>
-              <option value="Equity">Equity</option>
-              <option value="ADR">ADR</option>
-              <option value="Index">Index</option>
-              <option value="Govt">Govt</option>
-              <option value="Corporate Bond">Corporate Bond</option>
-              <option value="Convertible Bond">Convertible Bond</option>
-            </NativeSelect.Field>
-            <NativeSelect.Indicator />
-          </NativeSelect.Root>
-        </Field.Root>
-
-        {/* Restriction Category FIXED */}
-        <Controller
-          name="categoryName"
-          control={control}
-          render={({ field }) => (
-            <Select.Root
-              collection={collection}
-              value={field.value || ""}
-              onValueChange={field.onChange}
-            >
-              <Select.HiddenSelect />
-              <Select.Label>Restriction Category</Select.Label>
-              <Select.Control>
-                <Select.Trigger>
-                  <Select.ValueText placeholder="Select Below" />
-                </Select.Trigger>
-                <Select.IndicatorGroup>
-                  {state.loading && (
-                    <Spinner
-                      size="xs"
-                      borderWidth="1.5px"
-                      color="fg.muted"
-                    />
-                  )}
-                  <Select.Indicator />
-                </Select.IndicatorGroup>
-              </Select.Control>
-              <Select.Positioner>
-                <Select.Content>
-                  {collection.items.map((categories) => (
-                    <Select.Item value={categories.name} key={categories.name}>
-                      {categories.name}
-                      <Select.ItemIndicator />
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Positioner>
-            </Select.Root>
+<Controller
+  name="categoryName"
+  control={control}
+  render={({ field }) => (
+    <Select.Root
+      collection={collection}
+      value={collection.items.find(
+        (c) => c.name === field.value
+      )}
+      onValueChange={(item) => field.onChange(item?.name)}
+    >
+      <Select.HiddenSelect />
+      <Select.Label>Restriction Category</Select.Label>
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder="Select Below" />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          {state.loading && (
+            <Spinner
+              size="xs"
+              borderWidth="1.5px"
+              color="fg.muted"
+            />
           )}
-        />
-      </HStack>
-
-      {/* Transaction Types FIXED */}
-      <HStack gap={4} mb={4}>
-        <Fieldset.Root>
-          <CheckboxGroup name="transactionTypes">
-            <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
-            <Box
-              border="1px solid"
-              borderColor="gray.600"
-              borderRadius="md"
-              p={3}
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+      <Select.Positioner>
+        <Select.Content>
+          {collection.items.map((categories) => (
+            <Select.Item
+              item={categories} // ✅ pass the whole object, not string
+              key={categories.name}
             >
-              <Fieldset.Content>
-                <For each={["Buy", "Sell", "Buy to Cover", "Sell Short", "None"]}>
-                  {(value) => (
-                    <Checkbox.Root
-                      checked={selected.includes(value)}
-                      onCheckedChange={() => handleChange(value)}
-                      key={value}
-                      value={value}
-                    >
-                      <Checkbox.HiddenInput />
-                      <Checkbox.Control />
-                      <Checkbox.Label>{value}</Checkbox.Label>
-                    </Checkbox.Root>
-                  )}
-                </For>
-              </Fieldset.Content>
-            </Box>
-          </CheckboxGroup>
-        </Fieldset.Root>
-      </HStack>
-
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Start Date</Field.Label>
-          <Input {...register("dateRestricted")} type="date" />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>Restriction Requester</Field.Label>
-          <Input {...register("requester")} placeholder="Enter value" />
-        </Field.Root>
-      </HStack>
-
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Restriction Notes</Field.Label>
-          <Input {...register("notes")} placeholder="Enter value" />
-        </Field.Root>
-      </HStack>
-
-      <HStack justify="flex-end" mt={6}>
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" colorScheme="blue" isLoading={mutation.isPending}>
-          Save
-        </Button>
-      </HStack>
-    </form>
-  );
-};
-
-export default CreateIssuerModal;
+              {categories.name}
+              <Select.ItemIndicator />
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Positioner>
+    </Select.Root>
+  )}
+/>
