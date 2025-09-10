@@ -1,1 +1,7 @@
-LicenseManager.setLicenseKey(import.meta.env.VITE_AG_GRID_LICENCE_KEY);
+interface ImportMetaEnv {
+  readonly VITE_AG_GRID_LICENCE_KEY: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
