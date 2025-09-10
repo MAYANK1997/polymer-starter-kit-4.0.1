@@ -1,138 +1,252 @@
-Step1: On Restricted List, we would need a new tab called ““Wall-crossed Issuers”
-
-Upon clicking on tab, user should be taken to new page
-
-There should be below options as we have on “Restricted Issuers” tab
-
-Insert New Entry
-
-Clear Filter
-
-Export option
-
-
-Step2: On Wall-crossed Issuers, when user clicks on “Insert new entry“, user should see a pop-up window with input fields as below
-
-The pop-up should have title “Enter Issuer details“. Display a note in bracket (At least ISIN or Ticker is mandatory)
-
-Issuer Name - Text field to accept Issuer name
-
-Issuer Type - It is dropdown with values - Public/Private
-
-Ticker
-
-ISIN
-
-CUSIP
-
-SEDOL
-
-Button - “Fetch Issuer Details”
-
-When user clicks on “Fetch Issuer Details button“
-
-Need to validate if user has entered valid ISIN or Ticker
-
-And if yes, then fetch the details using SAPI and display in fields on pop-up window
-
-If the data is not entered in above field or entered data is invalid, throw an error message -
-
-“Please enter valid ISIN or Ticker, the details entered may not be valid“ and have close option to close the window
-
-
-
-
-Step3: This is next step after IT-3812: Restricted List - Wall-crossed Issuers - Insert New Entry
-In Progress
-
-When user enters valid details, and we can fetch the details from SAPI or source we decide, those would be displayed on pop-up
-
-The “Fetch the Issuer Details“ button should be turned as “Search Issuer Holdings”
-
-Compliance user can validate the details displayed an clicks on “Search Issuer Holdings”
-
-Then, we should send the request to Sirius and get all the details and receive holding details from Sirius
-
-The holding details can be split in two sections
-
-Holdings - It should display below details
-
-Instrument Name
-
-Instrument Type
-
-Quantity
-
-Account
-
-Investment Manager
-
-We should be displaying all positions/holdings
-
-Trade History
-
-Trade Date
-
-Instrument
-
-Quantity
-
-Account
-
-Investment Manager
-
-We should display last 90 trade transactions
-
-And user should see below buttons
-
-Proceed to Wall cross
-
-Refuse Wall cross
-
-
-Step4: On previous page, if user clicks on “Proceed to Wall cross“ button,
-
-User should be displayed with pop-up for “Add new Restricted Issuer“ pop-up which comes upon clicking “Insert new entry” button on “Restricted Issuers“ page
-
-The popup should display all previously fetched values like Issuer Name, Type, ISIN, Ticker, SEDOL, CUSIP
-
-And should allow to user update and enter details in all fields including Restriction Category
-
-Once user enters all valid details, the restricted issuer should be added to restricted list mentioned and flow should work as is
-
-
-After user submits it, the entry should be displayed on Wall-crossed Issuer tab
-
-Each record would have details for below columns
-
-Validated Issuer Name
-
-User entered Issuer Name
-
-Issuer Type
-
-Ticker
-
-ISIN
-
-CUSIP
-
-SEDOL
-
-Reason - Not applicable for Wall crossed Issuers
-
-Wall Crossed Date - date should be captured based on event
-
-Wall Crossed By - User details to be captured based on login detail
-
-Step5: At the end of Step in 
-  if user clicks on “Refuse Wall cross“ then,
-
-User should be popped up with field called “Reason“
-
-This is text box and mandatory field
-
-User should be able to enter reason and submit
-
-The entry should be displayed as the entry in acceptance flow is displayed
-
+import {
+  Box,
+  Button,
+  Checkbox,
+  Field,
+  Fieldset,
+  For,
+  HStack,
+  Input,
+  NativeSelect,
+} from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';
+import { useAsync } from 'react-use';
+
+import { config } from '@/config';
+import { useMutation } from '@tanstack/react-query';
+
+
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+  instrumentType: string;
+  categoryName: string; // string, sent to backend
+  transactionTypes: string[]; // values: e.g. ["Buy","Sell"] or ["None"]
+  dateRestricted: string;
+  requester: string;
+  notes: string;
+}
+
+interface RestrictionCategories {
+  name: string;
+}
+
+const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<IssuerFormData>({
+    defaultValues: {
+      transactionTypes: ['None'], // default
+      categoryName: '',
+    },
+  });
+
+  // fetch categories
+  const state = useAsync(async (): Promise<RestrictionCategories[]> => {
+    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`);
+    if (!response.ok) return [];
+    return response.json();
+  }, []);
+
+  // transaction types are synced with form via watch() and setValue()
+  const transactionTypes = watch('transactionTypes') || ['None'];
+  
+
+  // handle checkbox toggle and keep form value in sync
+  const handleTransactionToggle = (option: string) => {
+    // compute next selection based on current form value
+    const current = watch('transactionTypes') || ['None'];
+    let next: string[];
+    if (option === 'None') {
+      next = ['None'];
+    } else {
+      const has = current.includes(option);
+      if (has) {
+        next = current.filter((v) => v !== option);
+      } else {
+        next = [...current.filter((v) => v !== 'None'), option];
+      }
+      if (next.length === 0) next = ['None'];
+    }
+    setValue('transactionTypes', next, { shouldDirty: true, shouldValidate: true });
+  };
+
+  // mutation to create issuer
+  const mutation = useMutation({
+    mutationFn: async (payload: IssuerFormData) => {
+      const url = `${config.apis.mdmApi}/RestrictedIssuer`;
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Failed to create issuer: ${res.status} ${txt}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      onClose();
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
+    // ensure transactionTypes is taken from form (already synced)
+    const payload = {
+      ...data,
+      transactionTypes: data.transactionTypes?.length ? data.transactionTypes : ['None'],
+    };
+    mutation.mutate(payload);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Issuer Name</Field.Label>
+          <Input
+            {...register('issuerName', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+          />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Issuer Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('issuerType')}>
+              <option value="">Select type</option>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Ticker</Field.Label>
+          <Input {...register('ticker')} placeholder="Enter value" />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>ISIN</Field.Label>
+          <Input {...register('isin')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>CUSIP</Field.Label>
+          <Input {...register('cusip')} placeholder="Enter value" />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>SEDOL</Field.Label>
+          <Input {...register('sedol')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Instrument Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('instrumentType')}>
+              <option value="">Select instrument</option>
+              <option value="Equity">Equity</option>
+              <option value="ADR">ADR</option>
+              <option value="Index">Index</option>
+              <option value="Govt">Govt</option>
+              <option value="Corporate Bond">Corporate Bond</option>
+              <option value="Convertible Bond">Convertible Bond</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        {/* ===== RESTRICTION CATEGORY (NativeSelect) =====
+            Simpler and robust: bind to form directly using register.
+         */}
+        <Field.Root>
+          <Field.Label>Restriction Category</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('categoryName')}>
+              <option value="">Select category</option>
+              {state.value?.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+      </HStack>
+
+      {/* Transaction types - synced with form state */}
+      <HStack gap={4} mb={4}>
+      <Fieldset.Root>
+  <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
+  <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={3}>
+    <Fieldset.Content>
+      <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
+        {(value) => (
+          <Checkbox.Root
+            key={value}
+            checked={transactionTypes.includes(value)}
+            onCheckedChange={() => handleTransactionToggle(value)}
+            value={value}
+          >
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <Checkbox.Label>{value}</Checkbox.Label>
+          </Checkbox.Root>
+        )}
+      </For>
+    </Fieldset.Content>
+  </Box>
+</Fieldset.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Start Date</Field.Label>
+          <Input {...register('dateRestricted')} type="date" defaultValue="2025-08-25" />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Restriction Requester</Field.Label>
+          <Input {...register('requester')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Restriction Notes</Field.Label>
+          <Input {...register('notes')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack justify="flex-end" mt={6}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+
+        {/* use mutation.isPending (TSQ v5) or mutation.isLoading (v4) as appropriate */}
+        <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
+          Save
+        </Button>
+      </HStack>
+    </form>
+  );
+};
+
+export default CreateIssuerModal;
