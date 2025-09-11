@@ -1,4 +1,4 @@
-import { config } from "@/config";
+import { config } from '@/config';
 import {
   DialogRoot,
   DialogContent,
@@ -8,26 +8,21 @@ import {
   DialogTitle,
   DialogCloseTrigger,
   Button,
+  Text,
   HStack,
   Input,
   Textarea,
-  FormControl,
-  FormLabel,
-} from "@chakra-ui/react";
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toaster } from "@loim/loim-ui";
-
-interface IssuerData {
-  validatedIssuerName: string;
-  issuerName: string;
-  restrictionCategory: { name: string };
-}
+  Box,
+  Field,
+} from '@chakra-ui/react';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toaster } from '@loim/loim-ui';
 
 interface UnrestrictIssuerModalProps {
   open: boolean;
   onClose: () => void;
-  issuer: IssuerData | null;
+  issuer?: any | null; // keeps it flexible to match your payload shape
 }
 
 export function UnrestrictIssuerModal({
@@ -37,43 +32,50 @@ export function UnrestrictIssuerModal({
 }: UnrestrictIssuerModalProps) {
   const queryClient = useQueryClient();
 
-  const [restrictionEndDate, setRestrictionEndDate] = useState("");
-  const [requester, setRequester] = useState("");
-  const [notes, setNotes] = useState("");
+  const [dateUnrestricted, setDateUnrestricted] = useState('');
+  const [requester, setRequester] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${config.apis.mdmApi}/UnrestrictIssuer`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          categoryName: issuer?.restrictionCategory?.name,
-          dateUnrestricted: restrictionEndDate,
-          issuerName: issuer?.validatedIssuerName,
-          unrestrictRequestor: requester,
-          notes: notes,
-        }),
+  const unrestrictMutation = useMutation({
+    mutationFn: async (payload: {
+      categoryName: string;
+      dateUnrestricted: string;
+      issuerName: string;
+      unrestrictRequestor: string;
+      notes?: string | null;
+    }) => {
+      const url = `${config.apis.mdmApi}/UnrestrictIssuer`;
+      const res = await fetch(url, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to unrestrict issuer");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Failed to unrestrict issuer: ${res.status} ${txt}`);
+      }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restricted-issuers"] });
+      queryClient.invalidateQueries({ queryKey: ['restricted-issuers'] });
       toaster.create({
-        title: "Issuer Unrestricted",
-        description: "The issuer has been unrestricted successfully.",
-        type: "success",
+        title: 'Issuer Unrestricted',
+        description: 'The issuer has been unrestricted successfully.',
+        type: 'success',
         duration: 3000,
       });
       onClose();
     },
-    onError: () => {
+    onError: (err) => {
       toaster.create({
-        title: "Error",
-        description: "Failed to unrestrict issuer.",
-        type: "error",
+        title: 'Error',
+        description:
+          (err as Error)?.message || 'Failed to unrestrict issuer. Try again later.',
+        type: 'error',
         duration: 3000,
       });
     },
@@ -81,59 +83,99 @@ export function UnrestrictIssuerModal({
 
   if (!issuer) return null;
 
+  const handleSubmit = async () => {
+    // basic client-side validation
+    if (!dateUnrestricted) {
+      toaster.create({
+        title: 'Validation',
+        description: 'Please provide Restriction End Date.',
+        type: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+    if (!requester) {
+      toaster.create({
+        title: 'Validation',
+        description: 'Please provide Requester for un-restriction.',
+        type: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
+    const payload = {
+      categoryName: issuer?.restrictionCategory?.name ?? '',
+      dateUnrestricted,
+      issuerName: issuer?.validatedIssuerName ?? issuer?.issuerName ?? '',
+      unrestrictRequestor: requester,
+      notes,
+    };
+
+    unrestrictMutation.mutate(payload);
+  };
+
   return (
     <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
-      <DialogContent>
+      <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl" maxW="640px">
         <DialogHeader>
           <DialogTitle>
-            Unrestrict Issuer - {issuer.validatedIssuerName}
+            Unrestrict Issuer - {issuer.validatedIssuerName ?? issuer.issuerName}
           </DialogTitle>
           <DialogCloseTrigger />
         </DialogHeader>
 
         <DialogBody>
-          <FormControl mb={4}>
-            <FormLabel>Restriction Category</FormLabel>
-            <Input value={issuer.restrictionCategory?.name || ""} isReadOnly />
-          </FormControl>
+          <Field.Root mb={4}>
+            <Field.Label>Restriction Category</Field.Label>
+            <Input value={issuer.restrictionCategory?.name ?? ''} isReadOnly />
+          </Field.Root>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Restriction End Date</FormLabel>
+          <Field.Root mb={4}>
+            <Field.Label>Restriction End Date</Field.Label>
             <Input
               type="date"
-              value={restrictionEndDate}
-              onChange={(e) => setRestrictionEndDate(e.target.value)}
+              value={dateUnrestricted}
+              onChange={(e) => setDateUnrestricted(e.target.value)}
             />
-          </FormControl>
+          </Field.Root>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Requester for Un-restriction</FormLabel>
+          <Field.Root mb={4}>
+            <Field.Label>Requester for Un-restriction</Field.Label>
             <Input
+              placeholder="Enter requester name"
               value={requester}
               onChange={(e) => setRequester(e.target.value)}
-              placeholder="Enter requestor name"
             />
-          </FormControl>
+          </Field.Root>
 
-          <FormControl mb={4}>
-            <FormLabel>Un-restriction Notes</FormLabel>
+          <Field.Root mb={2}>
+            <Field.Label>Un-restriction Notes</Field.Label>
             <Textarea
+              placeholder="Enter notes (optional)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes"
+              minH="80px"
             />
-          </FormControl>
+          </Field.Root>
+
+          <Box mt={2}>
+            <Text fontSize="sm" color="fg.muted">
+              Issuer: {issuer.issuerName} • Instrument: {issuer.instrumentType} •
+              Restricted On: {issuer.restrictedOn ?? 'N/A'}
+            </Text>
+          </Box>
         </DialogBody>
 
         <DialogFooter>
           <HStack justify="flex-end" gap={3}>
-            <Button onClick={onClose} variant="outline">
+            <Button onClick={onClose} variant="outline" colorScheme="gray">
               Cancel
             </Button>
             <Button
               colorScheme="green"
-              onClick={() => mutation.mutate()}
-              isLoading={mutation.isPending}
+              onClick={handleSubmit}
+              loading={unrestrictMutation.isPending ?? unrestrictMutation.isLoading}
             >
               Unrestrict Issuer
             </Button>
