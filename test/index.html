@@ -137,3 +137,128 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
       </>
     )
   }
+
+          categoryName
+: 
+null
+confiSigned
+: 
+null
+country
+: 
+null
+cusip
+: 
+""
+dateRestricted
+: 
+"2025-09-09"
+dateUnrestricted
+: 
+null
+evidenceOfActivity
+: 
+null
+instrumentId
+: 
+41544
+instrumentType
+: 
+"Equity"
+isRestricted
+: 
+null
+isValidated
+: 
+true
+isin
+: 
+"INE155A01022"
+issuerName
+: 
+"TATA"
+issuerType
+: 
+"Private"
+notes
+: 
+"TEST"
+otherId
+: 
+null
+requester
+: 
+"MAYANK"
+restrictedBy
+: 
+"mayankp"
+restrictedHistoryId
+: 
+32871
+restrictedOn
+: 
+"2025-09-09 05:55:40"
+restrictionCategory
+: 
+{id: 3011, name: 'ASDRL', description: 'ASDL', lastModifiedBy: 'mayankp', lastModifiedDate: '2025-09-10T15:58:09.337', …}
+sedol
+: 
+""
+sentToEnfusion
+: 
+null
+ticker
+: 
+""
+transactionType
+: 
+"Buy to Cover"
+transactionTypes
+: 
+null
+typeOfWeapon
+: 
+null
+ultimateParentISIN
+: 
+null
+ultimateParentName
+: 
+null
+ultimateParentTicker
+: 
+null
+unrestrictRequestor
+: 
+null
+unrestrictedBy
+: 
+null
+unrestrictedOn
+: 
+null
+unrestrictionNotes
+: 
+null
+validatedIssuerName
+: 
+"TATA"
+url: http://nycuapp03.biz.lodh.com:8787/UnrestrictIssuer
+Payload: {"categoryName":"ASDRL","dateUnrestricted":"2025-09-10","issuerName":"TATA","unrestrictRequestor":"Mayank","notes":"TESTPRIVATE"}
+
+return fetch(url, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+
+        "categoryName": data.restrictionCategory.name,
+        "dateUnrestricted": restrictionEndDate,
+        "issuerName": data.validatedIssuerName,
+        "unrestrictRequestor":restrictionBy,
+        "notes": notes
+
+
+          
