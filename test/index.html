@@ -1,264 +1,145 @@
-import { config } from '@/config';
+import { config } from "@/config";
 import {
-    DialogRoot,
-    DialogContent,
-    DialogHeader,
-    DialogBody,
-    DialogFooter,
-    DialogTitle,
-    DialogCloseTrigger,
-    Button,
-    Text,
-    HStack,
-  } from '@chakra-ui/react'
-  import {
-    AlertRoot,
-    AlertIndicator,
-    AlertDescription,
-  } from '@chakra-ui/react/alert';
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogCloseTrigger,
+  Button,
+  HStack,
+  Input,
+  Textarea,
+  FormControl,
+  FormLabel,
+} from "@chakra-ui/react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toaster } from "@loim/loim-ui";
 
-import { toaster } from '@loim/loim-ui';
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-  
-  interface UnrestrictedIssuer {
-    categoryName: string
-    issuerName: string
-  }
+interface IssuerData {
+  validatedIssuerName: string;
+  issuerName: string;
+  restrictionCategory: { name: string };
+}
 
- 
-  
-  interface UnrestrictIssuerModalProps {
-    open: boolean
-    onClose: () => void
-    unrestrictissuer?: UnrestrictedIssuer | null
-  }
-  
-  export function UnrestrictIssuerModal({ open, onClose, unrestrictissuer }: UnrestrictIssuerModalProps) {
-    const queryClient = useQueryClient()
-  
-    const unrestrictMutation = useMutation({
-      mutationFn: async (categoryId: string) => {
-        const res = await fetch(
-          `${config.apis.mdmApi}/RestrictionCategory/${categoryId}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+interface UnrestrictIssuerModalProps {
+  open: boolean;
+  onClose: () => void;
+  issuer: IssuerData | null;
+}
 
-        if (!res.ok) {
-          throw new Error("Failed to delete restriction category");
-        }
-  
-        return categoryId;
-       
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
-        toaster.create({
-          title: 'Category Deleted',
-          description: 'The restriction category has been deleted successfully.',
-          type: 'success',
-          duration: 3000,
-        })
-        onClose()
-      },
-      onError: () => {
-        toaster.create({
-          title: 'Error',
-          description: 'Failed to delete restriction category.',
-          type: 'error',
-          duration: 3000,
-        })
-      },
-    })
-  
-    const handleDelete = () => {
-      if (category?.id) {
-        deleteMutation.mutate(category.id)
-      }
-    }
-  
-    if (!category) return null
-  
-    return (
-      <>
-        <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
-          <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
-            <DialogHeader>
-              <DialogTitle>Delete Restriction Category</DialogTitle>
-              <DialogCloseTrigger />
-            </DialogHeader>
-  
-            <DialogBody>
-              <AlertRoot
-                status="warning"
-                bg="orange.900"
-                borderRadius="md"
-                mb={4}
-                variant="subtle"
-              >
-                <AlertIndicator />
-                <AlertDescription fontSize="sm">
-                  This action cannot be undone. This will permanently delete the restriction category.
-                </AlertDescription>
-              </AlertRoot>
-  
-              <Text mb={4}>
-                Are you sure you want to delete the restriction category:
-              </Text>
-  
-              <Text fontWeight="bold" color="red.300" mb={6}>
-                "{category.name}"
-              </Text>
-            </DialogBody>
-  
-            <DialogFooter>
-              <HStack justify="flex-end" gap={3}>
-                <Button onClick={onClose} variant="outline" colorScheme="gray">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDelete}
-                  loading={deleteMutation.isPending}
-                  colorScheme="red"
-                >
-                  Delete Category
-                </Button>
-              </HStack>
-            </DialogFooter>
-          </DialogContent>
-        </DialogRoot>
-  
-        
-      </>
-    )
-  }
+export function UnrestrictIssuerModal({
+  open,
+  onClose,
+  issuer,
+}: UnrestrictIssuerModalProps) {
+  const queryClient = useQueryClient();
 
-          categoryName
-: 
-null
-confiSigned
-: 
-null
-country
-: 
-null
-cusip
-: 
-""
-dateRestricted
-: 
-"2025-09-09"
-dateUnrestricted
-: 
-null
-evidenceOfActivity
-: 
-null
-instrumentId
-: 
-41544
-instrumentType
-: 
-"Equity"
-isRestricted
-: 
-null
-isValidated
-: 
-true
-isin
-: 
-"INE155A01022"
-issuerName
-: 
-"TATA"
-issuerType
-: 
-"Private"
-notes
-: 
-"TEST"
-otherId
-: 
-null
-requester
-: 
-"MAYANK"
-restrictedBy
-: 
-"mayankp"
-restrictedHistoryId
-: 
-32871
-restrictedOn
-: 
-"2025-09-09 05:55:40"
-restrictionCategory
-: 
-{id: 3011, name: 'ASDRL', description: 'ASDL', lastModifiedBy: 'mayankp', lastModifiedDate: '2025-09-10T15:58:09.337', …}
-sedol
-: 
-""
-sentToEnfusion
-: 
-null
-ticker
-: 
-""
-transactionType
-: 
-"Buy to Cover"
-transactionTypes
-: 
-null
-typeOfWeapon
-: 
-null
-ultimateParentISIN
-: 
-null
-ultimateParentName
-: 
-null
-ultimateParentTicker
-: 
-null
-unrestrictRequestor
-: 
-null
-unrestrictedBy
-: 
-null
-unrestrictedOn
-: 
-null
-unrestrictionNotes
-: 
-null
-validatedIssuerName
-: 
-"TATA"
-url: http://nycuapp03.biz.lodh.com:8787/UnrestrictIssuer
-Payload: {"categoryName":"ASDRL","dateUnrestricted":"2025-09-10","issuerName":"TATA","unrestrictRequestor":"Mayank","notes":"TESTPRIVATE"}
+  const [restrictionEndDate, setRestrictionEndDate] = useState("");
+  const [requester, setRequester] = useState("");
+  const [notes, setNotes] = useState("");
 
-return fetch(url, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${config.apis.mdmApi}/UnrestrictIssuer`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryName: issuer?.restrictionCategory?.name,
+          dateUnrestricted: restrictionEndDate,
+          issuerName: issuer?.validatedIssuerName,
+          unrestrictRequestor: requester,
+          notes: notes,
+        }),
+      });
 
-        "categoryName": data.restrictionCategory.name,
-        "dateUnrestricted": restrictionEndDate,
-        "issuerName": data.validatedIssuerName,
-        "unrestrictRequestor":restrictionBy,
-        "notes": notes
+      if (!res.ok) throw new Error("Failed to unrestrict issuer");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restricted-issuers"] });
+      toaster.create({
+        title: "Issuer Unrestricted",
+        description: "The issuer has been unrestricted successfully.",
+        type: "success",
+        duration: 3000,
+      });
+      onClose();
+    },
+    onError: () => {
+      toaster.create({
+        title: "Error",
+        description: "Failed to unrestrict issuer.",
+        type: "error",
+        duration: 3000,
+      });
+    },
+  });
 
+  if (!issuer) return null;
 
-          
+  return (
+    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Unrestrict Issuer - {issuer.validatedIssuerName}
+          </DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
+
+        <DialogBody>
+          <FormControl mb={4}>
+            <FormLabel>Restriction Category</FormLabel>
+            <Input value={issuer.restrictionCategory?.name || ""} isReadOnly />
+          </FormControl>
+
+          <FormControl mb={4} isRequired>
+            <FormLabel>Restriction End Date</FormLabel>
+            <Input
+              type="date"
+              value={restrictionEndDate}
+              onChange={(e) => setRestrictionEndDate(e.target.value)}
+            />
+          </FormControl>
+
+          <FormControl mb={4} isRequired>
+            <FormLabel>Requester for Un-restriction</FormLabel>
+            <Input
+              value={requester}
+              onChange={(e) => setRequester(e.target.value)}
+              placeholder="Enter requestor name"
+            />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Un-restriction Notes</FormLabel>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Enter notes"
+            />
+          </FormControl>
+        </DialogBody>
+
+        <DialogFooter>
+          <HStack justify="flex-end" gap={3}>
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button
+              colorScheme="green"
+              onClick={() => mutation.mutate()}
+              isLoading={mutation.isPending}
+            >
+              Unrestrict Issuer
+            </Button>
+          </HStack>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+  );
+}
