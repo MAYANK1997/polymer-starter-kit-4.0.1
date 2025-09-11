@@ -1,7 +1,126 @@
-interface ImportMetaEnv {
-  readonly VITE_AG_GRID_LICENCE_KEY: string;
-}
+const ActionCellRenderer = (params: any) => 
+  React.createElement('button', {
+    onClick: () => {
+      if (window.handleUnrestrict) {
+        window.handleUnrestrict(params.data.id)
+      }
+    },
+    style: {
+      background: 'none',
+      border: 'none',
+      color: '#F56565',
+      cursor: 'pointer',
+      fontSize: '16px',
+      padding: '4px 8px'
+    }
+  }, '🔓')
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  { 
+    field: 'unrestrict', 
+    headerName: 'Unrestrict', 
+    width: 100,
+    cellRenderer: ActionCellRenderer,
+    sortable: false,
+    filter: false
+  }
+
+  import { Box, Button, Flex, HStack, useDisclosure } from '@chakra-ui/react'
+import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi'
+import { DataTable } from '../../components/DataTable'
+import { CreateIssuerModal } from '../../components/CreateIssuerModal'
+import { UnrestrictIssuerModal } from '../../components/UnrestrictIssuerModal'
+import { useRestrictedIssuers } from '../../hooks/useRestrictedIssuers'
+import { restrictedIssuersColumns } from '../../data/columns'
+import { useState } from 'react'
+
+export function RestrictedIssuersPage() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen: isUnrestrictOpen, onOpen: onUnrestrictOpen, onClose: onUnrestrictClose } = useDisclosure()
+  const { data: issuers, isLoading } = useRestrictedIssuers()
+  const [selectedIssuer, setSelectedIssuer] = useState<any>(null)
+
+  // Set up global unrestrict handler
+  window.handleUnrestrict = (id: string) => {
+    const issuer = issuers?.find(i => i.id === id)
+    if (issuer) {
+      setSelectedIssuer(issuer)
+      onUnrestrictOpen()
+    }
+  }
+
+  const handleExport = () => {
+    if (window.exportGridData) {
+      window.exportGridData()
+    }
+  }
+
+  const handleClearFilters = () => {
+    if (window.clearGridFilters) {
+      window.clearGridFilters()
+    }
+  }
+
+  return (
+    <Box>
+      {/* Action Bar */}
+      <Flex justify="space-between" mb={4}>
+        <Button
+          leftIcon={<FiPlus />}
+          onClick={onOpen}
+          bg="gray.700"
+          color="white"
+          _hover={{ bg: 'gray.600' }}
+          size="sm"
+        >
+          Insert New Entry
+        </Button>
+        
+        <HStack>
+          <Button
+            leftIcon={<FiFilter />}
+            onClick={handleClearFilters}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
+          >
+            Clear Filters
+          </Button>
+          <Button
+            leftIcon={<FiDownload />}
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            color="gray.400"
+            borderColor="gray.600"
+            _hover={{ borderColor: 'gray.500', color: 'white' }}
+          >
+            Export
+          </Button>
+        </HStack>
+      </Flex>
+
+      {/* Data Table */}
+      <DataTable
+        columns={restrictedIssuersColumns}
+        data={issuers || []}
+        loading={isLoading}
+        enableFiltering
+        enableExport
+        onClearFilters={handleClearFilters}
+        onExport={handleExport}
+      />
+
+      {/* Create Modal */}
+      <CreateIssuerModal isOpen={isOpen} onClose={onClose} />
+
+      {/* Unrestrict Modal */}
+      <UnrestrictIssuerModal 
+        isOpen={isUnrestrictOpen} 
+        onClose={onUnrestrictClose}
+        issuer={selectedIssuer}
+      />
+    </Box>
+  )
 }
