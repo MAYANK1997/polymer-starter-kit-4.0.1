@@ -1,126 +1,139 @@
-const ActionCellRenderer = (params: any) => 
-  React.createElement('button', {
-    onClick: () => {
-      if (window.handleUnrestrict) {
-        window.handleUnrestrict(params.data.id)
+import { config } from '@/config';
+import {
+    DialogRoot,
+    DialogContent,
+    DialogHeader,
+    DialogBody,
+    DialogFooter,
+    DialogTitle,
+    DialogCloseTrigger,
+    Button,
+    Text,
+    HStack,
+  } from '@chakra-ui/react'
+  import {
+    AlertRoot,
+    AlertIndicator,
+    AlertDescription,
+  } from '@chakra-ui/react/alert';
+
+import { toaster } from '@loim/loim-ui';
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+  
+  interface UnrestrictedIssuer {
+    categoryName: string
+    issuerName: string
+  }
+
+ 
+  
+  interface UnrestrictIssuerModalProps {
+    open: boolean
+    onClose: () => void
+    unrestrictissuer?: UnrestrictedIssuer | null
+  }
+  
+  export function UnrestrictIssuerModal({ open, onClose, unrestrictissuer }: UnrestrictIssuerModalProps) {
+    const queryClient = useQueryClient()
+  
+    const unrestrictMutation = useMutation({
+      mutationFn: async (categoryId: string) => {
+        const res = await fetch(
+          `${config.apis.mdmApi}/RestrictionCategory/${categoryId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to delete restriction category");
+        }
+  
+        return categoryId;
+       
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['restriction-categories'] })
+        toaster.create({
+          title: 'Category Deleted',
+          description: 'The restriction category has been deleted successfully.',
+          type: 'success',
+          duration: 3000,
+        })
+        onClose()
+      },
+      onError: () => {
+        toaster.create({
+          title: 'Error',
+          description: 'Failed to delete restriction category.',
+          type: 'error',
+          duration: 3000,
+        })
+      },
+    })
+  
+    const handleDelete = () => {
+      if (category?.id) {
+        deleteMutation.mutate(category.id)
       }
-    },
-    style: {
-      background: 'none',
-      border: 'none',
-      color: '#F56565',
-      cursor: 'pointer',
-      fontSize: '16px',
-      padding: '4px 8px'
     }
-  }, '🔓')
-
-  { 
-    field: 'unrestrict', 
-    headerName: 'Unrestrict', 
-    width: 100,
-    cellRenderer: ActionCellRenderer,
-    sortable: false,
-    filter: false
-  }
-
-  import { Box, Button, Flex, HStack, useDisclosure } from '@chakra-ui/react'
-import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi'
-import { DataTable } from '../../components/DataTable'
-import { CreateIssuerModal } from '../../components/CreateIssuerModal'
-import { UnrestrictIssuerModal } from '../../components/UnrestrictIssuerModal'
-import { useRestrictedIssuers } from '../../hooks/useRestrictedIssuers'
-import { restrictedIssuersColumns } from '../../data/columns'
-import { useState } from 'react'
-
-export function RestrictedIssuersPage() {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const { isOpen: isUnrestrictOpen, onOpen: onUnrestrictOpen, onClose: onUnrestrictClose } = useDisclosure()
-  const { data: issuers, isLoading } = useRestrictedIssuers()
-  const [selectedIssuer, setSelectedIssuer] = useState<any>(null)
-
-  // Set up global unrestrict handler
-  window.handleUnrestrict = (id: string) => {
-    const issuer = issuers?.find(i => i.id === id)
-    if (issuer) {
-      setSelectedIssuer(issuer)
-      onUnrestrictOpen()
-    }
-  }
-
-  const handleExport = () => {
-    if (window.exportGridData) {
-      window.exportGridData()
-    }
-  }
-
-  const handleClearFilters = () => {
-    if (window.clearGridFilters) {
-      window.clearGridFilters()
-    }
-  }
-
-  return (
-    <Box>
-      {/* Action Bar */}
-      <Flex justify="space-between" mb={4}>
-        <Button
-          leftIcon={<FiPlus />}
-          onClick={onOpen}
-          bg="gray.700"
-          color="white"
-          _hover={{ bg: 'gray.600' }}
-          size="sm"
-        >
-          Insert New Entry
-        </Button>
+  
+    if (!category) return null
+  
+    return (
+      <>
+        <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()}>
+          <DialogContent bg="gray.800" color="white" rounded="xl" shadow="xl">
+            <DialogHeader>
+              <DialogTitle>Delete Restriction Category</DialogTitle>
+              <DialogCloseTrigger />
+            </DialogHeader>
+  
+            <DialogBody>
+              <AlertRoot
+                status="warning"
+                bg="orange.900"
+                borderRadius="md"
+                mb={4}
+                variant="subtle"
+              >
+                <AlertIndicator />
+                <AlertDescription fontSize="sm">
+                  This action cannot be undone. This will permanently delete the restriction category.
+                </AlertDescription>
+              </AlertRoot>
+  
+              <Text mb={4}>
+                Are you sure you want to delete the restriction category:
+              </Text>
+  
+              <Text fontWeight="bold" color="red.300" mb={6}>
+                "{category.name}"
+              </Text>
+            </DialogBody>
+  
+            <DialogFooter>
+              <HStack justify="flex-end" gap={3}>
+                <Button onClick={onClose} variant="outline" colorScheme="gray">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  loading={deleteMutation.isPending}
+                  colorScheme="red"
+                >
+                  Delete Category
+                </Button>
+              </HStack>
+            </DialogFooter>
+          </DialogContent>
+        </DialogRoot>
+  
         
-        <HStack>
-          <Button
-            leftIcon={<FiFilter />}
-            onClick={handleClearFilters}
-            variant="outline"
-            size="sm"
-            color="gray.400"
-            borderColor="gray.600"
-            _hover={{ borderColor: 'gray.500', color: 'white' }}
-          >
-            Clear Filters
-          </Button>
-          <Button
-            leftIcon={<FiDownload />}
-            onClick={handleExport}
-            variant="outline"
-            size="sm"
-            color="gray.400"
-            borderColor="gray.600"
-            _hover={{ borderColor: 'gray.500', color: 'white' }}
-          >
-            Export
-          </Button>
-        </HStack>
-      </Flex>
-
-      {/* Data Table */}
-      <DataTable
-        columns={restrictedIssuersColumns}
-        data={issuers || []}
-        loading={isLoading}
-        enableFiltering
-        enableExport
-        onClearFilters={handleClearFilters}
-        onExport={handleExport}
-      />
-
-      {/* Create Modal */}
-      <CreateIssuerModal isOpen={isOpen} onClose={onClose} />
-
-      {/* Unrestrict Modal */}
-      <UnrestrictIssuerModal 
-        isOpen={isUnrestrictOpen} 
-        onClose={onUnrestrictClose}
-        issuer={selectedIssuer}
-      />
-    </Box>
-  )
-}
+      </>
+    )
+  }
