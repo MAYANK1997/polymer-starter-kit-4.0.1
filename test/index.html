@@ -1,18 +1,6 @@
-{
-    "id": 1,
-    "isAccepted": true,
-    "isin": "INE202H01019",
-    "cusip": null,
-    "sedol": null,
-    "ticker": null,
-    "issuerName": null,
-    "issuerType": null,
-    "validatedIssuerName": "Kernex Microsystems India Ltd",
-    "companyId": "10141602",
-    "rejectReason": "test wc reason",
-    "createdBy": "undefined",
-    "createdOn": "2025-09-10T07:40:47.907",
-    "modifiedBy": "amit",
-    "modifiedOn": "2025-09-10T08:18:50.868",
-    "complete": true
-  },
+hide: (params: any) => params.data?.isAccepted === true,
+
+valueFormatter: (params) => {
+      if (!params.value) return '';
+      return params.value.split('T')[0]; // format YYYY-MM-DD
+    },
