@@ -1,6 +1,39 @@
-hide: (params: any) => params.data?.isAccepted === true,
+<input type="text" id="myInput" placeholder="Type something..." />
+<div id="result"></div>
 
-valueFormatter: (params) => {
-      if (!params.value) return '';
-      return params.value.split('T')[0]; // format YYYY-MM-DD
-    },
+<script>
+  const input = document.getElementById("myInput");
+  const resultDiv = document.getElementById("result");
+
+  // Debounce function to avoid calling API on every keystroke immediately
+  function debounce(func, delay) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  async function callApi(query) {
+    if (!query) {
+      resultDiv.innerText = "";
+      return;
+    }
+
+    try {
+      // Example API (replace with your own)
+      const response = await fetch(`https://api.example.com/search?q=${query}`);
+      const data = await response.json();
+
+      resultDiv.innerText = JSON.stringify(data, null, 2);
+    } catch (error) {
+      console.error("Error calling API:", error);
+      resultDiv.innerText = "Error fetching data";
+    }
+  }
+
+  // Trigger API call on input with debounce
+  input.addEventListener("input", debounce((e) => {
+    callApi(e.target.value);
+  }, 500)); // waits 500ms after typing stops
+</script>
