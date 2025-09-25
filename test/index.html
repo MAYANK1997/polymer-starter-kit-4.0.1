@@ -1,149 +1,149 @@
 import {
-    Button,
-    Field,
-    HStack,
-    Input,
-    NativeSelect,
-  } from '@chakra-ui/react';
-  import { useForm } from 'react-hook-form';  
-  import { config } from '@/config';
-  import { useMutation } from '@tanstack/react-query';
-  
-  
-  interface IssuerFormData {
-    issuerName: string;
-    issuerType: string;
-    ticker: string;
-    isin: string;
-    cusip: string;
-    sedol: string;
-    
-  }
-  
-  
-  
-  const CreateWallCrosssedIssuerModal = ({ onClose }: { onClose: () => void }) => {
+  Button,
+  Field,
+  HStack,
+  Input,
+  NativeSelect,
+} from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';  
+import { config } from '@/config';
+import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 
-    const {
-      register,
-      handleSubmit,
-      watch
-      
-    } = useForm<IssuerFormData>({
-      defaultValues: {
-        issuerType: 'Public',       // ✅ default Public
-      },
-    });
-  
-    
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+}
 
-  
-    const ticker = watch('ticker');
-    const isin = watch('isin');
-    const cusip = watch('cusip');
-    const sedol = watch('sedol');
+const CreateWallCrosssedIssuerModal = ({
+  onClose,
+  onOpenHoldings,   // ✅ new prop for opening IssuerHoldingsModal
+}: {
+  onClose: () => void;
+  onOpenHoldings: (wcId: number) => void;
+}) => {
+  const {
+    register,
+    handleSubmit,
+    watch
+  } = useForm<IssuerFormData>({
+    defaultValues: {
+      issuerType: 'Public', // ✅ default Public
+    },
+  });
 
-  
-    
-  
-    const mutation = useMutation({
-      mutationFn: async (payload: IssuerFormData) => {
-        const url = `${config.apis.mdmApi}//wallcross/validate`;
-        const res = await fetch(url, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const txt = await res.text().catch(() => '');
-          throw new Error(`Failed to create issuer: ${res.status} ${txt}`);
-        }
-        return res.json();
-      },
-      onSuccess: () => {
-        onClose();
-      },
-    });
-  
-    const onSubmit = (data: IssuerFormData) => {
-      // ✅ Validation logic
-      
-        const hasOneId = ticker || isin || cusip || sedol;
-        if (!hasOneId) {
-          alert('For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required.');
-          return;
-        }
-       
-      
-  
-      
-      const payload = {
-        ...data,
-        
-      };
-      mutation.mutate(payload);
-    };
-  
-    return (
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <HStack gap={4} mb={4}>
-          <Field.Root>
-            <Field.Label>Issuer Name</Field.Label>
-            <Input
-              {...register('issuerName', { required: 'Issuer name is required' })}
-              placeholder="Enter value"
-            />
-          </Field.Root>
-  
-          <Field.Root>
-            <Field.Label>Issuer Type</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field {...register('issuerType')}>
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-        </HStack>
-  
-          <HStack gap={4} mb={4}>
-          <Field.Root>
-            <Field.Label>Ticker</Field.Label>
-            <Input {...register('ticker')} placeholder="Enter value" />
-          </Field.Root>
-         
-  
-          
-          <Field.Root>
-            <Field.Label>ISIN</Field.Label>
-            <Input {...register('isin')} placeholder="Enter value" />
-          </Field.Root>
-          </HStack>
-        
-        <HStack gap={4} mb={4}>
-          <Field.Root>
-            <Field.Label>CUSIP</Field.Label>
-            <Input {...register('cusip')} placeholder="Enter value" />
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>SEDOL</Field.Label>
-            <Input {...register('sedol')} placeholder="Enter value" />
-          </Field.Root>
-        </HStack>
-  
-        <HStack justify="flex-end" mt={6}>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
-            Fetch Issuer Details
-          </Button>
-        </HStack>
-      </form>
-    )
-    };
-      
-  
-  export default CreateWallCrosssedIssuerModal;
+  // ✅ New state
+  const [buttonLabel, setButtonLabel] = useState("Fetch Issuer Details");
+  const [wcId, setWcId] = useState<number | null>(null);
+  const [isValidated, setIsValidated] = useState(false);
+
+  const ticker = watch('ticker');
+  const isin = watch('isin');
+  const cusip = watch('cusip');
+  const sedol = watch('sedol');
+
+  const mutation = useMutation({
+    mutationFn: async (payload: IssuerFormData) => {
+      const url = `${config.apis.mdmApi}/wallcross/validate`;
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Failed to create issuer: ${res.status} ${txt}`);
+      }
+
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data?.id || data?.wcId) {
+        setWcId(data.id || data.wcId);
+      }
+      setButtonLabel("Search Issuer Holdings"); // ✅ change button
+      setIsValidated(true); // ✅ mark as validated
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
+    if (!isValidated) {
+      // ✅ First phase: API call
+      const hasOneId = ticker || isin || cusip || sedol;
+      if (data.issuerType === 'Public' && !hasOneId) {
+        alert('For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required.');
+        return;
+      }
+      mutation.mutate(data);
+    } else if (wcId) {
+      // ✅ Second phase: switch to IssuerHoldingsModal
+      onClose();
+      onOpenHoldings(wcId);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Issuer Name</Field.Label>
+          <Input
+            {...register('issuerName', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+          />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Issuer Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('issuerType')}>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Ticker</Field.Label>
+          <Input {...register('ticker')} placeholder="Enter value" />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>ISIN</Field.Label>
+          <Input {...register('isin')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>CUSIP</Field.Label>
+          <Input {...register('cusip')} placeholder="Enter value" />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>SEDOL</Field.Label>
+          <Input {...register('sedol')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack justify="flex-end" mt={6}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
+          {buttonLabel}
+        </Button>
+      </HStack>
+    </form>
+  )
+};
+
+export default CreateWallCrosssedIssuerModal;
