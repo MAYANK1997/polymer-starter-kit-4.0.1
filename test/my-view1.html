@@ -1,81 +1,133 @@
-Response from validated wall cross: {
-    "wcId": 14,
-    "companyId": "153367",
-    "validatedIssuerName": "Tata Motors Ltd",
-    "isValidated": true,
-    "vrequest": {
-        "isin": "INE155A01022",
-        "cusip": "",
-        "sedol": "",
-        "ticker": "",
-        "issuerName": "AAPL US Equity",
-        "issuerType": "Public"
-    }
+// IssuerHoldingsModal.tsx
+import {
+  Dialog,
+  Portal,
+  Button,
+  CloseButton,
+  HStack,
+  VStack,
+  Text,
+  Box,
+  Table,
+} from "@chakra-ui/react";
+
+interface IssuerHoldingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  issuerDetails: any; // validated issuer + vrequest
+  onProceed: () => void;
+  onRefuse: () => void;
 }
 
-Need to pass all this data to IssuerHoldingModal - POST "http://nycuapp03.biz.lodh.com:8787/wallcross/process/7 (wcId) 
+export function IssuerHoldingsModal({
+  isOpen,
+  onClose,
+  issuerDetails,
+  onProceed,
+  onRefuse,
+}: IssuerHoldingsModalProps) {
+  if (!issuerDetails) return null;
 
-Response coming: hgList: Data for Holding Tab 
-                 thlist: Data for Trade History Tab
-Need to show all data coming from response under both the tabs. Make suitable headings under each table for all the fields coming from the API
+  const { hgList = [], thList = [] } = issuerDetails;
 
-{
-  "wcId": null,
-  "hgList": [
-    {
-      "PositionDate": "2025-09-24T00:00:00",
-      "Instrument__InstrumentTypeName": "Corporate Bond",
-      "Instrument__LongName": "APPLE 0.5% 15/11/31",
-      "Instrument__IssuerName": "Apple Inc",
-      "Instrument__ISIN": "XS2079716937",
-      "Instrument__CUSIP": "037833DS6",
-      "TradedQuantity": 500000,
-      "Account__Portfolio__MainPortfolio__Product__ShortName": "Arrco Quant 2",
-      "Instrument__BBGTicker": "AAPL",
-      "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Lombard Odier Asset Management Switzerland SA",
-      "Instrument__Issuer__BBGCompanyId": "101695",
-      "SystemSource__SystemSourceCode": "BBGAIM CASH",
-      "Account__Portfolio__MainPortfolio__Product__ProductCode": "4303"
-    },
-    {
-      "PositionDate": "2025-09-24T00:00:00",
-      "Instrument__InstrumentTypeName": "Corporate Bond",
-      "Instrument__LongName": "APPLE 0.5% 15/11/31",
-      "Instrument__IssuerName": "Apple Inc",
-      "Instrument__ISIN": "XS2079716937",
-      "Instrument__CUSIP": "037833DS6",
-      "TradedQuantity": 200000,
-      "Account__Portfolio__MainPortfolio__Product__ShortName": "Bank of Thailand",
-      "Instrument__BBGTicker": "AAPL",
-      "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Lombard Odier Asset Management Switzerland SA",
-      "Instrument__Issuer__BBGCompanyId": "101695",
-      "SystemSource__SystemSourceCode": "BBGAIM CASH",
-      "Account__Portfolio__MainPortfolio__Product__ProductCode": "10003999"
-    },
-  ],
-  "thList": [
-    {
-      "TradeDate": "2025-08-26T00:00:00",
-      "IsActive": true,
-      "TransactionType": "Sell",
-      "TransactionType__TransactionTypeGroup": "MarketTrade",
-      "SystemSource__SystemSourceCode": "G2",
-      "Account__Portfolio__MainPortfolio__Product__Name": "IF IST - Globe Index",
-      "Quantity": -3288,
-      "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Pictet Asset Management SA",
-      "Instrument__LongName": "APPLE INC"
-    },
-    {
-      "TradeDate": "2025-09-16T00:00:00",
-      "IsActive": true,
-      "TransactionType": "Buy",
-      "TransactionType__TransactionTypeGroup": "MarketTrade",
-      "SystemSource__SystemSourceCode": "G2",
-      "Account__Portfolio__MainPortfolio__Product__Name": "IF IST - Globe Index",
-      "Quantity": 805,
-      "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Pictet Asset Management SA",
-      "Instrument__LongName": "APPLE INC"
-    },
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content bg="gray.800" color="white" maxW="90vw">
+            <Dialog.Header>
+              <Text fontSize="lg" fontWeight="bold">
+                Issuer Holdings - {issuerDetails.validatedIssuerName || issuerDetails.vrequest?.issuerName}
+              </Text>
+            </Dialog.Header>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton position="absolute" top={2} right={2} />
+            </Dialog.CloseTrigger>
 
-  ]
+            <Dialog.Body>
+              <VStack spacing={6} align="stretch">
+                {/* Issuer Details */}
+                <Box bg="gray.700" p={4} borderRadius="md">
+                  <Text fontWeight="bold" mb={2}>Issuer Details</Text>
+                  <HStack spacing={8} flexWrap="wrap">
+                    {Object.entries(issuerDetails.vrequest || {}).map(([key, value]) => (
+                      <Text key={key} fontSize="sm">
+                        <strong>{key}:</strong> {value || "-"}
+                      </Text>
+                    ))}
+                  </HStack>
+                </Box>
+
+                {/* Holdings Tab */}
+                <Box>
+                  <Text fontWeight="bold" mb={2}>Holdings</Text>
+                  <Box overflowX="auto">
+                    <Table.Root size="sm">
+                      <Table.Header>
+                        <Table.Row>
+                          {hgList[0] &&
+                            Object.keys(hgList[0]).map((key) => (
+                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
+                            ))}
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {hgList.map((holding, idx) => (
+                          <Table.Row key={idx}>
+                            {Object.values(holding).map((val, i) => (
+                              <Table.Cell key={i}>{val?.toString() || "-"}</Table.Cell>
+                            ))}
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Box>
+                </Box>
+
+                {/* Trade History Tab */}
+                <Box>
+                  <Text fontWeight="bold" mb={2}>Trade History (Last 90 days)</Text>
+                  <Box overflowX="auto">
+                    <Table.Root size="sm">
+                      <Table.Header>
+                        <Table.Row>
+                          {thList[0] &&
+                            Object.keys(thList[0]).map((key) => (
+                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
+                            ))}
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {thList.map((trade, idx) => (
+                          <Table.Row key={idx}>
+                            {Object.values(trade).map((val, i) => (
+                              <Table.Cell key={i}>{val?.toString() || "-"}</Table.Cell>
+                            ))}
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Box>
+                </Box>
+
+                {/* Action Buttons */}
+                <HStack justify="flex-end" spacing={3}>
+                  <Button variant="outline" colorScheme="gray" onClick={onClose}>
+                    Close
+                  </Button>
+                  <Button onClick={onRefuse} colorScheme="red">
+                    Refuse Wall Cross
+                  </Button>
+                  <Button onClick={onProceed} colorScheme="green">
+                    Proceed to Wall Cross
+                  </Button>
+                </HStack>
+              </VStack>
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
 }
