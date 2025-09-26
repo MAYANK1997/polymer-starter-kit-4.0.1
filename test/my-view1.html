@@ -14,7 +14,12 @@ import {
 interface IssuerHoldingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  issuerDetails: any; // validated issuer + vrequest
+  issuerDetails: {
+    validatedIssuerName?: string;
+    vrequest?: Record<string, any>;
+    hgList?: Record<string, any>[];
+    thList?: Record<string, any>[];
+  } | null;
   onProceed: () => void;
   onRefuse: () => void;
 }
@@ -41,6 +46,7 @@ export function IssuerHoldingsModal({
                 Issuer Holdings - {issuerDetails.validatedIssuerName || issuerDetails.vrequest?.issuerName}
               </Text>
             </Dialog.Header>
+
             <Dialog.CloseTrigger asChild>
               <CloseButton position="absolute" top={2} right={2} />
             </Dialog.CloseTrigger>
@@ -51,63 +57,64 @@ export function IssuerHoldingsModal({
                 <Box bg="gray.700" p={4} borderRadius="md">
                   <Text fontWeight="bold" mb={2}>Issuer Details</Text>
                   <HStack spacing={8} flexWrap="wrap">
-                    {Object.entries(issuerDetails.vrequest || {}).map(([key, value]) => (
-                      <Text key={key} fontSize="sm">
-                        <strong>{key}:</strong> {value || "-"}
-                      </Text>
-                    ))}
+                    {issuerDetails.vrequest &&
+                      Object.entries(issuerDetails.vrequest).map(([key, value]) => (
+                        <Text key={key} fontSize="sm">
+                          <strong>{key}:</strong> {value?.toString() || "-"}
+                        </Text>
+                      ))}
                   </HStack>
                 </Box>
 
-                {/* Holdings Tab */}
+                {/* Holdings Table */}
                 <Box>
                   <Text fontWeight="bold" mb={2}>Holdings</Text>
                   <Box overflowX="auto">
-                    <Table.Root size="sm">
-                      <Table.Header>
-                        <Table.Row>
+                    <Table variant="simple" size="sm">
+                      <thead>
+                        <tr>
                           {hgList[0] &&
                             Object.keys(hgList[0]).map((key) => (
-                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
+                              <th key={key}>{key}</th>
                             ))}
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {hgList.map((holding, idx) => (
-                          <Table.Row key={idx}>
+                          <tr key={idx}>
                             {Object.values(holding).map((val, i) => (
-                              <Table.Cell key={i}>{val?.toString() || "-"}</Table.Cell>
+                              <td key={i}>{val?.toString() || "-"}</td>
                             ))}
-                          </Table.Row>
+                          </tr>
                         ))}
-                      </Table.Body>
-                    </Table.Root>
+                      </tbody>
+                    </Table>
                   </Box>
                 </Box>
 
-                {/* Trade History Tab */}
+                {/* Trade History Table */}
                 <Box>
                   <Text fontWeight="bold" mb={2}>Trade History (Last 90 days)</Text>
                   <Box overflowX="auto">
-                    <Table.Root size="sm">
-                      <Table.Header>
-                        <Table.Row>
+                    <Table variant="simple" size="sm">
+                      <thead>
+                        <tr>
                           {thList[0] &&
                             Object.keys(thList[0]).map((key) => (
-                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
+                              <th key={key}>{key}</th>
                             ))}
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {thList.map((trade, idx) => (
-                          <Table.Row key={idx}>
+                          <tr key={idx}>
                             {Object.values(trade).map((val, i) => (
-                              <Table.Cell key={i}>{val?.toString() || "-"}</Table.Cell>
+                              <td key={i}>{val?.toString() || "-"}</td>
                             ))}
-                          </Table.Row>
+                          </tr>
                         ))}
-                      </Table.Body>
-                    </Table.Root>
+                      </tbody>
+                    </Table>
                   </Box>
                 </Box>
 
