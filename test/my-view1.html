@@ -1,74 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import { Toaster } from 'react-hot-toast'
-import { blink } from './blink/client'
-import Layout from './components/Layout'
-import RestrictedIssuers from './pages/RestrictedIssuers'
-import RestrictedIssuerHistory from './pages/RestrictedIssuerHistory'
-import RestrictedInstruments from './pages/RestrictedInstruments'
-import RestrictionCategory from './pages/RestrictionCategory'
-
-function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const unsubscribe = blink.auth.onAuthStateChanged((state) => {
-      setUser(state.user)
-      setLoading(state.isLoading)
-    })
-    return unsubscribe
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Restricted List Management</h1>
-          <p className="text-gray-300 mb-6">Please sign in to access the application</p>
-          <button
-            onClick={() => blink.auth.login()}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<RestrictedIssuers />} />
-            <Route path="/history" element={<RestrictedIssuerHistory />} />
-            <Route path="/instruments" element={<RestrictedInstruments />} />
-            <Route path="/categories" element={<RestrictionCategory />} />
-          </Routes>
-        </Layout>
-      </Router>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#2D3748',
-            color: '#E2E8F0',
-            border: '1px solid #4A5568',
-          },
-        }}
-      />
-    </>
-  )
-}
-
-export default App
+ Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
+    TabPanel,
