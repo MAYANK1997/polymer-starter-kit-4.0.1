@@ -11,15 +11,26 @@ import {
   Table,
 } from "@chakra-ui/react";
 
+interface Holding {
+  [key: string]: any;
+}
+
+interface Trade {
+  [key: string]: any;
+}
+
+interface IssuerDetails {
+  wcId: number | null;
+  validatedIssuerName?: string;
+  vrequest?: Record<string, any>;
+  hgList?: Holding[];
+  thList?: Trade[];
+}
+
 interface IssuerHoldingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  issuerDetails: {
-    validatedIssuerName?: string;
-    vrequest?: Record<string, string>;
-    hgList?: Record<string, any>[];
-    thList?: Record<string, any>[];
-  };
+  issuerDetails: IssuerDetails;
   onProceed: () => void;
   onRefuse: () => void;
 }
@@ -40,12 +51,16 @@ export function IssuerHoldingsModal({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content bg="gray.800" color="white" maxW="90vw">
+          <Dialog.Content bg="gray.800" color="white" maxW="90vw" p={4}>
             <Dialog.Header>
               <Text fontSize="lg" fontWeight="bold">
-                Issuer Holdings - {issuerDetails.validatedIssuerName || issuerDetails.vrequest?.issuerName}
+                Issuer Holdings -{" "}
+                {issuerDetails.validatedIssuerName ||
+                  issuerDetails.vrequest?.issuerName ||
+                  "-"}
               </Text>
             </Dialog.Header>
+
             <Dialog.CloseTrigger asChild>
               <CloseButton position="absolute" top={2} right={2} />
             </Dialog.CloseTrigger>
@@ -53,20 +68,28 @@ export function IssuerHoldingsModal({
             <Dialog.Body>
               <VStack spacing={6} align="stretch">
                 {/* Issuer Details */}
-                <Box bg="gray.700" p={4} borderRadius="md">
-                  <Text fontWeight="bold" mb={2}>Issuer Details</Text>
-                  <HStack spacing={8} flexWrap="wrap">
-                    {Object.entries(issuerDetails.vrequest || {}).map(([key, value]) => (
-                      <Text key={key} fontSize="sm">
-                        <strong>{key}:</strong> {value ?? "-"}
-                      </Text>
-                    ))}
-                  </HStack>
-                </Box>
+                {issuerDetails.vrequest && (
+                  <Box bg="gray.700" p={4} borderRadius="md">
+                    <Text fontWeight="bold" mb={2}>
+                      Issuer Details
+                    </Text>
+                    <HStack spacing={8} flexWrap="wrap">
+                      {Object.entries(issuerDetails.vrequest).map(
+                        ([key, value]) => (
+                          <Text key={key} fontSize="sm">
+                            <strong>{key}:</strong> {value ?? "-"}
+                          </Text>
+                        )
+                      )}
+                    </HStack>
+                  </Box>
+                )}
 
                 {/* Holdings Table */}
                 <Box>
-                  <Text fontWeight="bold" mb={2}>Holdings</Text>
+                  <Text fontWeight="bold" mb={2}>
+                    Holdings
+                  </Text>
                   <Box overflowX="auto">
                     <Table.Root size="sm">
                       <Table.Header>
@@ -80,8 +103,10 @@ export function IssuerHoldingsModal({
                       <Table.Body>
                         {hgList.map((holding, idx) => (
                           <Table.Row key={idx}>
-                            {Object.values(holding).map((val, i) => (
-                              <Table.Cell key={i}>{val?.toString() ?? "-"}</Table.Cell>
+                            {Object.keys(holding).map((key) => (
+                              <Table.Cell key={key}>
+                                {holding[key]?.toString() ?? "-"}
+                              </Table.Cell>
                             ))}
                           </Table.Row>
                         ))}
@@ -92,7 +117,9 @@ export function IssuerHoldingsModal({
 
                 {/* Trade History Table */}
                 <Box>
-                  <Text fontWeight="bold" mb={2}>Trade History (Last 90 days)</Text>
+                  <Text fontWeight="bold" mb={2}>
+                    Trade History (Last 90 days)
+                  </Text>
                   <Box overflowX="auto">
                     <Table.Root size="sm">
                       <Table.Header>
@@ -106,8 +133,10 @@ export function IssuerHoldingsModal({
                       <Table.Body>
                         {thList.map((trade, idx) => (
                           <Table.Row key={idx}>
-                            {Object.values(trade).map((val, i) => (
-                              <Table.Cell key={i}>{val?.toString() ?? "-"}</Table.Cell>
+                            {Object.keys(trade).map((key) => (
+                              <Table.Cell key={key}>
+                                {trade[key]?.toString() ?? "-"}
+                              </Table.Cell>
                             ))}
                           </Table.Row>
                         ))}
