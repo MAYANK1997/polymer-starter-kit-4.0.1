@@ -1,10 +1,190 @@
- Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Tabs,
-    TabList,
-    TabPanels,
-    Tab,
-    TabPanel,
+import {
+  Button,
+  HStack,
+  VStack,
+  Text,
+  Box,
+  Dialog,
+  Portal,
+  CloseButton,
+} from "@chakra-ui/react";
+import { Table } from "@chakra-ui/react";
+import { Tabs } from "@chakra-ui/react";
+
+interface IssuerHoldingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  issuerDetails: any;
+  onProceed: () => void;
+  onRefuse: () => void;
+}
+
+const mockHoldings = [
+  {
+    instrumentName: "Apple Inc Common Stock",
+    instrumentType: "Equity",
+    quantity: "1,500",
+    account: "Portfolio A",
+    investmentManager: "John Smith",
+  },
+  {
+    instrumentName: "Apple Inc 2.4% 2025 Bond",
+    instrumentType: "Bond",
+    quantity: "500,000",
+    account: "Fixed Income Fund",
+    investmentManager: "Sarah Johnson",
+  },
+];
+
+const mockTradeHistory = [
+  {
+    tradeDate: "2025-01-10",
+    instrument: "Apple Inc Common Stock",
+    quantity: "+200",
+    account: "Portfolio A",
+    investmentManager: "John Smith",
+  },
+  {
+    tradeDate: "2025-01-08",
+    instrument: "Apple Inc Common Stock",
+    quantity: "-100",
+    account: "Portfolio B",
+    investmentManager: "Mike Davis",
+  },
+  {
+    tradeDate: "2025-01-05",
+    instrument: "Apple Inc 2.4% 2025 Bond",
+    quantity: "+100,000",
+    account: "Fixed Income Fund",
+    investmentManager: "Sarah Johnson",
+  },
+];
+
+export function IssuerHoldingsModal({
+  isOpen,
+  onClose,
+  issuerDetails,
+  onProceed,
+  onRefuse,
+}: IssuerHoldingsModalProps) {
+  if (!issuerDetails) return null;
+
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Trigger />
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content maxW="90vw" bg="gray.800" color="white" borderRadius="xl">
+            <Dialog.Header>
+              <Text fontSize="lg" fontWeight="bold">
+                Issuer Holdings - {issuerDetails.issuerName}
+              </Text>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Header>
+
+            <Dialog.Body>
+              <VStack spacing={6} align="stretch">
+                {/* Issuer Summary */}
+                <Box bg="gray.700" p={4} borderRadius="md">
+                  <Text fontWeight="bold" mb={2}>
+                    Issuer Details
+                  </Text>
+                  <HStack spacing={8}>
+                    <Text fontSize="sm">
+                      <strong>Name:</strong> {issuerDetails.issuerName}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>Ticker:</strong> {issuerDetails.ticker}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>ISIN:</strong> {issuerDetails.isin}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>Type:</strong> {issuerDetails.issuerType}
+                    </Text>
+                  </HStack>
+                </Box>
+
+                {/* Tabs */}
+                <Tabs.Root variant="line" colorScheme="blue" defaultValue="holdings">
+                  <Tabs.List>
+                    <Tabs.Trigger value="holdings">Holdings</Tabs.Trigger>
+                    <Tabs.Trigger value="trades">Trade History (Last 90 days)</Tabs.Trigger>
+                  </Tabs.List>
+
+                  <Tabs.Content value="holdings">
+                    <Table.Root size="sm">
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>Instrument Name</Table.ColumnHeader>
+                          <Table.ColumnHeader>Instrument Type</Table.ColumnHeader>
+                          <Table.ColumnHeader>Quantity</Table.ColumnHeader>
+                          <Table.ColumnHeader>Account</Table.ColumnHeader>
+                          <Table.ColumnHeader>Investment Manager</Table.ColumnHeader>
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {mockHoldings.map((h, idx) => (
+                          <Table.Row key={idx}>
+                            <Table.Cell>{h.instrumentName}</Table.Cell>
+                            <Table.Cell>{h.instrumentType}</Table.Cell>
+                            <Table.Cell>{h.quantity}</Table.Cell>
+                            <Table.Cell>{h.account}</Table.Cell>
+                            <Table.Cell>{h.investmentManager}</Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Tabs.Content>
+
+                  <Tabs.Content value="trades">
+                    <Table.Root size="sm">
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>Trade Date</Table.ColumnHeader>
+                          <Table.ColumnHeader>Instrument</Table.ColumnHeader>
+                          <Table.ColumnHeader>Quantity</Table.ColumnHeader>
+                          <Table.ColumnHeader>Account</Table.ColumnHeader>
+                          <Table.ColumnHeader>Investment Manager</Table.ColumnHeader>
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {mockTradeHistory.map((t, idx) => (
+                          <Table.Row key={idx}>
+                            <Table.Cell>{t.tradeDate}</Table.Cell>
+                            <Table.Cell>{t.instrument}</Table.Cell>
+                            <Table.Cell color={t.quantity.startsWith("+") ? "green.300" : "red.300"}>
+                              {t.quantity}
+                            </Table.Cell>
+                            <Table.Cell>{t.account}</Table.Cell>
+                            <Table.Cell>{t.investmentManager}</Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Tabs.Content>
+                </Tabs.Root>
+
+                {/* Action Buttons */}
+                <HStack justify="flex-end" spacing={3}>
+                  <Button variant="outline" colorScheme="gray" onClick={onClose}>
+                    Close
+                  </Button>
+                  <Button onClick={onRefuse} colorScheme="red">
+                    Refuse Wall Cross
+                  </Button>
+                  <Button onClick={onProceed} colorScheme="green">
+                    Proceed to Wall Cross
+                  </Button>
+                </HStack>
+              </VStack>
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
+}
