@@ -4,11 +4,13 @@ import {
   HStack,
   Input,
   NativeSelect,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';  
 import { config } from '@/config';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { IssuerHoldingsModal } from './IssuerHoldingsModal';  // import the new modal
 
 interface IssuerFormData {
   issuerName: string;
@@ -19,13 +21,7 @@ interface IssuerFormData {
   sedol: string;
 }
 
-const CreateWallCrosssedIssuerModal = ({
-  onClose,
-  onOpenHoldings,   // ✅ new prop for opening IssuerHoldingsModal
-}: {
-  onClose: () => void;
-  onOpenHoldings: (wcId: number) => void;
-}) => {
+const CreateWallCrosssedIssuerModal = ({ onClose }: { onClose: () => void }) => {
   const {
     register,
     handleSubmit,
@@ -36,15 +32,18 @@ const CreateWallCrosssedIssuerModal = ({
     },
   });
 
-  // ✅ New state
-  const [buttonLabel, setButtonLabel] = useState("Fetch Issuer Details");
-  const [wcId, setWcId] = useState<number | null>(null);
-  const [isValidated, setIsValidated] = useState(false);
-
   const ticker = watch('ticker');
   const isin = watch('isin');
   const cusip = watch('cusip');
   const sedol = watch('sedol');
+
+  // Local state for flow control
+  const [buttonLabel, setButtonLabel] = useState('Fetch Issuer Details');
+  const [fetchedDetails, setFetchedDetails] = useState<any>(null);
+  const [wcId, setWcId] = useState<string | null>(null);
+
+  // Modal control for IssuerHoldingsModal
+  const { isOpen: isHoldingsOpen, onOpen: onHoldingsOpen, onClose: onHoldingsClose } = useDisclosure();
 
   const mutation = useMutation({
     mutationFn: async (payload: IssuerFormData) => {
@@ -55,95 +54,321 @@ const CreateWallCrosssedIssuerModal = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
         throw new Error(`Failed to create issuer: ${res.status} ${txt}`);
       }
-
       return res.json();
     },
     onSuccess: (data) => {
-      if (data?.id || data?.wcId) {
-        setWcId(data.id || data.wcId);
-      }
-      setButtonLabel("Search Issuer Holdings"); // ✅ change button
-      setIsValidated(true); // ✅ mark as validated
+      setFetchedDetails(data);
+      setWcId(data.wcId); // ✅ extract wcId
+      setButtonLabel('Search Issuer Holdings');
     },
   });
 
   const onSubmit = (data: IssuerFormData) => {
-    if (!isValidated) {
-      // ✅ First phase: API call
+    // ✅ Validation logic
+    if (data.issuerType === 'Public') {
       const hasOneId = ticker || isin || cusip || sedol;
-      if (data.issuerType === 'Public' && !hasOneId) {
+      if (!hasOneId) {
         alert('For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required.');
         return;
       }
+    }
+
+    if (buttonLabel === 'Fetch Issuer Details') {
       mutation.mutate(data);
-    } else if (wcId) {
-      // ✅ Second phase: switch to IssuerHoldingsModal
-      onClose();
-      onOpenHoldings(wcId);
+    } else {
+      // Open Issuer Holdings modal
+      onHoldingsOpen();
     }
   };
 
+  const handleProceedToWallCross = () => {
+    if (!wcId) return;
+    console.log('Proceeding with wcId:', wcId);
+    // ✅ call your proceed API here
+    onHoldingsClose();
+    onClose();
+  };
+
+  const handleRefuseWallCross = () => {
+    if (!wcId) return;
+    console.log('Refusing with wcId:', wcId);
+    // ✅ call your refuse API here
+    onHoldingsClose();
+    onClose();
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Issuer Name</Field.Label>
-          <Input
-            {...register('issuerName', { required: 'Issuer name is required' })}
-            placeholder="Enter value"
-          />
-        </Field.Root>
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Issuer Name</Field.Label>
+            <Input
+              {...register('issuerName', { required: 'Issuer name is required' })}
+              placeholder="Enter value"
+            />
+          </Field.Root>
 
-        <Field.Root>
-          <Field.Label>Issuer Type</Field.Label>
-          <NativeSelect.Root>
-            <NativeSelect.Field {...register('issuerType')}>
-              <option value="Public">Public</option>
-              <option value="Private">Private</option>
-            </NativeSelect.Field>
-            <NativeSelect.Indicator />
-          </NativeSelect.Root>
-        </Field.Root>
-      </HStack>
+          <Field.Root>
+            <Field.Label>Issuer Type</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field {...register('issuerType')}>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        </HStack>
 
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>Ticker</Field.Label>
-          <Input {...register('ticker')} placeholder="Enter value" />
-        </Field.Root>
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Ticker</Field.Label>
+            <Input {...register('ticker')} placeholder="Enter value" />
+          </Field.Root>
 
-        <Field.Root>
-          <Field.Label>ISIN</Field.Label>
-          <Input {...register('isin')} placeholder="Enter value" />
-        </Field.Root>
-      </HStack>
+          <Field.Root>
+            <Field.Label>ISIN</Field.Label>
+            <Input {...register('isin')} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
 
-      <HStack gap={4} mb={4}>
-        <Field.Root>
-          <Field.Label>CUSIP</Field.Label>
-          <Input {...register('cusip')} placeholder="Enter value" />
-        </Field.Root>
-        <Field.Root>
-          <Field.Label>SEDOL</Field.Label>
-          <Input {...register('sedol')} placeholder="Enter value" />
-        </Field.Root>
-      </HStack>
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>CUSIP</Field.Label>
+            <Input {...register('cusip')} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>SEDOL</Field.Label>
+            <Input {...register('sedol')} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
 
-      <HStack justify="flex-end" mt={6}>
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
-          {buttonLabel}
-        </Button>
-      </HStack>
-    </form>
-  )
+        <HStack justify="flex-end" mt={6}>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" colorScheme="blue" disabled={mutation.isPending}>
+            {buttonLabel}
+          </Button>
+        </HStack>
+      </form>
+
+      {/* Issuer Holdings Modal */}
+      <IssuerHoldingsModal
+        isOpen={isHoldingsOpen}
+        onClose={onHoldingsClose}
+        issuerDetails={fetchedDetails}
+        onProceed={handleProceedToWallCross}
+        onRefuse={handleRefuseWallCross}
+      />
+    </>
+  );
 };
 
 export default CreateWallCrosssedIssuerModal;
+
+
+
+
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  HStack,
+  VStack,
+  Text,
+  Box,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+} from '@chakra-ui/react'
+
+interface IssuerHoldingsModalProps {
+  isOpen: boolean
+  onClose: () => void
+  issuerDetails: any
+  onProceed: () => void
+  onRefuse: () => void
+}
+
+const mockHoldings = [
+  {
+    instrumentName: 'Apple Inc Common Stock',
+    instrumentType: 'Equity',
+    quantity: '1,500',
+    account: 'Portfolio A',
+    investmentManager: 'John Smith',
+  },
+  {
+    instrumentName: 'Apple Inc 2.4% 2025 Bond',
+    instrumentType: 'Bond',
+    quantity: '500,000',
+    account: 'Fixed Income Fund',
+    investmentManager: 'Sarah Johnson',
+  },
+]
+
+const mockTradeHistory = [
+  {
+    tradeDate: '2025-01-10',
+    instrument: 'Apple Inc Common Stock',
+    quantity: '+200',
+    account: 'Portfolio A',
+    investmentManager: 'John Smith',
+  },
+  {
+    tradeDate: '2025-01-08',
+    instrument: 'Apple Inc Common Stock',
+    quantity: '-100',
+    account: 'Portfolio B',
+    investmentManager: 'Mike Davis',
+  },
+  {
+    tradeDate: '2025-01-05',
+    instrument: 'Apple Inc 2.4% 2025 Bond',
+    quantity: '+100,000',
+    account: 'Fixed Income Fund',
+    investmentManager: 'Sarah Johnson',
+  },
+]
+
+export function IssuerHoldingsModal({ 
+  isOpen, 
+  onClose, 
+  issuerDetails, 
+  onProceed, 
+  onRefuse 
+}: IssuerHoldingsModalProps) {
+  if (!issuerDetails) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+      <ModalOverlay />
+      <ModalContent bg="gray.800" color="white" maxW="90vw">
+        <ModalHeader>
+          Issuer Holdings - {issuerDetails.issuerName}
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <VStack spacing={6} align="stretch">
+            {/* Issuer Details Summary */}
+            <Box bg="gray.700" p={4} borderRadius="md">
+              <Text fontWeight="bold" mb={2}>Issuer Details</Text>
+              <HStack spacing={8} flexWrap="wrap">
+                <Text fontSize="sm"><strong>Name:</strong> {issuerDetails.issuerName}</Text>
+                <Text fontSize="sm"><strong>Ticker:</strong> {issuerDetails.ticker}</Text>
+                <Text fontSize="sm"><strong>ISIN:</strong> {issuerDetails.isin}</Text>
+                <Text fontSize="sm"><strong>Type:</strong> {issuerDetails.issuerType}</Text>
+              </HStack>
+            </Box>
+
+            {/* Holdings and Trade History Tabs */}
+            <Tabs variant="enclosed" colorScheme="blue">
+              <TabList>
+                <Tab>Holdings</Tab>
+                <Tab>Trade History (Last 90 days)</Tab>
+              </TabList>
+
+              <TabPanels>
+                {/* Holdings Tab */}
+                <TabPanel px={0}>
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th color="gray.300">Instrument Name</Th>
+                          <Th color="gray.300">Instrument Type</Th>
+                          <Th color="gray.300">Quantity</Th>
+                          <Th color="gray.300">Account</Th>
+                          <Th color="gray.300">Investment Manager</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {mockHoldings.map((holding, index) => (
+                          <Tr key={index}>
+                            <Td>{holding.instrumentName}</Td>
+                            <Td>{holding.instrumentType}</Td>
+                            <Td>{holding.quantity}</Td>
+                            <Td>{holding.account}</Td>
+                            <Td>{holding.investmentManager}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                </TabPanel>
+
+                {/* Trade History Tab */}
+                <TabPanel px={0}>
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th color="gray.300">Trade Date</Th>
+                          <Th color="gray.300">Instrument</Th>
+                          <Th color="gray.300">Quantity</Th>
+                          <Th color="gray.300">Account</Th>
+                          <Th color="gray.300">Investment Manager</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {mockTradeHistory.map((trade, index) => (
+                          <Tr key={index}>
+                            <Td>{trade.tradeDate}</Td>
+                            <Td>{trade.instrument}</Td>
+                            <Td color={trade.quantity.startsWith('+') ? 'green.300' : 'red.300'}>
+                              {trade.quantity}
+                            </Td>
+                            <Td>{trade.account}</Td>
+                            <Td>{trade.investmentManager}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+
+            {/* Action Buttons */}
+            <HStack justify="flex-end" spacing={3}>
+              <Button onClick={onClose} variant="outline" colorScheme="gray">
+                Close
+              </Button>
+              <Button onClick={onRefuse} colorScheme="red">
+                Refuse Wall Cross
+              </Button>
+              <Button onClick={onProceed} colorScheme="green">
+                Proceed to Wall Cross
+              </Button>
+            </HStack>
+          </VStack>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  )
+}
+
+
+
+
+
+
+        
