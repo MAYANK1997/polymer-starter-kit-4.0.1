@@ -9,6 +9,7 @@ import {
   Text,
   Box,
   Table,
+  Tabs,
 } from "@chakra-ui/react";
 
 interface Holding {
@@ -77,7 +78,7 @@ export function IssuerHoldingsModal({
                       {Object.entries(issuerDetails.vrequest).map(
                         ([key, value]) => (
                           <Text key={key} fontSize="sm">
-                            <strong>{key}:</strong> {value ?? "-"}
+                            <strong>{key}:</strong> {String(value) ?? "-"}
                           </Text>
                         )
                       )}
@@ -85,65 +86,79 @@ export function IssuerHoldingsModal({
                   </Box>
                 )}
 
-                {/* Holdings Table */}
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Holdings
-                  </Text>
-                  <Box overflowX="auto">
-                    <Table.Root size="sm">
-                      <Table.Header>
-                        <Table.Row>
-                          {hgList[0] &&
-                            Object.keys(hgList[0]).map((key) => (
-                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
-                            ))}
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
-                        {hgList.map((holding, idx) => (
-                          <Table.Row key={idx}>
-                            {Object.keys(holding).map((key) => (
-                              <Table.Cell key={key}>
-                                {holding[key]?.toString() ?? "-"}
-                              </Table.Cell>
-                            ))}
-                          </Table.Row>
-                        ))}
-                      </Table.Body>
-                    </Table.Root>
-                  </Box>
-                </Box>
+                {/* Tabs for Holdings & Trade History */}
+                <Tabs.Root defaultValue="holdings">
+                  <Tabs.List mb={4}>
+                    <Tabs.Trigger value="holdings">Holdings</Tabs.Trigger>
+                    <Tabs.Trigger value="trades">Trade History</Tabs.Trigger>
+                  </Tabs.List>
 
-                {/* Trade History Table */}
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Trade History (Last 90 days)
-                  </Text>
-                  <Box overflowX="auto">
-                    <Table.Root size="sm">
-                      <Table.Header>
-                        <Table.Row>
-                          {thList[0] &&
-                            Object.keys(thList[0]).map((key) => (
-                              <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>
+                  <Tabs.Content value="holdings">
+                    <Box>
+                      <Text fontWeight="bold" mb={2}>
+                        Holdings
+                      </Text>
+                      <Box overflowX="auto">
+                        <Table.Root size="sm">
+                          <Table.Header>
+                            <Table.Row>
+                              {hgList[0] &&
+                                Object.keys(hgList[0]).map((key) => (
+                                  <Table.ColumnHeader key={key}>
+                                    {key}
+                                  </Table.ColumnHeader>
+                                ))}
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {hgList.map((holding, idx) => (
+                              <Table.Row key={idx}>
+                                {Object.keys(holding).map((key) => (
+                                  <Table.Cell key={key}>
+                                    {holding[key]?.toString() ?? "-"}
+                                  </Table.Cell>
+                                ))}
+                              </Table.Row>
                             ))}
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
-                        {thList.map((trade, idx) => (
-                          <Table.Row key={idx}>
-                            {Object.keys(trade).map((key) => (
-                              <Table.Cell key={key}>
-                                {trade[key]?.toString() ?? "-"}
-                              </Table.Cell>
+                          </Table.Body>
+                        </Table.Root>
+                      </Box>
+                    </Box>
+                  </Tabs.Content>
+
+                  <Tabs.Content value="trades">
+                    <Box>
+                      <Text fontWeight="bold" mb={2}>
+                        Trade History (Last 90 days)
+                      </Text>
+                      <Box overflowX="auto">
+                        <Table.Root size="sm">
+                          <Table.Header>
+                            <Table.Row>
+                              {thList[0] &&
+                                Object.keys(thList[0]).map((key) => (
+                                  <Table.ColumnHeader key={key}>
+                                    {key}
+                                  </Table.ColumnHeader>
+                                ))}
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {thList.map((trade, idx) => (
+                              <Table.Row key={idx}>
+                                {Object.keys(trade).map((key) => (
+                                  <Table.Cell key={key}>
+                                    {trade[key]?.toString() ?? "-"}
+                                  </Table.Cell>
+                                ))}
+                              </Table.Row>
                             ))}
-                          </Table.Row>
-                        ))}
-                      </Table.Body>
-                    </Table.Root>
-                  </Box>
-                </Box>
+                          </Table.Body>
+                        </Table.Root>
+                      </Box>
+                    </Box>
+                  </Tabs.Content>
+                </Tabs.Root>
 
                 {/* Action Buttons */}
                 <HStack justify="flex-end" spacing={3}>
