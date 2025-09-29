@@ -1,9 +1,186 @@
-Post Request: http://nycuapp03.biz.lodh.com:8787/wallcross/cancel
-Payload:
 
-{
-  "wcId": 0,
-  "reason": "string"
+import {
+  Button,
+  Field,
+  HStack,
+  Input,
+  NativeSelect,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { useForm } from "react-hook-form";
+import { config } from "@/config";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { IssuerHoldingsModal } from "./IssuerHoldingsModal";
+
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
 }
 
+export const CreateWallCrosssedIssuerModal = ({
+  onClose,
+}: {
+  onClose: () => void;
+}) => {
+  const { register, handleSubmit, watch } = useForm<IssuerFormData>({
+    defaultValues: { issuerType: "Public" },
+  });
 
+  const ticker = watch("ticker");
+  const isin = watch("isin");
+  const cusip = watch("cusip");
+  const sedol = watch("sedol");
+
+  const [buttonLabel, setButtonLabel] = useState("Fetch Issuer Details");
+  const [validatedData, setValidatedData] = useState<any>(null);
+  const [holdingData, setHoldingData] = useState<any>(null);
+
+  const { open: isHoldingsOpen, onOpen: onHoldingsOpen, onClose: onHoldingsClose } =
+    useDisclosure();
+
+  // Validate Issuer API
+  const validateMutation = useMutation({
+    mutationFn: async (payload: IssuerFormData) => {
+      const url = `${config.apis.mdmApi}/wallcross/validate`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Validation failed: ${res.status} ${txt}`);
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setValidatedData(data);
+      setButtonLabel("Search Issuer Holdings");
+    },
+  });
+
+  // Fetch Holdings API
+  const fetchHoldingsMutation = useMutation({
+    mutationFn: async (wcId: number) => {
+      const url = `${config.apis.mdmApi}/wallcross/process/${wcId}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Fetch holdings failed: ${res.status} ${txt}`);
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setHoldingData({ ...validatedData, ...data });
+      onHoldingsOpen();
+      
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
+    if (data.issuerType === "Public" && !ticker && !isin && !cusip && !sedol) {
+      alert(
+        "For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required."
+      );
+      return;
+    }
+
+    if (buttonLabel === "Fetch Issuer Details") {
+      validateMutation.mutate(data);
+    } else if (validatedData?.wcId) {
+      fetchHoldingsMutation.mutate(validatedData.wcId);
+    }
+  };
+
+  const handleProceedToWallCross = () => {
+    console.log("Proceeding with wcId:", holdingData?.wcId);
+    
+  };
+
+  const handleRefuseWallCross = () => {
+    console.log("Refusing with wcId:", holdingData?.wcId);
+
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Issuer Name</Field.Label>
+            <Input
+              {...register("issuerName", { required: "Issuer name is required" })}
+              placeholder="Enter value"
+            />
+          </Field.Root>
+
+          <Field.Root>
+            <Field.Label>Issuer Type</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field {...register("issuerType")}>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Ticker</Field.Label>
+            <Input {...register("ticker")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>ISIN</Field.Label>
+            <Input {...register("isin")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>CUSIP</Field.Label>
+            <Input {...register("cusip")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>SEDOL</Field.Label>
+            <Input {...register("sedol")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack justify="flex-end" mt={6}>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            colorScheme="blue"
+           
+          >
+            {buttonLabel}
+          </Button>
+        </HStack>
+      </form>
+
+      {holdingData && (
+        <IssuerHoldingsModal
+          open={isHoldingsOpen}
+          onClose={onHoldingsClose}
+          issuerDetails={holdingData}
+          onProceed={handleProceedToWallCross}
+          onRefuse={handleRefuseWallCross}
+        />
+      )}
+    </>
+  );
+};
+
+export default CreateWallCrosssedIssuerModal;
