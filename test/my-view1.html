@@ -1,1 +1,89 @@
 
+import {
+  Dialog,
+  Portal,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  CloseButton,
+  Button,
+  HStack,
+  useToast,
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+interface ProceedWallCrossDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  wcId: number;
+  transactionTypes: string[];
+  categoryName: string;
+}
+
+export function ProceedWallCrossDialog({
+  isOpen,
+  onClose,
+  wcId,
+  transactionTypes,
+  categoryName,
+}: ProceedWallCrossDialogProps) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+
+  const proceedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`http://nycuapp03.biz.lodh.com:8787/wallcross/proceed`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wcId, transactionTypes, categoryName }),
+      });
+      if (!res.ok) throw new Error("Failed to proceed to wall cross");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Wall Cross Proceeded",
+        description: "Successfully proceeded to wall cross.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      queryClient.invalidateQueries({ queryKey: ["wall-crossed-issuers"] });
+      onClose();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to proceed to wall cross.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+  });
+
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Portal>
+        <DialogContent bg="gray.800" color="white" maxW="md" p={4}>
+          <DialogHeader>
+            Proceed to Wall Cross
+            <CloseButton position="absolute" top={2} right={2} onClick={onClose} />
+          </DialogHeader>
+          <DialogBody>
+            <HStack justify="flex-end" spacing={3}>
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button
+                colorScheme="green"
+                onClick={() => proceedMutation.mutate()}
+                isLoading={proceedMutation.isLoading}
+              >
+                Proceed
+              </Button>
+            </HStack>
+          </DialogBody>
+        </DialogContent>
+      </Portal>
+    </Dialog.Root>
+  );
+}
