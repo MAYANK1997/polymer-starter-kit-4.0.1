@@ -1,181 +1,104 @@
-// IssuerHoldingsModal.tsx
 import {
   Dialog,
   Portal,
-  Button,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
   CloseButton,
+  Button,
+  FormControl,
+  FormLabel,
+  Textarea,
   HStack,
-  VStack,
   Text,
-  Box,
-  Table,
-  Tabs,
+  useToast,
 } from "@chakra-ui/react";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface Holding {
-  [key: string]: any;
-}
-
-interface Trade {
-  [key: string]: any;
-}
-
-interface IssuerDetails {
-  wcId: number | null;
-  validatedIssuerName?: string;
-  vrequest?: Record<string, any>;
-  hgList?: Holding[];
-  thList?: Trade[];
-}
-
-interface IssuerHoldingsModalProps {
-  open: boolean;
+interface RefuseWallCrossDialogProps {
+  isOpen: boolean;
   onClose: () => void;
-  issuerDetails: IssuerDetails;
-  onProceed: () => void;
-  onRefuse: () => void;
+  wcId: number;
 }
 
-export function IssuerHoldingsModal({
-  open,
-  onClose,
-  issuerDetails,
-  onProceed,
-  onRefuse,
-}: IssuerHoldingsModalProps) {
-  if (!issuerDetails) return null;
+interface RefuseFormData {
+  reason: string;
+}
 
-  const { hgList = [], thList = [] } = issuerDetails;
+export function RefuseWallCrossDialog({ isOpen, onClose, wcId }: RefuseWallCrossDialogProps) {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<RefuseFormData>();
+  const queryClient = useQueryClient();
+  const toast = useToast();
+
+  const refuseMutation = useMutation({
+    mutationFn: async (data: RefuseFormData) => {
+      const res = await fetch("http://nycuapp03.biz.lodh.com:8787/wallcross/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wcId, reason: data.reason }),
+      });
+      if (!res.ok) throw new Error("Failed to refuse wall cross");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wall-crossed-issuers"] });
+      toast({
+        title: "Wall Cross Refused",
+        description: "Refusal successfully recorded.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      reset();
+      onClose();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to refuse wall cross.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+  });
+
+  const onSubmit = (data: RefuseFormData) => refuseMutation.mutate(data);
 
   return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content bg="gray.800" color="white" maxW="90vw" p={4}>
-            <Dialog.Header>
-              <Text fontSize="lg" fontWeight="bold">
-                Issuer Holdings -{" "}
-                {issuerDetails.validatedIssuerName ||
-                  issuerDetails.vrequest?.issuerName ||
-                  "-"}
-              </Text>
-            </Dialog.Header>
-
-            <Dialog.CloseTrigger asChild>
-              <CloseButton position="absolute" top={2} right={2} />
-            </Dialog.CloseTrigger>
-
-            <Dialog.Body>
-              <VStack mb={6} align="stretch">
-                {/* Issuer Details */}
-                {issuerDetails.vrequest && (
-                  <Box bg="gray.700" p={4} borderRadius="md">
-                    <Text fontWeight="bold" mb={2}>
-                      Issuer Details
-                    </Text>
-                    <HStack mb={8} flexWrap="wrap">
-                      {Object.entries(issuerDetails.vrequest).map(
-                        ([key, value]) => (
-                          <Text key={key} fontSize="sm">
-                            <strong>{key}:</strong> {String(value) ?? "-"}
-                          </Text>
-                        )
-                      )}
-                    </HStack>
-                  </Box>
-                )}
-
-                {/* Tabs for Holdings & Trade History */}
-                <Tabs.Root defaultValue="holdings">
-                  <Tabs.List mb={4}>
-                    <Tabs.Trigger value="holdings">Holdings</Tabs.Trigger>
-                    <Tabs.Trigger value="trades">Trade History</Tabs.Trigger>
-                  </Tabs.List>
-
-                  <Tabs.Content value="holdings">
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Holdings
-                      </Text>
-                      <Box overflowX="auto">
-                        <Table.Root size="sm">
-                          <Table.Header>
-                            <Table.Row>
-                              {hgList[0] &&
-                                Object.keys(hgList[0]).map((key) => (
-                                  <Table.ColumnHeader key={key}>
-                                    {key}
-                                  </Table.ColumnHeader>
-                                ))}
-                            </Table.Row>
-                          </Table.Header>
-                          <Table.Body>
-                            {hgList.map((holding, idx) => (
-                              <Table.Row key={idx}>
-                                {Object.keys(holding).map((key) => (
-                                  <Table.Cell key={key}>
-                                    {holding[key]?.toString() ?? "-"}
-                                  </Table.Cell>
-                                ))}
-                              </Table.Row>
-                            ))}
-                          </Table.Body>
-                        </Table.Root>
-                      </Box>
-                    </Box>
-                  </Tabs.Content>
-
-                  <Tabs.Content value="trades">
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Trade History (Last 90 days)
-                      </Text>
-                      <Box overflowX="auto">
-                        <Table.Root size="sm">
-                          <Table.Header>
-                            <Table.Row>
-                              {thList[0] &&
-                                Object.keys(thList[0]).map((key) => (
-                                  <Table.ColumnHeader key={key}>
-                                    {key}
-                                  </Table.ColumnHeader>
-                                ))}
-                            </Table.Row>
-                          </Table.Header>
-                          <Table.Body>
-                            {thList.map((trade, idx) => (
-                              <Table.Row key={idx}>
-                                {Object.keys(trade).map((key) => (
-                                  <Table.Cell key={key}>
-                                    {trade[key]?.toString() ?? "-"}
-                                  </Table.Cell>
-                                ))}
-                              </Table.Row>
-                            ))}
-                          </Table.Body>
-                        </Table.Root>
-                      </Box>
-                    </Box>
-                  </Tabs.Content>
-                </Tabs.Root>
-
-                {/* Action Buttons */}
-                <HStack justify="flex-end" mb={3}>
-                  <Button variant="outline" colorScheme="gray" onClick={onClose}>
-                    Close
-                  </Button>
-                  <Button onClick={onRefuse} colorScheme="red">
-                    Refuse Wall Cross
-                  </Button>
-                  <Button onClick={onProceed} colorScheme="green">
-                    Proceed to Wall Cross
-                  </Button>
-                </HStack>
-              </VStack>
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Positioner>
+        <Dialog.Overlay />
+        <DialogContent bg="gray.800" color="white" maxW="md" p={4}>
+          <DialogHeader>
+            Refuse Wall Cross
+            <CloseButton position="absolute" top={2} right={2} onClick={onClose} />
+          </DialogHeader>
+          <DialogBody>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FormControl mb={4}>
+                <FormLabel>Reason *</FormLabel>
+                <Textarea
+                  {...register("reason", { required: "Reason is required" })}
+                  placeholder="Enter refusal reason"
+                  bg="gray.700"
+                  border="none"
+                  _focus={{ bg: "gray.600" }}
+                  rows={4}
+                />
+                {errors.reason && <Text color="red.300">{errors.reason.message}</Text>}
+              </FormControl>
+              <HStack justify="flex-end" spacing={3}>
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button type="submit" colorScheme="red" isLoading={refuseMutation.isLoading}>
+                  Submit Refusal
+                </Button>
+              </HStack>
+            </form>
+          </DialogBody>
+        </DialogContent>
       </Portal>
     </Dialog.Root>
   );
