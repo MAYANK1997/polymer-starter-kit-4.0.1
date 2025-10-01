@@ -1,0 +1,147 @@
+import { Button, Field, HStack, Input, NativeSelect, useDisclosure } from "@chakra-ui/react";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+
+import { IssuerHoldingsModal } from "./IssuerHoldingsModal";
+import { RefuseWallCrossDialog } from "./RefuseWallCrossDialog";
+import { ProceedWallCrossDialog } from "./ProceedWallCrossDialog";
+
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+}
+
+export const CreateWallCrossModal = ({ onClose }: { onClose: () => void }) => {
+  const { register, handleSubmit, watch } = useForm<IssuerFormData>({ defaultValues: { issuerType: "Public" } });
+  const ticker = watch("ticker");
+  const isin = watch("isin");
+  const cusip = watch("cusip");
+  const sedol = watch("sedol");
+
+  const [buttonLabel, setButtonLabel] = useState("Fetch Issuer Details");
+  const [validatedData, setValidatedData] = useState<any>(null);
+  const [holdingData, setHoldingData] = useState<any>(null);
+
+  const { isOpen: holdingsOpen, onOpen: openHoldings, onClose: closeHoldings } = useDisclosure();
+  const { isOpen: refuseOpen, onOpen: openRefuse, onClose: closeRefuse } = useDisclosure();
+  const { isOpen: proceedOpen, onOpen: openProceed, onClose: closeProceed } = useDisclosure();
+
+  // --- API calls ---
+  const validateMutation = useMutation({
+    mutationFn: async (payload: IssuerFormData) => {
+      const res = await fetch(`/wallcross/validate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error("Validation failed");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setValidatedData(data);
+      setButtonLabel("Search Issuer Holdings");
+    },
+  });
+
+  const fetchHoldingsMutation = useMutation({
+    mutationFn: async (wcId: number) => {
+      const res = await fetch(`/wallcross/process/${wcId}`, { method: "POST" });
+      if (!res.ok) throw new Error("Fetch holdings failed");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setHoldingData({ ...validatedData, ...data });
+      openHoldings();
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
+    if (data.issuerType === "Public" && !ticker && !isin && !cusip && !sedol) {
+      alert("For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required.");
+      return;
+    }
+    if (buttonLabel === "Fetch Issuer Details") validateMutation.mutate(data);
+    else if (validatedData?.wcId) fetchHoldingsMutation.mutate(validatedData.wcId);
+  };
+
+  const handleRefuse = () => openRefuse();
+  const handleProceed = () => openProceed();
+
+  return (
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Issuer Name</Field.Label>
+            <Input {...register("issuerName", { required: true })} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>Issuer Type</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field {...register("issuerType")}>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Ticker</Field.Label>
+            <Input {...register("ticker")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>ISIN</Field.Label>
+            <Input {...register("isin")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>CUSIP</Field.Label>
+            <Input {...register("cusip")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>SEDOL</Field.Label>
+            <Input {...register("sedol")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack justify="flex-end" mt={6}>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="submit" colorScheme="blue">{buttonLabel}</Button>
+        </HStack>
+      </form>
+
+      {holdingData && (
+        <IssuerHoldingsModal
+          open={holdingsOpen}
+          onClose={closeHoldings}
+          issuerDetails={holdingData}
+          onRefuse={handleRefuse}
+          onProceed={handleProceed}
+        />
+      )}
+
+      {holdingData?.wcId && (
+        <>
+          <RefuseWallCrossDialog
+            isOpen={refuseOpen}
+            onClose={closeRefuse}
+            wcId={holdingData.wcId}
+          />
+          <ProceedWallCrossDialog
+            isOpen={proceedOpen}
+            onClose={closeProceed}
+            wcId={holdingData.wcId}
+            transactionTypes={holdingData.transactionTypes || []}
+            categoryName={holdingData.categoryName || ""}
+          />
+        </>
+      )}
+    </>
+  );
+};
