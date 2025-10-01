@@ -1,17 +1,16 @@
 import {
   Dialog,
   Portal,
-  DialogOverlay,
   DialogContent,
   DialogHeader,
   DialogBody,
+  DialogOverlay,
   CloseButton,
   Button,
-  FormControl,
-  FormLabel,
-  Textarea,
   HStack,
   Text,
+  Textarea,
+  Field,
   useToast,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
@@ -27,18 +26,30 @@ interface RefuseFormData {
   reason: string;
 }
 
-export function RefuseWallCrossDialog({ isOpen, onClose, wcId }: RefuseWallCrossDialogProps) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<RefuseFormData>();
+export function RefuseWallCrossDialog({
+  isOpen,
+  onClose,
+  wcId,
+}: RefuseWallCrossDialogProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RefuseFormData>();
   const queryClient = useQueryClient();
   const toast = useToast();
 
   const refuseMutation = useMutation({
     mutationFn: async (data: RefuseFormData) => {
-      const res = await fetch("http://nycuapp03.biz.lodh.com:8787/wallcross/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wcId, reason: data.reason }),
-      });
+      const res = await fetch(
+        "http://nycuapp03.biz.lodh.com:8787/wallcross/cancel",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wcId, reason: data.reason }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to refuse wall cross");
       return res.json();
     },
@@ -70,7 +81,7 @@ export function RefuseWallCrossDialog({ isOpen, onClose, wcId }: RefuseWallCross
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Portal>
-        <Dialog.Overlay />
+        <DialogOverlay />
         <DialogContent bg="gray.800" color="white" maxW="md" p={4}>
           <DialogHeader>
             Refuse Wall Cross
@@ -78,8 +89,8 @@ export function RefuseWallCrossDialog({ isOpen, onClose, wcId }: RefuseWallCross
           </DialogHeader>
           <DialogBody>
             <form onSubmit={handleSubmit(onSubmit)}>
-              <FormControl mb={4}>
-                <FormLabel>Reason *</FormLabel>
+              <Field.Root invalid={!!errors.reason} mb={4}>
+                <Field.Label>Reason *</Field.Label>
                 <Textarea
                   {...register("reason", { required: "Reason is required" })}
                   placeholder="Enter refusal reason"
@@ -88,11 +99,19 @@ export function RefuseWallCrossDialog({ isOpen, onClose, wcId }: RefuseWallCross
                   _focus={{ bg: "gray.600" }}
                   rows={4}
                 />
-                {errors.reason && <Text color="red.300">{errors.reason.message}</Text>}
-              </FormControl>
+                {errors.reason && (
+                  <Field.ErrorText>{errors.reason.message}</Field.ErrorText>
+                )}
+              </Field.Root>
               <HStack justify="flex-end" spacing={3}>
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button type="submit" colorScheme="red" isLoading={refuseMutation.isLoading}>
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  colorScheme="red"
+                  isLoading={refuseMutation.isPending}
+                >
                   Submit Refusal
                 </Button>
               </HStack>
