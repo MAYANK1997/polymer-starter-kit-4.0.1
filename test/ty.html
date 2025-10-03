@@ -1,1 +1,14 @@
 
+  const state = useAsync(async (): Promise<RestrictionCategories[]> => {
+    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`);
+    if (!response.ok) return [];
+    return response.json();
+  }, []);
+
+    fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        cache: 'no-cache'
+      }
