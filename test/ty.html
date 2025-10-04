@@ -1,10 +1,18 @@
 // src/components/ui/toaster.tsx
-import { createToaster } from "@chakra-ui/react"
+'use client'; // Required for Next.js client components
 
-// create a global toaster instance
+import { createToaster } from '@chakra-ui/react';
+
 export const toaster = createToaster({
-  placement: "top-right", // default placement
-})
+  placement: 'top-end', // Options: 'top', 'top-left', 'top-right', 'bottom', etc.
+  max: 5, // Maximum visible toasts
+  duration: 4000, // Default auto-close duration in ms
+  pauseOnPageIdle: true, // Pause timers when tab is inactive
+  offsets: { top: '20px', right: '20px' }, // Custom spacing from edges
+  overlap: false, // Allow toasts to overlap if true
+});
 
-// export the UI component that renders toasts
-export const Toaster = toaster.Toaster
+// The Toaster component for rendering in your app
+export function Toaster() {
+  return <div id="__chakra_toaster__portal" />;
+}
