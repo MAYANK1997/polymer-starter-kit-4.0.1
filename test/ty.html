@@ -1,26 +1,33 @@
-"use client"
-
 import {
+  Box,
+  Button,
+  Center,
+  VStack,
   Toaster as ChakraToaster,
   Portal,
   Spinner,
   Stack,
   Toast,
   createToaster,
-} from "@chakra-ui/react"
+} from '@chakra-ui/react';
+import { Logo } from '@/components/logo';
+import { ColorModeButton } from '@/components/ui/color-mode';
 
-export const toaster = createToaster({
-  placement: "bottom-end",
+// copied from toaster snipped in order to set max: 3
+
+const toaster = createToaster({
+  placement: 'bottom-end',
   pauseOnPageIdle: true,
-})
+  max: 3,
+});
 
-export const Toaster = () => {
+const Toaster = () => {
   return (
     <Portal>
-      <ChakraToaster toaster={toaster} insetInline={{ mdDown: "4" }}>
+      <ChakraToaster toaster={toaster} insetInline={{ mdDown: '4' }}>
         {(toast) => (
-          <Toast.Root width={{ md: "sm" }}>
-            {toast.type === "loading" ? (
+          <Toast.Root width={{ md: 'sm' }}>
+            {toast.type === 'loading' ? (
               <Spinner size="sm" color="blue.solid" />
             ) : (
               <Toast.Indicator />
@@ -34,10 +41,44 @@ export const Toaster = () => {
             {toast.action && (
               <Toast.ActionTrigger>{toast.action.label}</Toast.ActionTrigger>
             )}
-            {toast.closable && <Toast.CloseTrigger />}
+            {toast.meta?.closable && <Toast.CloseTrigger />}
           </Toast.Root>
         )}
       </ChakraToaster>
     </Portal>
-  )
+  );
+};
+
+function App() {
+  let toastInterval: ReturnType<typeof setInterval> | null = null;
+
+  const openToasts = () => {
+    if (toastInterval) return;
+
+    let counter = 0;
+    toastInterval = setInterval(() => {
+      toaster.create({
+        title: `Toast ${counter}`,
+        description: `This is toast number ${counter}`,
+        type: 'error',
+        duration: 10000,
+      });
+
+      counter += 1;
+    }, 2000);
+  };
+  return (
+    <Center minH="dvh">
+      <Toaster />
+      <Box pos="absolute" top="4" right="4">
+        <ColorModeButton />
+      </Box>
+      <VStack gap="5">
+        <Logo height="12" mb="5" />
+        <Button onClick={openToasts}>Start Toasts</Button>
+      </VStack>
+    </Center>
+  );
 }
+
+export default App;
