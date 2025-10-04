@@ -1,16 +1,10 @@
-const state = useAsync(async (): Promise<RestrictionCategories[]> => {
-  const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-cache',
-    },
-  });
+// src/components/ui/toaster.tsx
+import { createToaster } from "@chakra-ui/react"
 
-  if (!response.ok) {
-    return [];
-  }
+// create a global toaster instance
+export const toaster = createToaster({
+  placement: "top-right", // default placement
+})
 
-  return response.json();
-}, []);
+// export the UI component that renders toasts
+export const Toaster = toaster.Toaster
