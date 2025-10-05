@@ -1,84 +1,522 @@
-import {
-  Box,
-  Button,
-  Center,
-  VStack,
-  Toaster as ChakraToaster,
-  Portal,
-  Spinner,
-  Stack,
-  Toast,
-  createToaster,
-} from '@chakra-ui/react';
-import { Logo } from '@/components/logo';
-import { ColorModeButton } from '@/components/ui/color-mode';
 
-// copied from toaster snipped in order to set max: 3
 
-const toaster = createToaster({
-  placement: 'bottom-end',
-  pauseOnPageIdle: true,
-  max: 3,
-});
+// RestrictedIssuersPage
 
-const Toaster = () => {
+import { useState } from 'react';
+import RestrictedIssuerTable from './RestrictedIssuerTable';
+import { Box, Button, CloseButton, Dialog, Flex, HStack, Portal, useDisclosure } from '@chakra-ui/react';
+import { FiDownload, FiFilter, FiPlus } from 'react-icons/fi';
+import CreateIssuerModal from '@/components/modals/CreateIssuerModal';
+import { UnrestrictIssuerModal } from '../../components/modals/UnrestrictIssuerModal';
+
+const RestrictedIssuersPage = () => {
+
+  const [selectedIssuer, setSelectedIssuer] = useState<any>(null);
+  const unrestrictDialog = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+
+  
+  window.handleUnrestrict = (selectedIssuerData: any) => {
+    setSelectedIssuer(selectedIssuerData);
+    console.log(selectedIssuerData);
+    unrestrictDialog.onOpen()
+  }
+  
+
   return (
-    <Portal>
-      <ChakraToaster toaster={toaster} insetInline={{ mdDown: '4' }}>
-        {(toast) => (
-          <Toast.Root width={{ md: 'sm' }}>
-            {toast.type === 'loading' ? (
-              <Spinner size="sm" color="blue.solid" />
-            ) : (
-              <Toast.Indicator />
-            )}
-            <Stack gap="1" flex="1" maxWidth="100%">
-              {toast.title && <Toast.Title>{toast.title}</Toast.Title>}
-              {toast.description && (
-                <Toast.Description>{toast.description}</Toast.Description>
-              )}
-            </Stack>
-            {toast.action && (
-              <Toast.ActionTrigger>{toast.action.label}</Toast.ActionTrigger>
-            )}
-            {toast.meta?.closable && <Toast.CloseTrigger />}
-          </Toast.Root>
-        )}
-      </ChakraToaster>
-    </Portal>
+    <>
+      <Box>
+        {/* Action Bar */}
+        <Flex justify="space-between" mb={4}>
+          <Dialog.Root
+            key="center"
+            placement="center"
+            motionPreset="slide-in-bottom"
+           
+            open={isOpen}
+            onOpenChange={(e) => setIsOpen(e.open)}
+          >
+            <Dialog.Trigger asChild>
+              <Button
+                bg="gray.700"
+                color="white"
+                _hover={{ bg: 'gray.600' }}
+                size="sm"
+              >
+                <FiPlus />
+                Insert New Entry
+              </Button>
+            </Dialog.Trigger>
+
+            <Portal>
+              <Dialog.Backdrop />
+              <Dialog.Positioner>
+                <Dialog.Content 
+                css={{
+                  width:"60vw",
+                  height:"92vh",
+                  maxWidth:"100vw",
+                  maxHeight:"100vh"
+                }}
+                >
+                  <Dialog.Header>
+                    <Dialog.Title>Add New Restricted Issuer</Dialog.Title>
+                  </Dialog.Header>
+
+                  <Dialog.Body>
+                    <CreateIssuerModal onClose={() => setIsOpen(false)} />
+                  </Dialog.Body>
+
+                  <Dialog.CloseTrigger asChild>
+                    <CloseButton size="sm" />
+                  </Dialog.CloseTrigger>
+                </Dialog.Content>
+              </Dialog.Positioner>
+            </Portal>
+          </Dialog.Root>
+
+          <HStack>
+            <Button
+              variant="outline"
+              size="sm"
+              color="gray.400"
+              borderColor="gray.600"
+              _hover={{ borderColor: 'gray.500', color: 'white' }}
+            >
+              <FiFilter />
+              Clear Filters
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              color="gray.400"
+              borderColor="gray.600"
+              _hover={{ borderColor: 'gray.500', color: 'white' }}
+            >
+              <FiDownload />
+              Export
+            </Button>
+          </HStack>
+        </Flex>
+      </Box>
+
+      <UnrestrictIssuerModal
+        open={unrestrictDialog.open}
+        onClose={unrestrictDialog.onClose}
+        issuer={selectedIssuer}
+    />
+
+      <RestrictedIssuerTable />
+    </>
   );
 };
 
-function App() {
-  let toastInterval: ReturnType<typeof setInterval> | null = null;
+export default RestrictedIssuersPage;
 
-  const openToasts = () => {
-    if (toastInterval) return;
+ // CreateIssuersModal
 
-    let counter = 0;
-    toastInterval = setInterval(() => {
+import {
+  Box,
+  Button,
+  Spinner,
+  Checkbox,
+  Field,
+  Fieldset,
+  For,
+  HStack,
+  Input,
+  NativeSelect,
+  
+} from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';
+import { useAsync } from 'react-use';
+import {useState} from 'react';
+import { config } from '@/config';
+import {Toaster,toaster} from '@/components/ui/toaster'
+import { useMutation } from '@tanstack/react-query';
+
+
+
+
+
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+  instrumentType: string;
+  categoryName: string;
+  transactionTypes: string[];
+  dateRestricted: string;
+  requester: string;
+  notes: string;
+}
+
+interface RestrictionCategories {
+  name: string;
+}
+
+const CreateIssuerModal = ({ onClose }: { onClose: () => void }) => {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    
+  } = useForm<IssuerFormData>({
+    defaultValues: {
+      issuerType: 'Public',       // ✅ default Public
+      instrumentType: 'Equity',   // ✅ default Equity
+      transactionTypes: ['None'],
+      categoryName: '',
+    },
+  });
+
+  const [isSubmit, setIsSubmit] = useState(false);
+
+  const state = useAsync(async (): Promise<RestrictionCategories[]> => {
+    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      },
+    });
+  
+    if (!response.ok) {
+      const txt = await response.text().catch(() => '');
       toaster.create({
-        title: `Toast ${counter}`,
-        description: `This is toast number ${counter}`,
+        title: 'Error',
+        description: `${txt}`,
         type: 'error',
         duration: 10000,
       });
+     
+      return [];
+    }
+  
+    return response.json();
+  }, []);
 
-      counter += 1;
-    }, 2000);
+  const transactionTypes = watch('transactionTypes') || ['None'];
+  const issuerType = watch('issuerType');
+  const ticker = watch('ticker');
+  const isin = watch('isin');
+  const cusip = watch('cusip');
+  const sedol = watch('sedol');
+  const categoryName = watch('categoryName');
+  const instrumentType = watch('instrumentType');
+  const dateRestricted = watch('dateRestricted');
+  const issuerName = watch('issuerName');
+
+  const handleTransactionToggle = (option: string) => {
+    const current = watch('transactionTypes') || ['None'];
+    let next: string[];
+    if (option === 'None') {
+      next = ['None'];
+    } else {
+      const has = current.includes(option);
+      if (has) {
+        next = current.filter((v) => v !== option);
+      } else {
+        next = [...current.filter((v) => v !== 'None'), option];
+      }
+      if (next.length === 0) next = ['None'];
+    }
+    setValue('transactionTypes', next, { shouldDirty: true, shouldValidate: true });
   };
-  return (
-    <Center minH="dvh">
-      <Toaster />
-      <Box pos="absolute" top="4" right="4">
-        <ColorModeButton />
-      </Box>
-      <VStack gap="5">
-        <Logo height="12" mb="5" />
-        <Button onClick={openToasts}>Start Toasts</Button>
-      </VStack>
-    </Center>
-  );
-}
 
-export default App;
+  const mutation = useMutation({
+    mutationFn: async (payload: IssuerFormData) => {
+      setIsSubmit(true);
+      const url = `${config.apis.mdmApi}/RestrictIssuer`;
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+
+        setIsSubmit(false);
+        const txt = await res.text().catch(() => '');
+        toaster.create({
+          title: 'Error',
+          description: `${txt}`,
+          type: 'error',
+          duration: 10000,
+        });
+      
+       
+       
+        
+     
+
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsSubmit(false);
+      toaster.create({
+        title: 'Success',
+        description: 'New Restricted Issuer Added',
+        type: 'success',
+        duration: 10000,
+      });
+     
+      onClose();
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
+    // ✅ Validation logic
+    if (issuerType === 'Public') {
+      const hasOneId = ticker || isin || cusip || sedol;
+      if (!hasOneId) {
+        toaster.create({
+          title: 'Error',
+          description: 'For Public issuers, at least one of Ticker, ISIN, CUSIP, or SEDOL is required.',
+          type: 'error',
+          duration: 10000,
+        });
+        
+        return;
+      }
+      if (!categoryName || !instrumentType || !dateRestricted) {
+        toaster.create({
+          title: 'Error',
+          description: 'For Public issuers, Restriction Category, Instrument Type, and Start Date are mandatory.',
+          type: 'error',
+          duration: 10000,
+        });
+       
+        return;
+      }
+    }
+
+    if (issuerType === 'Private') {
+      if (!issuerName || !categoryName || !dateRestricted) {
+        toaster.create({
+          title: 'Error',
+          description: 'For Private issuers, Issuer Name, Restriction Category, and Start Date are mandatory.',
+          type: 'error',
+          duration: 10000,
+        });
+      
+        return;
+      }
+    }
+
+    const payload = {
+      ...data,
+      transactionTypes: data.transactionTypes?.length ? data.transactionTypes : ['None'],
+    };
+    mutation.mutate(payload);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Toaster />
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Issuer Name</Field.Label>
+          <Input
+            {...register('issuerName', { required: 'Issuer name is required' })}
+            placeholder="Enter value"
+          />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Issuer Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('issuerType')}>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+      
+
+      
+        <Field.Root>
+          <Field.Label>Ticker</Field.Label>
+          <Input {...register('ticker')} placeholder="Enter value" />
+        </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>ISIN</Field.Label>
+          <Input {...register('isin')} placeholder="Enter value" />
+        </Field.Root>
+      
+
+        <Field.Root>
+          <Field.Label>CUSIP</Field.Label>
+          <Input {...register('cusip')} placeholder="Enter value" />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>SEDOL</Field.Label>
+          <Input {...register('sedol')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Field.Root>
+          <Field.Label>Instrument Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('instrumentType')}>
+              <option value="Equity">Equity</option>
+              <option value="ADR">ADR</option>
+              <option value="Index">Index</option>
+              <option value="Govt">Govt</option>
+              <option value="Corporate Bond">Corporate Bond</option>
+              <option value="Convertible Bond">Convertible Bond</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Restriction Category</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field {...register('categoryName')}>
+              <option value="">Select category</option>
+              {state.value?.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Start Date</Field.Label>
+          <Input {...register('dateRestricted')} type="date" defaultValue="2025-08-25" />
+        </Field.Root>
+
+        
+
+      </HStack>
+
+      <HStack gap={4} mb={4}>
+        <Fieldset.Root>
+          <Fieldset.Legend>Allowed Transaction Type</Fieldset.Legend>
+          <Box border="1px solid" borderColor="gray.600" borderRadius="md" p={3}>
+            <Fieldset.Content>
+              <For each={['Buy', 'Sell', 'Buy to Cover', 'Sell Short', 'None']}>
+                {(value) => (
+                  <Checkbox.Root
+                    key={value}
+                    checked={transactionTypes.includes(value)}
+                    onCheckedChange={() => handleTransactionToggle(value)}
+                    value={value}
+                  >
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>{value}</Checkbox.Label>
+                  </Checkbox.Root>
+                )}
+              </For>
+            </Fieldset.Content>
+          </Box>
+        </Fieldset.Root>
+      </HStack>
+
+
+            
+
+      <HStack gap={4} mb={4}>
+      <Field.Root>
+          <Field.Label>Restriction Requester</Field.Label>
+          <Input {...register('requester')} placeholder="Enter value" />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Restriction Notes</Field.Label>
+          <Input {...register('notes')} placeholder="Enter value" />
+        </Field.Root>
+      </HStack>
+
+      <HStack justify="flex-end" mt={6}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button 
+         type="submit" 
+         colorScheme="blue" 
+         loading={isSubmit}
+         loadingText="Saving"
+         spinner={<Spinner size='sm' />}
+         >
+          Save
+        </Button>
+      </HStack>
+    </form>
+  );
+};
+
+export default CreateIssuerModal;
+
+
+//RestrictedIssuerTable
+
+                      import { useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { config } from '@/config';
+
+import { restrictedIssuersColumnDefs } from './restricted-issuers-column-defs';
+import { useAgGridTheme } from '@loim/loim-ui';
+
+const RestrictedIssuerTable = () => {
+  const [data, setData] = useState([]);
+  const [columnDef] = useState(restrictedIssuersColumnDefs);
+  const [loading, setLoading] = useState(false);
+
+  const { agGridTheme } = useAgGridTheme();
+  
+
+  useEffect(() => {
+   
+
+    setLoading(true);
+
+    fetch(`${config.apis.mdmApi}/RestrictedHistory`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        cache: 'no-cache'
+      },
+
+      body: JSON.stringify({
+        "categoryName": "",
+        "dateRestricted": "",
+        "isRestricted":true
+      })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [setData, setLoading]);
+
+  return (
+    <div style={{ height: '90%' }}>
+      <AgGridReact rowData={data} columnDefs={columnDef} theme={agGridTheme} loading={loading} />
+    </div>
+  );
+};
+
+export default RestrictedIssuerTable;
+
+        
