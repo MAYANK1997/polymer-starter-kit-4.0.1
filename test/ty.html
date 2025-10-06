@@ -1,86 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import { config } from '@/config';
-
-import { restrictedInstrumentsColumnDef,restrictedDetailInstrumentsColumnDef } from './restricted-instruments-column-defs';
-
-import { useAgGridTheme } from '@loim/loim-ui';
-
-
-
-const RestrictedInstrumentsTable = () => {
-
-  const masterDetail = true;
-
-  const [columnDefs] = useState(
-    restrictedInstrumentsColumnDef
-  );
- 
-  const detailCellRendererParams = useMemo(() => { 
-    return {
-          // provide the Grid Options to use on the Detail Grid
-          detailGridOptions: {
-              columnDefs: restrictedDetailInstrumentsColumnDef
-                 
-              
-          },
-          // get the rows for each Detail Grid
-          getDetailRowData: (params:any) => {
-              params.successCallback(params.data.callRecords);
-          }
-      };
-  }, []);
-  
-  const [data, setData] = useState([]);
-   
-  const [loading, setLoading] = useState(false);
-
-  
-
-  const { agGridTheme } = useAgGridTheme();
-  
-
-  useEffect(() => {
-
-   
-    setLoading(true);
-
-    fetch(`${config.apis.mdmApi}/RestrictedInstrumentView`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        cache: 'no-cache'
-      },
-
-      body: JSON.stringify({
-     
-        "isRestricted":true
-      })
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setData(data);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [setData, setLoading]);
-
-  return (
-    <div style={{ height: '90%' }}>
-      <AgGridReact
-       rowData={data}
-       theme={agGridTheme}   
-       loading={loading}
-       masterDetail={masterDetail}
-       columnDefs={columnDefs}
-       detailCellRendererParams={detailCellRendererParams}
-
-      
-       />
-    </div>
-  );
-};
-
-export default RestrictedInstrumentsTable;
+<Button
+            type="submit"
+            colorScheme="blue"
+            loading={isSubmit}
+            loadingText="Saving"
+            spinner={<Spinner size='sm' />}
+           
+          >
+            {buttonLabel}
+          </Button>
