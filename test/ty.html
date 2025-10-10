@@ -1,218 +1,87 @@
-import {
-  Dialog,
-  Portal,
-  Button,
-  CloseButton,
-  HStack,
-  VStack,
-  Text,
-  Box,
-  Table,
-  Tabs,
-} from "@chakra-ui/react";
+  onFilterTextBoxChanged2(grid2) {
+    let toFilterBy = document.querySelector('#filter-text-box-1').value;
+    let existsInMaster = false;
 
-interface Holding {
-  [key: string]: any;
-}
+    grid2.forEachNode(node => {
+      
+      if (node.data.validatedIssuerName.includes(toFilterBy)) existsInMaster = true;
+    });
 
-interface Trade {
-  [key: string]: any;
-}
+  
+  if (toFilterBy == '') {
+    
+      grid2.setFilterModel(null);
+      grid2.forEachDetailGridInfo(detailGridInfo => {
+          detailGridInfo.api.setQuickFilter(null);
+      });
+      grid2.forEachNode(node => {
+      
+        node.setExpanded(false);
+      });
+  }
+  
+  if (existsInMaster) {
+    grid2.setQuickFilter(toFilterBy);
+  } else { 
+    
 
-interface IssuerDetails {
-  wcId: number | null;
-  validatedIssuerName?: string;
-  vrequest?: Record<string, any>;
-  hgList?: Holding[];
-  thList?: Trade[];
-}
 
-interface IssuerHoldingsModalProps {
-  open: boolean;
-  onHClose: () => void;
-  issuerDetails: IssuerDetails;
-  onProceed: () => void;
-  onRefuse: () => void;
-}
 
-export function IssuerHoldingsModal({
-  open,
-  onHClose,
-  issuerDetails,
-  onProceed,
-  onRefuse,
-}: IssuerHoldingsModalProps) {
-  if (!issuerDetails) return null;
+      grid2.setQuickFilter(toFilterBy);
+      grid2.forEachNode(node => {
+      
+        node.setExpanded(true);
+      });
+      grid2.forEachDetailGridInfo(detailGridInfo => {
+       
 
-  const { hgList = [], thList = [] } = issuerDetails;
+          detailGridInfo.api.setQuickFilter(toFilterBy);
+      });
+  }
 
-  // --- Define visible fields & headers ---
-  const holdingsColumns: Record<string, string> = {
-    "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Investment Manager",
-    "Instrument__BBGTicker": "Ticker",
-    "Instrument__CUSIP": "CUSIP",
-    "Instrument__ISIN": "ISIN",
-    "Instrument__InstrumentTypeName": "Instrument Type Name",
-    "Instrument__IssuerName": "Issuer Name",
-    "Instrument__LongName": "Instrument Long Name",
-    "PositionDate": "Position Date",
-    "TradedQuantity": "Quantity",
-  };
 
-  const tradesColumns: Record<string, string> = {
-    "Account__Portfolio__MainPortfolio__Product__InvestmentManager": "Investment Manager",
-    "Account__Portfolio__MainPortfolio__Product__Name": "Product Name",
-    "Instrument__LongName": "Instrument Long Name",
-    "Quantity": "Quantity",
-    "TradeDate": "Trade Date",
-  };
 
-  // --- Date formatting helper ---
-  const formatDate = (value: string) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? value : date.toISOString().split("T")[0];
-  };
+import RestrictedInstrumentsTable from './RestrictedInstrumentsTable';
+import { Box, Flex, Input, InputGroup } from '@chakra-ui/react';
+
+import { LuSearch } from 'react-icons/lu';
+
+
+
+const RestrictedInstrumentsPage = () => {
+
+
+
+
+  
 
   return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onHClose()}>
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content maxW="80vw" p={4}>
-            <Dialog.Header>
-              <Text fontSize="lg" fontWeight="bold">
-                Issuer Holdings -{" "}
-                {issuerDetails.validatedIssuerName ||
-                  issuerDetails.vrequest?.issuerName ||
-                  "-"}
-              </Text>
-            </Dialog.Header>
+   <>
+    <Box>
+    {/* Action Bar */}
+    <Flex justify="space-between"  mb={4}>
+      
+      
+        
+      <InputGroup flex="0.3" startElement={<LuSearch />}>
+        <Input placeholder="Search Instruments" />
+      </InputGroup>
 
-            <Dialog.CloseTrigger asChild>
-              <CloseButton
-                position="absolute"
-                top={2}
-                right={2}
-                onClick={onHClose}
-              />
-            </Dialog.CloseTrigger>
 
-            <Dialog.Body>
-              <VStack mb={6} align="stretch">
-                {/* Issuer Details */}
-                {issuerDetails.vrequest && (
-                  <Box p={4} borderRadius="md">
-                    <Text fontWeight="bold" mb={2}>
-                      Issuer Details
-                    </Text>
-                    <HStack mb={8} flexWrap="wrap">
-                      {Object.entries(issuerDetails.vrequest).map(
-                        ([key, value]) => (
-                          <Text key={key} fontSize="sm">
-                            <strong>{key}:</strong> {String(value) ?? "-"}
-                          </Text>
-                        )
-                      )}
-                    </HStack>
-                  </Box>
-                )}
+        
+    </Flex>
+        
+ 
 
-                {/* Tabs for Holdings & Trade History */}
-                <Tabs.Root defaultValue="holdings">
-                  <Tabs.List mb={4}>
-                    <Tabs.Trigger value="holdings">Holdings</Tabs.Trigger>
-                    <Tabs.Trigger value="trades">Trade History</Tabs.Trigger>
-                  </Tabs.List>
-
-                  {/* Holdings Table */}
-                  <Tabs.Content value="holdings">
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Holdings
-                      </Text>
-                      <Box overflowX="auto">
-                        <Table.Root size="sm">
-                          <Table.Header>
-                            <Table.Row>
-                              {Object.values(holdingsColumns).map((header) => (
-                                <Table.ColumnHeader key={header}>
-                                  {header}
-                                </Table.ColumnHeader>
-                              ))}
-                            </Table.Row>
-                          </Table.Header>
-                          <Table.Body>
-                            {hgList.map((holding, idx) => (
-                              <Table.Row key={idx}>
-                                {Object.keys(holdingsColumns).map((key) => (
-                                  <Table.Cell key={key}>
-                                    {key === "PositionDate"
-                                      ? formatDate(holding[key])
-                                      : holding[key]?.toString() ?? "-"}
-                                  </Table.Cell>
-                                ))}
-                              </Table.Row>
-                            ))}
-                          </Table.Body>
-                        </Table.Root>
-                      </Box>
-                    </Box>
-                  </Tabs.Content>
-
-                  {/* Trade History Table */}
-                  <Tabs.Content value="trades">
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Trade History (Last 90 days)
-                      </Text>
-                      <Box overflowX="auto">
-                        <Table.Root size="sm">
-                          <Table.Header>
-                            <Table.Row>
-                              {Object.values(tradesColumns).map((header) => (
-                                <Table.ColumnHeader key={header}>
-                                  {header}
-                                </Table.ColumnHeader>
-                              ))}
-                            </Table.Row>
-                          </Table.Header>
-                          <Table.Body>
-                            {thList.map((trade, idx) => (
-                              <Table.Row key={idx}>
-                                {Object.keys(tradesColumns).map((key) => (
-                                  <Table.Cell key={key}>
-                                    {key === "TradeDate"
-                                      ? formatDate(trade[key])
-                                      : trade[key]?.toString() ?? "-"}
-                                  </Table.Cell>
-                                ))}
-                              </Table.Row>
-                            ))}
-                          </Table.Body>
-                        </Table.Root>
-                      </Box>
-                    </Box>
-                  </Tabs.Content>
-                </Tabs.Root>
-
-                {/* Action Buttons */}
-                <HStack justify="flex-end" mb={3}>
-                  <Button variant="outline" colorScheme="gray" onClick={onHClose}>
-                    Close
-                  </Button>
-                  <Button onClick={onRefuse} colorScheme="red">
-                    Refuse Wall Cross
-                  </Button>
-                  <Button onClick={onProceed} colorScheme="green">
-                    Proceed to Wall Cross
-                  </Button>
-                </HStack>
-              </VStack>
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    </Box>
+    <RestrictedInstrumentsTable />
+    </>
   );
-}
+};
+
+export default RestrictedInstrumentsPage;
+
+
+    
+    
+  }
