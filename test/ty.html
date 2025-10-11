@@ -1,87 +1,294 @@
-  onFilterTextBoxChanged2(grid2) {
-    let toFilterBy = document.querySelector('#filter-text-box-1').value;
-    let existsInMaster = false;
 
-    grid2.forEachNode(node => {
-      
-      if (node.data.validatedIssuerName.includes(toFilterBy)) existsInMaster = true;
-    });
+import {
+  Button,
+  Field,
+  HStack,
+  Input,
+  NativeSelect,
+  useDisclosure,
+  Spinner
+} from "@chakra-ui/react";
+import { useForm } from "react-hook-form";
+import { config } from "@/config";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { IssuerHoldingsModal } from "./IssuerHoldingsModal";
+import {Toaster,toaster} from '@/components/ui/toaster';
+import { RefuseWallCrossDialog } from "./RefuseWallCrossModal";
+import {ProceedWallCrossDialog} from "./ProceedToWallCrossModal";
 
-  
-  if (toFilterBy == '') {
-    
-      grid2.setFilterModel(null);
-      grid2.forEachDetailGridInfo(detailGridInfo => {
-          detailGridInfo.api.setQuickFilter(null);
+interface IssuerFormData {
+  issuerName: string;
+  issuerType: string;
+  ticker: string;
+  isin: string;
+  cusip: string;
+  sedol: string;
+}
+
+export const CreateWallCrosssedIssuerModal = ({
+  onWClose,
+  onSuccess
+}: {
+  onWClose: () => void;
+  onSuccess:()=>void
+}) => {
+  const { register, handleSubmit, watch } = useForm<IssuerFormData>({
+    defaultValues: { issuerType: "Public" },
+  });
+
+  const issuerName = watch("issuerName");
+  const ticker = watch("ticker");
+  const isin = watch("isin");
+  const cusip = watch("cusip");
+  const sedol = watch("sedol");
+
+  const [buttonLabel, setButtonLabel] = useState("Fetch Issuer Details");
+  const [isSubmit, setIsSubmit] = useState(false);
+  const [validatedData, setValidatedData] = useState<any>(null);
+  const [holdingData, setHoldingData] = useState<any>(null);
+
+  const { open: isHoldingsOpen, onOpen: onHoldingsOpen, onClose: onHoldingsClose } =
+    useDisclosure();
+    const { open: isRefuseOpen, onOpen: onRefuseOpen, onClose: onRefuseClose } =
+    useDisclosure();
+    const { open: isProceedOpen, onOpen: onProceedOpen, onClose: onProceedClose } =
+    useDisclosure();
+
+  // Validate Issuer API
+  const validateMutation = useMutation({
+
+    mutationFn: async (payload: IssuerFormData) => {
+      const url = `${config.apis.mdmApi}/wallcross/validate`;
+      setIsSubmit(true);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      grid2.forEachNode(node => {
-      
-        node.setExpanded(false);
-      });
-  }
-  
-  if (existsInMaster) {
-    grid2.setQuickFilter(toFilterBy);
-  } else { 
-    
-
-
-
-      grid2.setQuickFilter(toFilterBy);
-      grid2.forEachNode(node => {
-      
-        node.setExpanded(true);
-      });
-      grid2.forEachDetailGridInfo(detailGridInfo => {
+      if (!res.ok) {
+        setIsSubmit(false);
+        const txt = await res.text().catch(() => "");
+        toaster.create({
+          title: 'Error',
+          description: `${txt}`,
+          type: 'error',
+          duration: 10000,
+        });
        
-
-          detailGridInfo.api.setQuickFilter(toFilterBy);
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+     
+      toaster.create({
+        title: 'Success',
+        description: 'New Issuer Successfully Validated',
+        type: 'success',
+        duration: 10000,
       });
-  }
+      setIsSubmit(false);
+      setValidatedData(data);
+      setButtonLabel("Search Issuer Holdings");
+    },
+  });
+
+  // Fetch Holdings API
+  const fetchHoldingsMutation = useMutation({
+   
+    mutationFn: async (wcId: number) => {
+      const url = `${config.apis.mdmApi}/wallcross/process/${wcId}`;
+      setIsSubmit(true);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        setIsSubmit(false);
+        const txt = await res.text().catch(() => "");
+        toaster.create({
+          title: 'Error',
+          description: `${txt}`,
+          type: 'error',
+          duration: 10000,
+        });
+       
+      }
+      
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setIsSubmit(false);
+      toaster.create({
+        title: 'Success',
+        description: 'Issuer Holdings Successfully Published',
+        type: 'success',
+        duration: 10000,
+      });
+
+      setHoldingData({ ...validatedData, ...data });
+      
+      onHoldingsOpen();
+      
+      
+
+    },
+  });
+
+  const onSubmit = (data: IssuerFormData) => {
 
 
+    if(!issuerName){
 
-import RestrictedInstrumentsTable from './RestrictedInstrumentsTable';
-import { Box, Flex, Input, InputGroup } from '@chakra-ui/react';
+      toaster.create({
+        title: 'Error',
+        description:  "Issuer Name is required.",
+        type: 'error',
+        duration: 10000,
+      });
 
-import { LuSearch } from 'react-icons/lu';
+    return;
 
+    }
 
+    if (!ticker && !isin && !cusip && !sedol) {
+      toaster.create({
+        title: 'Error',
+        description:  "At least one of Ticker, ISIN, CUSIP, or SEDOL is required.",
+        type: 'error',
+        duration: 10000,
+      });
+     
+      return;
+    }
 
-const RestrictedInstrumentsPage = () => {
+    if (buttonLabel === "Fetch Issuer Details") {
+      validateMutation.mutate(data);
+    } else if (validatedData?.wcId) {
+      fetchHoldingsMutation.mutate(validatedData.wcId);
+    }
+  };
 
+  const handleProceedToWallCross = () => {
+    console.log("Proceeding with wcId:", validatedData?.wcId);
+    
+    onHoldingsClose();
+   
+    onProceedOpen();
+    
+  };
 
+  
+
+  const handleRefuseWallCross = () => {
+    console.log("Refused with wcId:", validatedData?.wcId);
+   
+    onHoldingsClose();
+    onRefuseOpen();
+    
+  };
 
 
   
 
   return (
-   <>
-    <Box>
-    {/* Action Bar */}
-    <Flex justify="space-between"  mb={4}>
-      
-      
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+      <Toaster />
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Issuer Name</Field.Label>
+            <Input
+              {...register("issuerName")}
+              placeholder="Enter value"
+            />
         
-      <InputGroup flex="0.3" startElement={<LuSearch />}>
-        <Input placeholder="Search Instruments" />
-      </InputGroup>
+          </Field.Root>
+
+          <Field.Root>
+            <Field.Label>Issuer Type</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field {...register("issuerType")}>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>Ticker</Field.Label>
+            <Input {...register("ticker")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>ISIN</Field.Label>
+            <Input {...register("isin")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack gap={4} mb={4}>
+          <Field.Root>
+            <Field.Label>CUSIP</Field.Label>
+            <Input {...register("cusip")} placeholder="Enter value" />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>SEDOL</Field.Label>
+            <Input {...register("sedol")} placeholder="Enter value" />
+          </Field.Root>
+        </HStack>
+
+        <HStack justify="flex-end" mt={6}>
+          <Button variant="outline" onClick={onWClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            colorScheme="blue"
+            loading={isSubmit}
+            loadingText={
+              buttonLabel === "Fetch Issuer Details" ? "Validating" : "Searching"}
+            
+            spinner={<Spinner size='sm' />}
+           
+          >
+            {buttonLabel}
+          </Button>
+        </HStack>
+      </form>
+
+      {holdingData && (
+        <>
+        <IssuerHoldingsModal
+          open={isHoldingsOpen}
+          onHClose={onHoldingsClose}
+          issuerDetails={holdingData}
+          onProceed={handleProceedToWallCross}
+          onRefuse={handleRefuseWallCross}
+        />
+
+        <RefuseWallCrossDialog
+        open={isRefuseOpen}
+        onRClose={onRefuseClose}
+        wcId={validatedData.wcId}
+        
+      />
+
+      <ProceedWallCrossDialog
+        open={isProceedOpen}
+        onPClose={onProceedClose}
+        wcId={validatedData.wcId}
+        validatedData={validatedData}
+      />   
+
+      </>
+      )}
 
 
-        
-    </Flex>
-        
- 
 
-    </Box>
-    <RestrictedInstrumentsTable />
     </>
   );
 };
 
-export default RestrictedInstrumentsPage;
-
-
-    
-    
-  }
+export default CreateWallCrosssedIssuerModal;
