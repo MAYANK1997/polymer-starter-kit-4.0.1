@@ -1,13 +1,7 @@
-  const handleClearFilters = () => {
-    if (window.clearGridFilters) {
-      window.clearGridFilters()
-    }
-  }
-
-    onClick={handleClearFilters}
-
-const handleExport = () => {
-    if (window.exportGridData) {
-      window.exportGridData()
-    }
-  }
+ <NativeSelect.Field {...register('categoryName')}>
+                        <option value="">Select category</option>
+                        {state.value?.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
