@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   Portal,
@@ -13,7 +12,7 @@ import {
 
 import { useForm } from 'react-hook-form';
 import { useAsync } from 'react-use';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { config } from '@/config';
 import { Toaster, toaster } from '@/components/ui/toaster';
 import { useMutation } from '@tanstack/react-query';
@@ -23,22 +22,17 @@ interface ProceedWallCrossDialogProps {
   onPClose: () => void;
   wcId: number;
   validatedData: any;
-  onSuccess:()=>void
+  onSuccess: () => void;
   onWClose: () => void;
 }
 
-
 interface ProceedFormData {
-
   categoryName: string;
 }
 
 interface RestrictionCategories {
   name: string;
 }
-
-
-
 
 export function ProceedWallCrossDialog({
   open,
@@ -47,18 +41,19 @@ export function ProceedWallCrossDialog({
   validatedData,
   onSuccess,
   onWClose
-
 }: ProceedWallCrossDialogProps) {
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { },
+    setValue, // Added for setting default value
+    formState: {},
   } = useForm<ProceedFormData>();
 
   const [isSubmit, setIsSubmit] = useState(false);
 
+  // Fetch restriction categories
   const state = useAsync(async (): Promise<RestrictionCategories[]> => {
     const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories?wallcrossOnly=true`, {
       method: 'GET',
@@ -77,16 +72,21 @@ export function ProceedWallCrossDialog({
         type: 'error',
         duration: 10000,
       });
-
       return [];
     }
 
     return response.json();
   }, []);
 
+  // Automatically set "LOIM RL" as the default category when data arrives
+  useEffect(() => {
+    if (state.value?.length) {
+      setValue('categoryName', 'LOIM RL');
+    }
+  }, [state.value, setValue]);
 
+  // Mutation to handle form submission
   const proceedMutation = useMutation({
-
     mutationFn: async (data: ProceedFormData) => {
       setIsSubmit(true);
       const res = await fetch(
@@ -98,8 +98,8 @@ export function ProceedWallCrossDialog({
           body: JSON.stringify({ wcId, transactionTypes: ["Buy"], categoryName: data.categoryName }),
         }
       );
-      if (!res.ok) {
 
+      if (!res.ok) {
         setIsSubmit(false);
         const txt = await res.text().catch(() => '');
         toaster.create({
@@ -108,10 +108,7 @@ export function ProceedWallCrossDialog({
           type: 'error',
           duration: 10000,
         });
-
-      }
-      else {
-
+      } else {
         setIsSubmit(false);
         toaster.create({
           title: 'Success',
@@ -120,21 +117,17 @@ export function ProceedWallCrossDialog({
           duration: 5000,
         });
 
-        setTimeout(()=>{
+        setTimeout(() => {
           setIsSubmit(false);
           reset();
           onPClose();
           onWClose();
           onSuccess();
-       
-        },5000);
-
-      
+        }, 5000);
       }
+
       return res.json();
     }
-   
-
   });
 
   const onSubmit = (data: ProceedFormData) => proceedMutation.mutate(data);
@@ -145,7 +138,7 @@ export function ProceedWallCrossDialog({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content  maxW="60vw">
+          <Dialog.Content maxW="60vw">
             <Dialog.Header>
               Proceed Wall Cross
               <CloseButton position="absolute" top={2} right={2} onClick={onPClose} />
@@ -155,67 +148,40 @@ export function ProceedWallCrossDialog({
                 <HStack gap={4} mb={4}>
                   <Field.Root>
                     <Field.Label>Issuer Name</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.issuerName}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.issuerName} disabled />
                   </Field.Root>
 
                   <Field.Root>
                     <Field.Label>Issuer Type</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.issuerType}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.issuerType} disabled />
                   </Field.Root>
-                  </HStack>
+                </HStack>
 
-                  <HStack gap={4} mb={4}>
+                <HStack gap={4} mb={4}>
                   <Field.Root>
                     <Field.Label>Ticker</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.ticker}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.ticker} disabled />
                   </Field.Root>
 
                   <Field.Root>
                     <Field.Label>ISIN</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.isin}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.isin} disabled />
                   </Field.Root>
-                  </HStack>
+                </HStack>
 
-                  <HStack gap={4} mb={4}>
-
+                <HStack gap={4} mb={4}>
                   <Field.Root>
                     <Field.Label>CUSIP</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.cusip}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.cusip} disabled />
                   </Field.Root>
 
                   <Field.Root>
                     <Field.Label>SEDOL</Field.Label>
-                    <Input
-
-                      value={validatedData.vrequest.sedol}
-                      disabled
-                    />
+                    <Input value={validatedData.vrequest.sedol} disabled />
                   </Field.Root>
-                  </HStack>
+                </HStack>
 
-                  <HStack gap={4} mb={4}>
-
-
+                <HStack gap={4} mb={4}>
                   <Field.Root>
                     <Field.Label>Restriction Category</Field.Label>
                     <NativeSelect.Root>
@@ -251,7 +217,6 @@ export function ProceedWallCrossDialog({
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
-
     </Dialog.Root>
   );
 }
