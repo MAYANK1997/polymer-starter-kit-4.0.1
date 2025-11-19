@@ -1,163 +1,82 @@
-import { Box, Heading, HStack, Badge } from '@chakra-ui/react';
+import { Table, Spinner, Box } from '@chakra-ui/react';
+import { Ticker } from '../lib/supabase';
 
-interface HeaderProps {
-  selectedTicker: string | null;
+interface TickerTableProps {
+  tickers: Ticker[];
+  selectedTicker: Ticker | null;
+  onSelectTicker: (ticker: Ticker) => void;
+  loading: boolean;
 }
 
-export function Header({ selectedTicker }: HeaderProps) {
-  return (
-    <Box bg="gray.900" borderBottom="1px solid" borderColor="gray.700" px={6} py={4}>
-      <HStack justifyContent="space-between" alignItems="center">
-        <HStack gap={4}>
-          <Heading size="lg" color="white">Alpha Theory Dashboard</Heading>
-          {selectedTicker && (
-            <Badge colorScheme="blue" fontSize="md" px={3} py={1}>
-              {selectedTicker}
-            </Badge>
-          )}
-        </HStack>
-        <HStack gap={6} color="gray.300" fontSize="sm">
-          <Box>
-            <Box as="span" color="gray.500">Price:</Box>{' '}
-            <Box as="span" color="white" fontWeight="semibold">1609.50</Box>
-          </Box>
-          <Box>
-            <Box as="span" color="gray.500">SO:</Box>{' '}
-            <Box as="span" color="white" fontWeight="semibold">0.0M</Box>
-          </Box>
-          <Box>
-            <Box as="span" color="gray.500">MC:</Box>{' '}
-            <Box as="span" color="white" fontWeight="semibold">$63.6B</Box>
-          </Box>
-          <Box>
-            <Box as="span" color="gray.500">ND:</Box>{' '}
-            <Box as="span" color="white" fontWeight="semibold">349.9B</Box>
-          </Box>
-          <Box>
-            <Box as="span" color="gray.500">EV:</Box>{' '}
-            <Box as="span" color="white" fontWeight="semibold">0M</Box>
-          </Box>
-        </HStack>
-      </HStack>
-    </Box>
-  );
-}
-
-
-
-import { useState, useEffect } from 'react';
-import { Box, Grid, GridItem } from '@chakra-ui/react';
-import { supabase, Ticker, TickerScenario, TickerMetric } from './lib/supabase';
-import { Header } from './components/Header';
-import { TickerTable } from './components/TickerTable';
-import { ScenarioTable } from './components/ScenarioTable';
-import { MetricsTable } from './components/MetricsTable';
-
-function App() {
-  const [tickers, setTickers] = useState<Ticker[]>([]);
-  const [selectedTicker, setSelectedTicker] = useState<Ticker | null>(null);
-  const [scenarios, setScenarios] = useState<TickerScenario[]>([]);
-  const [metrics, setMetrics] = useState<TickerMetric[]>([]);
-  const [loadingTickers, setLoadingTickers] = useState(true);
-  const [loadingScenarios, setLoadingScenarios] = useState(false);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
-
-  useEffect(() => {
-    fetchTickers();
-  }, []);
-
-  useEffect(() => {
-    if (selectedTicker) {
-      fetchScenarios(selectedTicker.id);
-      fetchMetrics(selectedTicker.id);
-    }
-  }, [selectedTicker]);
-
-  async function fetchTickers() {
-    try {
-      const { data, error } = await supabase
-        .from('tickers')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      setTickers(data || []);
-      if (data && data.length > 0) {
-        setSelectedTicker(data[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching tickers:', error);
-    } finally {
-      setLoadingTickers(false);
-    }
-  }
-
-  async function fetchScenarios(tickerId: string) {
-    setLoadingScenarios(true);
-    try {
-      const { data, error } = await supabase
-        .from('ticker_scenarios')
-        .select('*')
-        .eq('ticker_id', tickerId);
-
-      if (error) throw error;
-      setScenarios(data || []);
-    } catch (error) {
-      console.error('Error fetching scenarios:', error);
-    } finally {
-      setLoadingScenarios(false);
-    }
-  }
-
-  async function fetchMetrics(tickerId: string) {
-    setLoadingMetrics(true);
-    try {
-      const { data, error } = await supabase
-        .from('ticker_metrics')
-        .select('*')
-        .eq('ticker_id', tickerId)
-        .order('fiscal_year', { ascending: true });
-
-      if (error) throw error;
-      setMetrics(data || []);
-    } catch (error) {
-      console.error('Error fetching metrics:', error);
-    } finally {
-      setLoadingMetrics(false);
-    }
+export function TickerTable({ tickers, selectedTicker, onSelectTicker, loading }: TickerTableProps) {
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+        <Spinner size="xl" color="blue.500" />
+      </Box>
+    );
   }
 
   return (
-    <Box minHeight="100vh" bg="gray.950">
-      <Header selectedTicker={selectedTicker?.ticker || null} />
-
-      <Grid templateColumns="1fr 400px" gap={4} p={4} height="calc(100vh - 80px)">
-        <GridItem>
-          <Box bg="gray.900" borderRadius="lg" border="1px solid" borderColor="gray.800" p={4} height="100%">
-            <TickerTable
-              tickers={tickers}
-              selectedTicker={selectedTicker}
-              onSelectTicker={setSelectedTicker}
-              loading={loadingTickers}
-            />
-          </Box>
-        </GridItem>
-
-        <GridItem>
-          <Box display="flex" flexDirection="column" gap={4} height="100%">
-            <Box bg="gray.900" borderRadius="lg" border="1px solid" borderColor="gray.800" p={4} flex="1">
-              <ScenarioTable scenarios={scenarios} loading={loadingScenarios} />
-            </Box>
-
-            <Box bg="gray.900" borderRadius="lg" border="1px solid" borderColor="gray.800" p={4} flex="1">
-              <MetricsTable metrics={metrics} loading={loadingMetrics} />
-            </Box>
-          </Box>
-        </GridItem>
-      </Grid>
+    <Box overflowX="auto" overflowY="auto" maxHeight="calc(100vh - 180px)">
+      <Table.Root size="sm" variant="outline">
+        <Table.Header bg="gray.800">
+          <Table.Row>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2}>L/S</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2}>Ticker</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2} textAlign="right">Shares</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2} textAlign="right">Price (Local)</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2} textAlign="right">Target</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2}>Period</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2}>Val Method</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2} textAlign="right">Estimate</Table.ColumnHeader>
+            <Table.ColumnHeader color="gray.300" fontSize="xs" px={2} py={2} textAlign="right">Multiple</Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {tickers.map((ticker) => (
+            <Table.Row
+              key={ticker.id}
+              bg={selectedTicker?.id === ticker.id ? 'blue.900' : 'gray.900'}
+              _hover={{ bg: 'gray.800', cursor: 'pointer' }}
+              onClick={() => onSelectTicker(ticker)}
+            >
+              <Table.Cell px={2} py={1}>
+                <Box
+                  width="16px"
+                  height="16px"
+                  borderRadius="sm"
+                  bg="green.500"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize="10px"
+                  fontWeight="bold"
+                  color="white"
+                >
+                  L
+                </Box>
+              </Table.Cell>
+              <Table.Cell color="white" fontSize="xs" px={2} py={1}>{ticker.ticker}</Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1} textAlign="right">-</Table.Cell>
+              <Table.Cell color="white" fontSize="xs" px={2} py={1} textAlign="right">
+                {ticker.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1} textAlign="right">
+                {ticker.target || '0'}
+              </Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1}>{ticker.period || '-'}</Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1}>{ticker.val_method || '-'}</Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1} textAlign="right">
+                {ticker.estimate.toFixed(2)}
+              </Table.Cell>
+              <Table.Cell color="gray.300" fontSize="xs" px={2} py={1} textAlign="right">
+                {ticker.multiple.toFixed(1)}x
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
     </Box>
   );
 }
-
-export default App;
-
