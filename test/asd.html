@@ -1,10 +1,10 @@
-{
+ {
     headerName: "Link",
-    field: "link",                // API field with "url1;url2;url3"
+    field: "link",
     autoHeight: true,
     wrapText: true,
-    cellRenderer: (params) => {
-      const value = params.value ?? "";
+    cellRenderer: (params: ICellRendererParams) => {
+      const value = (params.value ?? "") as string;
 
       if (!value.trim()) return "";
 
@@ -13,30 +13,33 @@
         .map((s) => s.trim())
         .filter(Boolean);
 
-      return (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {links.map((url, index) => (
-            <a
-              key={index}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: "none" }}
-            >
-              <button
-                style={{
-                  padding: "4px 10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "6px",
-                  background: "white",
-                  cursor: "pointer",
-                }}
-              >
-                {links.length > 1 ? `Download ${index + 1}` : "Download"}
-              </button>
-            </a>
-          ))}
-        </div>
-      );
+      if (!links.length) return "";
+
+      // Build DOM manually (no JSX)
+      const container = document.createElement("div");
+      container.style.display = "flex";
+      container.style.flexWrap = "wrap";
+      container.style.gap = "8px";
+
+      links.forEach((url, index) => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+
+        const btn = document.createElement("button");
+        btn.textContent =
+          links.length > 1 ? `Download ${index + 1}` : "Download";
+        btn.style.padding = "4px 10px";
+        btn.style.border = "1px solid #E2E8F0";
+        btn.style.borderRadius = "6px";
+        btn.style.background = "white";
+        btn.style.cursor = "pointer";
+
+        a.appendChild(btn);
+        container.appendChild(a);
+      });
+
+      return container;
     },
   },
