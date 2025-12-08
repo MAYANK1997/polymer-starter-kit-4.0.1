@@ -1,35 +1,15 @@
- {
-    headerName: "Link",
-    field: "link",
-    autoHeight: true,
-    wrapText: true,
-    cellRenderer: (params: ICellRendererParams) => {
-      const value = (params.value ?? "") as string;
-
-      if (!value.trim()) return "";
-
-      const links = value
-        .split(";")
-        .map((s) => s.trim())
-        .filter(Boolean);
-
-      if (!links.length) return "";
-
-      // Build DOM manually (no JSX)
-      const container = document.createElement("div");
+const container = document.createElement("div");
       container.style.display = "flex";
       container.style.flexWrap = "wrap";
       container.style.gap = "8px";
 
-      links.forEach((url, index) => {
+      links.forEach((url: string, index: number) => {
         const a = document.createElement("a");
-        a.href = url;
+        const downloadURL = "http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=";
+        a.href = downloadURL+url;
         a.target = "_blank";
-        a.rel = "noopener noreferrer";
-
         const btn = document.createElement("button");
-        btn.textContent =
-          links.length > 1 ? `Download ${index + 1}` : "Download";
+        btn.textContent = links.length > 1 ? `Download ${index + 1}` : "Download";
         btn.style.padding = "4px 10px";
         btn.style.border = "1px solid #E2E8F0";
         btn.style.borderRadius = "6px";
@@ -38,8 +18,8 @@
 
         a.appendChild(btn);
         container.appendChild(a);
-      });
+    })
 
-      return container;
-    },
-  },
+    console.log(container);
+    return container;
+ 
