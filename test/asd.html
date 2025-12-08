@@ -1,25 +1,37 @@
-const container = document.createElement("div");
-      container.style.display = "flex";
-      container.style.flexWrap = "wrap";
-      container.style.gap = "8px";
-
-      links.forEach((url: string, index: number) => {
-        const a = document.createElement("a");
-        const downloadURL = "http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=";
-        a.href = downloadURL+url;
-        a.target = "_blank";
-        const btn = document.createElement("button");
-        btn.textContent = links.length > 1 ? `Download ${index + 1}` : "Download";
-        btn.style.padding = "4px 10px";
-        btn.style.border = "1px solid #E2E8F0";
-        btn.style.borderRadius = "6px";
-        btn.style.background = "white";
-        btn.style.cursor = "pointer";
-
-        a.appendChild(btn);
-        container.appendChild(a);
-    })
-
-    console.log(container);
-    return container;
- 
+return React.createElement(
+    "div",
+    {
+      style: {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "8px",
+      },
+    },
+    links.map((url, index) =>
+      React.createElement(
+        "a",
+        {
+          key: index,
+          href: downloadURL + url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          style: { textDecoration: "none" },
+        },
+        React.createElement(
+          "button",
+          {
+            style: {
+              padding: "4px 10px",
+              border: "1px solid #E2E8F0",
+              borderRadius: "6px",
+              background: "white",
+              cursor: "pointer",
+            },
+          },
+          links.length > 1 ? `Download ${index + 1}` : "Download"
+        )
+      )
+    )
+  );
+};
+✅ Use It in columnDe
