@@ -1,130 +1,42 @@
-import {
-  Dialog,
-  Portal,
-  CloseButton,
-  Button,
-  HStack,
-  VStack,
-  Text,
-  Box,
-  Table,
-  Tabs,
-} from "@chakra-ui/react";
+{
+    headerName: "Link",
+    field: "link",                // API field with "url1;url2;url3"
+    autoHeight: true,
+    wrapText: true,
+    cellRenderer: (params) => {
+      const value = params.value ?? "";
 
-interface Holding { [key: string]: any; }
-interface Trade { [key: string]: any; }
+      if (!value.trim()) return "";
 
-interface IssuerDetails {
-  wcId: number | null;
-  validatedIssuerName?: string;
-  vrequest?: Record<string, any>;
-  hgList?: Holding[];
-  thList?: Trade[];
-}
+      const links = value
+        .split(";")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
-interface IssuerHoldingsModalProps {
-  open: boolean;
-  onClose: () => void;
-  issuerDetails: IssuerDetails;
-  onProceed: () => void;
-  onRefuse: () => void;
-}
-
-export function IssuerHoldingsModal({
-  open,
-  onClose,
-  issuerDetails,
-  onProceed,
-  onRefuse,
-}: IssuerHoldingsModalProps) {
-  if (!issuerDetails) return null;
-  const { hgList = [], thList = [] } = issuerDetails;
-
-  return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content bg="gray.800" color="white" maxW="90vw" p={4}>
-            <Dialog.Header>
-              <Text fontSize="lg" fontWeight="bold">
-                Issuer Holdings - {issuerDetails.validatedIssuerName || issuerDetails.vrequest?.issuerName || "-"}
-              </Text>
-            </Dialog.Header>
-            <Dialog.CloseTrigger asChild>
-              <CloseButton position="absolute" top={2} right={2} />
-            </Dialog.CloseTrigger>
-
-            <Dialog.Body>
-              <VStack mb={6} align="stretch">
-                {issuerDetails.vrequest && (
-                  <Box bg="gray.700" p={4} borderRadius="md">
-                    <Text fontWeight="bold" mb={2}>Issuer Details</Text>
-                    <HStack mb={8} flexWrap="wrap">
-                      {Object.entries(issuerDetails.vrequest).map(([key, value]) => (
-                        <Text key={key} fontSize="sm"><strong>{key}:</strong> {String(value) ?? "-"}</Text>
-                      ))}
-                    </HStack>
-                  </Box>
-                )}
-
-                <Tabs.Root defaultValue="holdings">
-                  <Tabs.List mb={4}>
-                    <Tabs.Trigger value="holdings">Holdings</Tabs.Trigger>
-                    <Tabs.Trigger value="trades">Trade History</Tabs.Trigger>
-                  </Tabs.List>
-
-                  <Tabs.Content value="holdings">
-                    <Box overflowX="auto">
-                      <Table.Root size="sm">
-                        <Table.Header>
-                          <Table.Row>
-                            {hgList[0] && Object.keys(hgList[0]).map((key) => <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>)}
-                          </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                          {hgList.map((holding, idx) => (
-                            <Table.Row key={idx}>
-                              {Object.keys(holding).map((key) => (
-                                <Table.Cell key={key}>{holding[key]?.toString() ?? "-"}</Table.Cell>
-                              ))}
-                            </Table.Row>
-                          ))}
-                        </Table.Body>
-                      </Table.Root>
-                    </Box>
-                  </Tabs.Content>
-
-                  <Tabs.Content value="trades">
-                    <Box overflowX="auto">
-                      <Table.Root size="sm">
-                        <Table.Header>
-                          <Table.Row>
-                            {thList[0] && Object.keys(thList[0]).map((key) => <Table.ColumnHeader key={key}>{key}</Table.ColumnHeader>)}
-                          </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                          {thList.map((trade, idx) => (
-                            <Table.Row key={idx}>
-                              {Object.keys(trade).map((key) => <Table.Cell key={key}>{trade[key]?.toString() ?? "-"}</Table.Cell>)}
-                            </Table.Row>
-                          ))}
-                        </Table.Body>
-                      </Table.Root>
-                    </Box>
-                  </Tabs.Content>
-                </Tabs.Root>
-
-                <HStack justify="flex-end" mb={3}>
-                  <Button variant="outline" colorScheme="gray" onClick={onClose}>Close</Button>
-                  <Button onClick={onRefuse} colorScheme="red">Refuse Wall Cross</Button>
-                  <Button onClick={onProceed} colorScheme="green">Proceed to Wall Cross</Button>
-                </HStack>
-              </VStack>
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
-  );
-}
+      return (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {links.map((url, index) => (
+            <a
+              key={index}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "none" }}
+            >
+              <button
+                style={{
+                  padding: "4px 10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "6px",
+                  background: "white",
+                  cursor: "pointer",
+                }}
+              >
+                {links.length > 1 ? `Download ${index + 1}` : "Download"}
+              </button>
+            </a>
+          ))}
+        </div>
+      );
+    },
+  },
