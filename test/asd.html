@@ -1,1 +1,273 @@
 Allow user to modify the following fields: Person/Firm , Location, Info.
+
+// NewsletterPortalPage
+import { NewsletterPortalTable } from './NewsletterPortalTable';
+import { Box, IconButton, Input, InputGroup } from '@chakra-ui/react';
+import { Colors, useColorMode } from '@loim/loim-ui';
+import { LuSearch, LuPencil, LuSave } from 'react-icons/lu';
+import { useState } from 'react';
+
+export const NewsletterPortalPage = () => {
+
+  const { colorMode } = useColorMode();
+  const borderColor = colorMode === 'dark' ? Colors.gray[800].value : Colors.gray[100].value;
+
+  const [editMode, setEditMode] = useState(false);
+
+  return (
+    <>
+      <Box>
+
+        <Box
+          bg={colorMode === 'dark' ? Colors.gray[900].value : Colors.gray[100].value}
+          borderBottom={`1px solid ${borderColor}`}
+          padding='2.5rem 1.5rem'
+        >
+
+          <InputGroup width="40vw" border="1px solid gray" startElement={<LuSearch />}>
+            <Input placeholder="Search ..." />
+          </InputGroup>
+
+          {!editMode && (
+
+            <IconButton marginLeft="1rem" aria-label='Edit' onClick={() => setEditMode(true)}>
+              <LuPencil />
+            </IconButton>
+
+          )}
+
+          {editMode && (
+
+            <IconButton marginLeft="1rem" aria-label='Save' onClick={() => setEditMode(false)}>
+              <LuSave />
+            </IconButton>
+
+          )}
+
+
+
+        </Box>
+
+
+      </Box>
+      <NewsletterPortalTable />
+
+    </>
+  );
+};
+
+
+// NewsletterTable.tsx
+
+import { useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+
+import { newsletterPortalColumnDefs } from './newsletter-portal-column-defs';
+import { useAgGridTheme } from '@loim/loim-ui';
+
+export const NewsletterPortalTable = () => {
+  const [data, setData] = useState([]);
+  const [columnDef] = useState(newsletterPortalColumnDefs);
+  const [loading, setLoading] = useState(false);
+
+  const {agGridTheme} = useAgGridTheme();
+  
+
+  useEffect(() => {
+    
+    
+
+    setLoading(true);
+
+   
+
+    fetch('http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        cache: 'no-cache'
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setData(data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [setData, setLoading]);
+
+  return (
+    <div style={{ margin:'2px', padding: '2px', height: '74.5vh', width: '100vw' }}>
+      
+      <AgGridReact rowData={data} columnDefs={columnDef} theme={agGridTheme} loading={loading} />
+    </div>
+  );
+};
+
+
+// columndefs.ts
+import type { ColDef } from 'ag-grid-community';
+
+import React from 'react';
+
+
+const DownloadCellRenderer = (params: any) => {
+
+
+
+  const downloadURL = "http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=";
+
+  let link = params.value.replaceAll("\\","%5C");
+
+  let fileLocationArr = link.split(";").map((s: string) => s.trim()).filter(Boolean);
+
+  return React.createElement(
+    "div",
+    {
+      style: {
+        display: "flex",
+        flexDirection: "column",   // one link per row
+        justifyContent: "center",  // vertical centering
+        alignItems: "center",      // horizontal centering
+        rowGap: "4px",
+        height: "100%",
+        textAlign: "center",
+      },
+    },
+    fileLocationArr.map((url: string, index: number) => {
+      
+      const fileName = url.split("%5C").pop() || url;
+
+      return React.createElement(
+        "a",
+        {
+          key: index,
+          href: downloadURL + url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          style: {
+            color: "#3182CE",           
+            textDecoration: "underline",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          },
+        },
+        fileName
+      );
+    })
+  );
+  
+}
+
+export const newsletterPortalColumnDefs: Array<ColDef> = [
+ 
+  
+  {
+    headerName: 'Date',
+    headerClass: 'category-child',
+    field: 'asOfDate',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 120
+  },
+
+
+    
+  {
+    headerName: 'Section',
+    headerClass: 'category-child',
+    field: 'section',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 200
+  },
+
+  
+  {
+    headerName: 'Strategy',
+    headerClass: 'category-child',
+    field: 'strategy',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 120
+  },
+
+  {
+    headerName: 'Person/Firm',
+    headerClass: 'category-child',
+    field: 'personFirm',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 150
+  },
+
+  {
+    headerName: 'Location',
+    headerClass: 'category-child',
+    field: 'countryRegion',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 150
+  },
+
+
+  {
+    headerName: 'Information',
+    headerClass: 'category-child',
+    field: 'description',
+    sortable: true,
+    resizable: true,
+    filter:"agTextColumnFilter",
+    suppressMenu:true,
+    floatingFilter:true,
+    width: 500,
+    autoHeight: true,
+    wrapText: true,
+  },
+
+
+  {
+    headerName: "Link",
+    field: "fileLocation",
+    autoHeight: true,
+    wrapText: false,
+    sortable: true,
+    resizable: true,
+    suppressMenu:true,
+    width: 250,
+    cellRenderer: DownloadCellRenderer,
+    
+    
+
+}
+
+  
+
+
+
+
+
+  
+];
+
+
+
+
