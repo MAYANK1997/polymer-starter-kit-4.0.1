@@ -1,117 +1,16 @@
-// NewsletterPortalPage.tsx
-import { NewsletterPortalTable } from './NewsletterPortalTable';
-import { Box, IconButton, Input, InputGroup } from '@chakra-ui/react';
-import { Colors, useColorMode } from '@loim/loim-ui';
-import { LuSearch, LuPencil, LuSave } from 'react-icons/lu';
-import { useState } from 'react';
-import type { GridApi } from 'ag-grid-community';
+\const formatDate = (params: any) => {
+  if (!params.value) return "";
 
-export const NewsletterPortalPage = () => {
-  const { colorMode } = useColorMode();
-  const borderColor =
-    colorMode === 'dark' ? Colors.gray[800].value : Colors.gray[100].value;
+  const date = new Date(params.value);
+  if (isNaN(date.getTime())) return params.value;
 
-  const [editMode, setEditMode] = useState(false);
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [searchText, setSearchText] = useState('');   // 🔍 global search text
+  const day = date.getDate().toString().padStart(2, "0");
 
-  const handleSave = async () => {
-    if (!gridApi) return;
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[date.getMonth()];
 
-    const allRows: any[] = [];
-    gridApi.forEachNode((node) => {
-      if (node.data) {
-        allRows.push(node.data);
-      }
-    });
+  const year = date.getFullYear(); // full 4-digit year
 
-    try {
-      const response = await fetch(
-        'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            cache: 'no-cache',
-          },
-          body: JSON.stringify(allRows),
-        }
-      );
-
-      if (!response.ok) {
-        console.error('Save failed');
-        return;
-      }
-
-      setEditMode(false);
-    } catch (err) {
-      console.error('Error while saving newsletter data:', err);
-    }
-  };
-
-  // 🔍 Global AG Grid search handler
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchText(value);
-
-    if (gridApi) {
-      gridApi.setQuickFilter(value);   // ← AG Grid global filter
-    }
-  };
-
-  return (
-    <>
-      <Box>
-        <Box
-          bg={
-            colorMode === 'dark'
-              ? Colors.gray[900].value
-              : Colors.gray[100].value
-          }
-          borderBottom={`1px solid ${borderColor}`}
-          padding="2.5rem 1.5rem"
-          display="flex"
-          alignItems="center"
-        >
-          <InputGroup
-            width="40vw"
-            border="1px solid gray"
-            startElement={<LuSearch />}
-          >
-            <Input
-              placeholder="Search ..."
-              value={searchText}
-              onChange={handleSearchChange}   // 🔗 wired to AG Grid quick filter
-            />
-          </InputGroup>
-
-          {!editMode && (
-            <IconButton
-              marginLeft="1rem"
-              aria-label="Edit"
-              onClick={() => setEditMode(true)}
-            >
-              <LuPencil />
-            </IconButton>
-          )}
-
-          {editMode && (
-            <IconButton
-              marginLeft="1rem"
-              aria-label="Save"
-              onClick={handleSave}
-            >
-              <LuSave />
-            </IconButton>
-          )}
-        </Box>
-      </Box>
-
-      <NewsletterPortalTable
-        editMode={editMode}
-        onGridReadyExternal={setGridApi}   // keeps working as before
-      />
-    </>
-  );
+  return `${day}-${month}-${year}`;
 };
