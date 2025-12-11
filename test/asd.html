@@ -1,39 +1,116 @@
 // NewsletterPortalPage.tsx
-import React, { useState } from "react";
-import { NewsletterPortalTable } from "./NewsletterPortalTable";
-import { Box, Input, InputGroup } from "@chakra-ui/react";
-import { Colors, useColorMode } from "@loim/loim-ui";
-import { LuSearch } from "react-icons/lu";
+import { NewsletterPortalTable } from './NewsletterPortalTable';
+import { Box, IconButton, Input, InputGroup } from '@chakra-ui/react';
+import { Colors, useColorMode } from '@loim/loim-ui';
+import { LuSearch, LuPencil, LuSave } from 'react-icons/lu';
+import { useState } from 'react';
+import type { GridApi } from 'ag-grid-community';
 
-export const NewsletterPortalPage: React.FC = () => {
+export const NewsletterPortalPage = () => {
   const { colorMode } = useColorMode();
   const borderColor =
-    colorMode === "dark" ? Colors.gray[800].value : Colors.gray[100].value;
+    colorMode === 'dark' ? Colors.gray[800].value : Colors.gray[100].value;
 
-  // quick filter text for AG Grid
-  const [searchText, setSearchText] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const [searchText, setSearchText] = useState('');   // 🔍 global search text
+
+  const handleSave = async () => {
+    if (!gridApi) return;
+
+    const allRows: any[] = [];
+    gridApi.forEachNode((node) => {
+      if (node.data) {
+        allRows.push(node.data);
+      }
+    });
+
+    try {
+      const response = await fetch(
+        'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            cache: 'no-cache',
+          },
+          body: JSON.stringify(allRows),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Save failed');
+        return;
+      }
+
+      setEditMode(false);
+    } catch (err) {
+      console.error('Error while saving newsletter data:', err);
+    }
+  };
+
+  // 🔍 Global AG Grid search handler
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+    setSearchText(e.target.value);
+
+   
+  };
 
   return (
     <>
       <Box>
         <Box
-          bg={colorMode === "dark" ? Colors.gray[900].value : Colors.gray[100].value}
+          bg={
+            colorMode === 'dark'
+              ? Colors.gray[900].value
+              : Colors.gray[100].value
+          }
           borderBottom={`1px solid ${borderColor}`}
           padding="2.5rem 1.5rem"
+          display="flex"
+          alignItems="center"
         >
-          <InputGroup width="40vw" border="1px solid gray" style={{ display: "inline-flex" }}>
+          <InputGroup
+            width="40vw"
+            border="1px solid gray"
+            startElement={<LuSearch />}
+          >
             <Input
               placeholder="Search ..."
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              aria-label="Global search"
-              startElement={<LuSearch />}
+              onChange={handleSearchChange}   // 🔗 wired to AG Grid quick filter
             />
           </InputGroup>
+
+          {!editMode && (
+            <IconButton
+              marginLeft="1rem"
+              aria-label="Edit"
+              onClick={() => setEditMode(true)}
+            >
+              <LuPencil />
+            </IconButton>
+          )}
+
+          {editMode && (
+            <IconButton
+              marginLeft="1rem"
+              aria-label="Save"
+              onClick={handleSave}
+            >
+              <LuSave />
+            </IconButton>
+          )}
         </Box>
       </Box>
 
-      <NewsletterPortalTable quickFilterText={searchText} />
+      <NewsletterPortalTable
+        editMode={editMode}
+        onGridReadyExternal={setGridApi}  
+        quickFilterText={searchText}
+      />
     </>
   );
 };
@@ -41,112 +118,76 @@ export const NewsletterPortalPage: React.FC = () => {
 
 
 
-// NewsletterPortalTable.tsx
-import React, { useEffect, useState, useCallback } from "react";
-import { AgGridReact } from "ag-grid-react";
-import type { GridReadyEvent, CellDoubleClickedEvent, CellValueChangedEvent } from "ag-grid-community";
-import { newsletterPortalColumnDefs } from "./newsletter-portal-column-defs";
-import { useAgGridTheme } from "@loim/loim-ui";
+  import { useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import type { GridApi, GridReadyEvent } from 'ag-grid-community';
+
+import { newsletterPortalColumnDefs } from './newsletter-portal-column-defs';
+import { useAgGridTheme } from '@loim/loim-ui';
 
 type NewsletterPortalTableProps = {
-  quickFilterText?: string;
+  editMode: boolean;
+  quickFilterText: string;
+  onGridReadyExternal?: (api: GridApi) => void;
 };
 
-export const NewsletterPortalTable: React.FC<NewsletterPortalTableProps> = ({ quickFilterText = "" }) => {
-  const [rowData, setRowData] = useState<any[]>([]);
-  const { agGridTheme } = useAgGridTheme();
+export const NewsletterPortalTable = ({
+  editMode,
+  quickFilterText,
+  onGridReadyExternal,
+}: NewsletterPortalTableProps) => {
+  const [data, setData] = useState<any[]>([]);
+  const [columnDef] = useState(newsletterPortalColumnDefs);
   const [loading, setLoading] = useState(false);
+
+  const { agGridTheme } = useAgGridTheme();
 
   useEffect(() => {
     setLoading(true);
-    fetch("http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cache: "no-cache",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setRowData(data ?? []);
-      })
-      .catch((err) => {
-        console.error("Error fetching newsletter data", err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
 
-  const handleGridReady = useCallback((params: GridReadyEvent) => {
-    // nothing special needed here; kept for future use
-  }, []);
-
-  // Start editing on double click
-  const onCellDoubleClicked = (params: CellDoubleClickedEvent) => {
-    // Start editing the clicked cell
-    try {
-      params.api.startEditingCell({
-        rowIndex: params.rowIndex,
-        colKey: params.colDef.field as string,
-      });
-    } catch (err) {
-      // Some AG versions/typings might differ — fallback
-      params.api.startEditingCell({
-        rowIndex: params.node.rowIndex,
-        colKey: params.colDef.field as string,
-      });
-    }
-  };
-
-  // After a cell is changed (editing finished), POST the entire row to API
-  const onCellValueChanged = async (params: CellValueChangedEvent) => {
-    // params.data is the full row
-    const updatedRow = params.data;
-
-    // Optional: you might want to remove internal fields before sending
-    // For now we'll send entire object as requested
-    try {
-      const res = await fetch("http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter", {
-        method: "POST",
-        credentials: "include",
+    fetch(
+      'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
+      {
+        method: 'GET',
+        credentials: 'include',
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          cache: "no-cache",
+          'Content-Type': 'application/json; charset=utf-8',
+          cache: 'no-cache',
         },
-        body: JSON.stringify([updatedRow]), // send as array of rows (or single object if API expects)
-      });
-
-      if (!res.ok) {
-        console.error("Failed to save row", await res.text());
-        // Optionally show a toast or revert change
-      } else {
-        // success: optionally update local state or show toast
-        // We'll update the local rowData (params.node already has new data)
       }
-    } catch (err) {
-      console.error("Error posting updated row", err);
-    }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleGridReady = (params: GridReadyEvent) => {
+    onGridReadyExternal?.(params.api);
   };
 
   return (
-    <div style={{ margin: "2px", padding: "2px", height: "74.5vh", width: "100vw" }}>
+    <div
+      style={{
+        margin: '2px',
+        padding: '2px',
+        height: '80vh',
+        width: '100vw',
+      }}
+    >
       <AgGridReact
-        rowData={rowData}
-        columnDefs={newsletterPortalColumnDefs}
-        onGridReady={handleGridReady}
-        onCellDoubleClicked={onCellDoubleClicked}
-        onCellValueChanged={onCellValueChanged}
-        frameworkComponents={{}}
-        stopEditingWhenCellsLoseFocus={true}
-        defaultColDef={{
-          sortable: true,
-          resizable: true,
-          filter: true,
-        }}
-        quickFilterText={quickFilterText}
-        animateRows={true}
-        loadingOverlayComponentParams={{ loading }}
+        key={editMode ? 'edit-mode' : 'view-mode'} // force refresh to update highlight/editability
+        rowData={data}
+        columnDefs={columnDef}
         theme={agGridTheme}
+        loading={loading}
+        context={{ editMode }}
+        onGridReady={handleGridReady}
+        stopEditingWhenCellsLoseFocus={true}
+        quickFilterText={quickFilterText}
       />
     </div>
   );
@@ -155,55 +196,49 @@ export const NewsletterPortalTable: React.FC<NewsletterPortalTableProps> = ({ qu
 
 
 
-    // newsletter-portal-column-defs.tsx
-import type { ColDef } from "ag-grid-community";
-import React from "react";
+import type { ColDef } from 'ag-grid-community';
+import React from 'react';
 
-/** Date formatter: dd-Mmm-yyyy (10-Dec-2025) */
-const formatDate = (params: any) => {
-  if (!params.value) return "";
-  const d = new Date(params.value);
-  if (isNaN(d.getTime())) return params.value;
-  const day = d.getDate().toString().padStart(2, "0");
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const month = monthNames[d.getMonth()];
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
-};
 
-/* Download cell renderer (stacked links, file name shown) */
 const DownloadCellRenderer = (params: any) => {
-  const downloadURL = "http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=";
-  let link = params.value?.replaceAll("\\", "%5C") ?? "";
-  const fileLocationArr = link.split(";").map((s: string) => s.trim()).filter(Boolean);
+  const downloadURL =
+    'http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=';
+
+  let link = params.value?.replaceAll('\\', '%5C') ?? '';
+
+  const fileLocationArr = link
+    .split(';')
+    .map((s: string) => s.trim())
+    .filter(Boolean);
 
   return React.createElement(
-    "div",
+    'div',
     {
       style: {
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        rowGap: "4px",
-        height: "100%",
-        textAlign: "center",
+        display: 'flex',
+        flexDirection: 'column', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        rowGap: '4px',
+        height: '100%',
+        textAlign: 'center',
       },
     },
-    fileLocationArr.map((url: string, idx: number) => {
-      const fileName = url.split("%5C").pop() || url;
+    fileLocationArr.map((url: string, index: number) => {
+      const fileName = url.split('%5C').pop() || url;
+
       return React.createElement(
-        "a",
+        'a',
         {
-          key: idx,
+          key: index,
           href: downloadURL + url,
-          target: "_blank",
-          rel: "noopener noreferrer",
+          target: '_blank',
+          rel: 'noopener noreferrer',
           style: {
-            color: "#3182CE",
-            textDecoration: "underline",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
+            color: '#3182CE',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
           },
         },
         fileName
@@ -212,60 +247,122 @@ const DownloadCellRenderer = (params: any) => {
   );
 };
 
-/* COLUMN DEFINITIONS */
+const formatDate = (params: any) => {
+  if (!params.value) return "";
+
+  const date = new Date(params.value);
+  if (isNaN(date.getTime())) return params.value;
+
+  const day = date.getDate().toString().padStart(2, "0");
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[date.getMonth()];
+
+  const year = date.getFullYear(); // full 4-digit year
+
+  return `${day}-${month}-${year}`;
+};
+
+
 export const newsletterPortalColumnDefs: Array<ColDef> = [
   {
-    headerName: "Date",
-    field: "asOfDate",
-    valueFormatter: formatDate,
-    width: 120,
-    filter: "agDateColumnFilter",
+    headerName: 'Date',
+    field: 'asOfDate',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex: 1,
+    valueFormatter: formatDate
   },
 
   {
-    headerName: "Section",
-    field: "section",
-    width: 200,
-    filter: "agTextColumnFilter",
+    headerName: 'Section',
+    field: 'section',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex: 1.2,
+    autoHeight: true,
+    wrapText: true,
   },
 
   {
-    headerName: "Strategy",
-    field: "strategy",
-    width: 120,
-    filter: "agTextColumnFilter",
+    headerName: 'Strategy',
+    field: 'strategy',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex: 1,
+    autoHeight: true,
+    wrapText: true,
   },
 
-  // Editable columns — editing triggered by double-click
+  
   {
-    headerName: "Person/Firm",
-    field: "personFirm",
-    width: 150,
-    editable: true, // cell becomes editable via AG Grid when editing started
-  },
-
-  {
-    headerName: "Location",
-    field: "countryRegion",
-    width: 150,
+    headerName: 'Person/Firm',
+    field: 'personFirm',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex:1.5,
     editable: true,
+    autoHeight: true,
+    wrapText: true,
+    
   },
 
+
   {
-    headerName: "Information",
-    field: "description",
-    width: 500,
+    headerName: 'Location',
+    field: 'countryRegion',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex:1.5,
+    editable: true,
+    wrapText: true,
+    autoHeight: true
+
+    
+  },
+
+ 
+  {
+    headerName: 'Information',
+    field: 'description',
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+    suppressMenu: true,
+    floatingFilter: true,
+    flex:3,
     autoHeight: true,
     wrapText: true,
     editable: true,
-    // use textarea-like editor? AG Grid default will handle editing; you can plug large text editor later
+   
   },
 
+
   {
-    headerName: "Link",
-    field: "fileLocation",
-    width: 250,
-    cellRenderer: DownloadCellRenderer,
+    headerName: 'Link',
+    field: 'fileLocation',
     autoHeight: true,
+    wrapText: false,
+    sortable: true,
+    resizable: true,
+    suppressMenu: true,
+    flex:2,
+    cellRenderer: DownloadCellRenderer,
   },
 ];
