@@ -1,61 +1,19 @@
-// NewsletterPortalPage.tsx
 import { NewsletterPortalTable } from './NewsletterPortalTable';
-import { Box, IconButton, Input, InputGroup } from '@chakra-ui/react';
+import { Box, Input, InputGroup } from '@chakra-ui/react';
 import { Colors, useColorMode } from '@loim/loim-ui';
-import { LuSearch, LuPencil, LuSave } from 'react-icons/lu';
+import { LuSearch } from 'react-icons/lu';
 import { useState } from 'react';
-import type { GridApi } from 'ag-grid-community';
 
 export const NewsletterPortalPage = () => {
   const { colorMode } = useColorMode();
   const borderColor =
     colorMode === 'dark' ? Colors.gray[800].value : Colors.gray[100].value;
 
-  const [editMode, setEditMode] = useState(false);
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  // quick filter text for AG Grid
   const [searchText, setSearchText] = useState('');   // 🔍 global search text
 
-  const handleSave = async () => {
-    if (!gridApi) return;
-
-    const allRows: any[] = [];
-    gridApi.forEachNode((node) => {
-      if (node.data) {
-        allRows.push(node.data);
-      }
-    });
-
-    try {
-      const response = await fetch(
-        'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            cache: 'no-cache',
-          },
-          body: JSON.stringify(allRows),
-        }
-      );
-
-      if (!response.ok) {
-        console.error('Save failed');
-        return;
-      }
-
-      setEditMode(false);
-    } catch (err) {
-      console.error('Error while saving newsletter data:', err);
-    }
-  };
-
-  // 🔍 Global AG Grid search handler
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  
     setSearchText(e.target.value);
-
-   
   };
 
   return (
@@ -80,35 +38,13 @@ export const NewsletterPortalPage = () => {
             <Input
               placeholder="Search ..."
               value={searchText}
-              onChange={handleSearchChange}   // 🔗 wired to AG Grid quick filter
+              onChange={handleSearchChange}
             />
           </InputGroup>
-
-          {!editMode && (
-            <IconButton
-              marginLeft="1rem"
-              aria-label="Edit"
-              onClick={() => setEditMode(true)}
-            >
-              <LuPencil />
-            </IconButton>
-          )}
-
-          {editMode && (
-            <IconButton
-              marginLeft="1rem"
-              aria-label="Save"
-              onClick={handleSave}
-            >
-              <LuSave />
-            </IconButton>
-          )}
         </Box>
       </Box>
 
       <NewsletterPortalTable
-        editMode={editMode}
-        onGridReadyExternal={setGridApi}  
         quickFilterText={searchText}
       />
     </>
@@ -118,23 +54,24 @@ export const NewsletterPortalPage = () => {
 
 
 
-  import { useEffect, useState } from 'react';
+
+  import { useEffect, useState, useCallback } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import type { GridApi, GridReadyEvent } from 'ag-grid-community';
+import type {
+  GridReadyEvent,
+  CellDoubleClickedEvent,
+  CellValueChangedEvent,
+} from 'ag-grid-community';
 
 import { newsletterPortalColumnDefs } from './newsletter-portal-column-defs';
 import { useAgGridTheme } from '@loim/loim-ui';
 
 type NewsletterPortalTableProps = {
-  editMode: boolean;
-  quickFilterText: string;
-  onGridReadyExternal?: (api: GridApi) => void;
+  quickFilterText?: string;
 };
 
 export const NewsletterPortalTable = ({
-  editMode,
-  quickFilterText,
-  onGridReadyExternal,
+  quickFilterText = '',
 }: NewsletterPortalTableProps) => {
   const [data, setData] = useState<any[]>([]);
   const [columnDef] = useState(newsletterPortalColumnDefs);
@@ -145,28 +82,84 @@ export const NewsletterPortalTable = ({
   useEffect(() => {
     setLoading(true);
 
-    fetch(
-      'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          cache: 'no-cache',
-        },
-      }
-    )
+    fetch('http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        cache: 'no-cache',
+      },
+    })
       .then((response) => response.json())
-      .then((data) => {
-        setData(data);
+      .then((rows) => {
+        setData(rows ?? []);
+      })
+      .catch((err) => {
+        console.error('Error fetching newsletter data', err);
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
 
-  const handleGridReady = (params: GridReadyEvent) => {
-    onGridReadyExternal?.(params.api);
+  const handleGridReady = useCallback((params: GridReadyEvent) => {
+    // nothing extra needed, but kept for future
+  }, []);
+
+  // Start editing explicitly on double click (keeps UX consistent)
+  const onCellDoubleClicked = (params: CellDoubleClickedEvent) => {
+    const colKey = params.colDef.field as string | undefined;
+    if (!colKey) return;
+
+    try {
+      params.api.startEditingCell({
+        rowIndex: params.rowIndex,
+        colKey,
+      });
+    } catch (err) {
+      // fallback for some AG Grid versions
+      try {
+        params.api.startEditingCell({
+          rowIndex: params.node.rowIndex,
+          colKey,
+        });
+      } catch (e) {
+        console.warn('startEditingCell failed', e);
+      }
+    }
+  };
+
+  // When user finishes editing (Enter or blur) and value changed -> POST the full row
+  const onCellValueChanged = async (params: CellValueChangedEvent) => {
+    const updatedRow = params.data;
+    if (!updatedRow) return;
+
+    try {
+      const res = await fetch(
+        'http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter',
+        {
+          method: 'POST', // your API expects POST to same endpoint
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            cache: 'no-cache',
+          },
+          // sending as array containing single row to match previous usage
+          body: JSON.stringify([updatedRow]),
+        }
+      );
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        console.error('Failed to save row:', res.status, txt);
+        // optionally show toast or revert change
+      } else {
+        // success - you may refresh row data from response or keep local change
+        // Example: no-op, AG Grid already updated the cell
+      }
+    } catch (err) {
+      console.error('Error posting updated row', err);
+    }
   };
 
   return (
@@ -179,13 +172,13 @@ export const NewsletterPortalTable = ({
       }}
     >
       <AgGridReact
-        key={editMode ? 'edit-mode' : 'view-mode'} // force refresh to update highlight/editability
         rowData={data}
         columnDefs={columnDef}
         theme={agGridTheme}
         loading={loading}
-        context={{ editMode }}
         onGridReady={handleGridReady}
+        onCellDoubleClicked={onCellDoubleClicked}
+        onCellValueChanged={onCellValueChanged}
         stopEditingWhenCellsLoseFocus={true}
         quickFilterText={quickFilterText}
       />
@@ -196,7 +189,9 @@ export const NewsletterPortalTable = ({
 
 
 
-import type { ColDef } from 'ag-grid-community';
+
+
+    import type { ColDef } from 'ag-grid-community';
 import React from 'react';
 
 
@@ -366,3 +361,7 @@ export const newsletterPortalColumnDefs: Array<ColDef> = [
     cellRenderer: DownloadCellRenderer,
   },
 ];
+
+
+
+        
