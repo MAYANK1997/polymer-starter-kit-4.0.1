@@ -1,5 +1,139 @@
-Type 'number | null' is not assignable to type 'number'.
-  Type 'null' is not assignable to type 'number'.ts(2322)
-gridApi.d.ts(50, 5): The expected type comes from property 'rowIndex' which is declared here on type 'StartEditingCellParams'
-(property) StartEditingCellParams.rowIndex: number
-The row index of the row to start editing
+// NewsletterPortalTable.tsx
+import React, { useEffect, useState, useCallback } from "react";
+import { AgGridReact } from "ag-grid-react";
+import type {
+  GridReadyEvent,
+  CellDoubleClickedEvent,
+  CellValueChangedEvent,
+  GridApi,
+  ColumnApi,
+} from "ag-grid-community";
+
+import { newsletterPortalColumnDefs } from "./newsletter-portal-column-defs";
+import { useAgGridTheme } from "@loim/loim-ui";
+
+type NewsletterPortalTableProps = {
+  quickFilterText?: string;
+  // if you still use onGridReadyExternal elsewhere, you can add it:
+  onGridReadyExternal?: (api: GridApi, columnApi: ColumnApi) => void;
+};
+
+export const NewsletterPortalTable: React.FC<NewsletterPortalTableProps> = ({
+  quickFilterText = "",
+  onGridReadyExternal,
+}) => {
+  const [rowData, setRowData] = useState<any[]>([]);
+  const [columnDef] = useState(newsletterPortalColumnDefs);
+  const [loading, setLoading] = useState(false);
+  const { agGridTheme } = useAgGridTheme();
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        cache: "no-cache",
+      },
+    })
+      .then((res) => res.json())
+      .then((rows) => {
+        setRowData(rows ?? []);
+      })
+      .catch((err) => {
+        console.error("Error fetching newsletter data", err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleGridReady = useCallback(
+    (params: GridReadyEvent) => {
+      // expose grid APIs if parent needs them
+      onGridReadyExternal?.(params.api, params.columnApi);
+    },
+    [onGridReadyExternal]
+  );
+
+  // Safe start editing on double click — avoids TS error about nullable rowIndex
+  const onCellDoubleClicked = useCallback((params: CellDoubleClickedEvent) => {
+    const colKey = params.colDef?.field as string | undefined;
+    if (!colKey) return;
+
+    // prefer params.rowIndex; fallback to params.node?.rowIndex
+    const candidateRowIndex = params.rowIndex ?? params.node?.rowIndex;
+
+    if (candidateRowIndex == null) {
+      console.warn("startEditingCell: rowIndex is not available", params);
+      return;
+    }
+
+    // candidateRowIndex is guaranteed to be a number here
+    params.api.startEditingCell({
+      rowIndex: candidateRowIndex as number,
+      colKey,
+    });
+  }, []);
+
+  // When editing finishes and value changed -> POST the full row to API
+  const onCellValueChanged = useCallback(async (params: CellValueChangedEvent) => {
+    const updatedRow = params.data;
+    if (!updatedRow) return;
+
+    try {
+      const res = await fetch(
+        "http://nycuapp01.biz.lodh.com:8011/salesportal/api/crud/newsletter",
+        {
+          method: "POST", // as requested: POST to the same endpoint
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            cache: "no-cache",
+          },
+          // sending as array containing single row to match prior behavior
+          body: JSON.stringify([updatedRow]),
+        }
+      );
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.error("Failed to save row:", res.status, txt);
+        // optional: show user feedback or revert change
+      } else {
+        // success: optionally refresh row or show toast
+      }
+    } catch (err) {
+      console.error("Error posting updated row", err);
+    }
+  }, []);
+
+  return (
+    <div style={{ margin: "2px", padding: "2px", height: "80vh", width: "100vw" }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDef}
+        onGridReady={handleGridReady}
+        onCellDoubleClicked={onCellDoubleClicked}
+        onCellValueChanged={onCellValueChanged}
+        stopEditingWhenCellsLoseFocus={true}
+        quickFilterText={quickFilterText}
+        defaultColDef={{
+          sortable: true,
+          resizable: true,
+          filter: true,
+          editable: false, // individual columns set editable: true where needed
+        }}
+        frameworkComponents={{}}
+        animateRows={true}
+        suppressRowClickSelection={false}
+        /** pass theme via container className if required by your setup,
+         *  or agGridTheme prop in your wrapper if you use it that way.
+         *  Here we kept your existing approach and applied the theme variable
+         *  in the parent component (as you had previously).
+         */
+        // @ts-ignore - agGridTheme is a string like 'ag-theme-alpine' in your hook
+        className={agGridTheme}
+      />
+    </div>
+  );
+};
