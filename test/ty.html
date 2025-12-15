@@ -1,30 +1,94 @@
-// newsletterData.tsx
+import { useEffect, useState } from "react";
+import PortalHeader from "@/components/PortalHeader";
+import SearchBar from "@/components/SearchBar";
+import NewsletterGrid from "@/components/NewsletterGrid";
+import { fetchNewsletterData, NewsletterRow } from "@/data/newsletterData";
+import { FileText, Calendar } from "lucide-react";
 
-export interface NewsletterRow {
-  id: number;
-  date: string;
-  section: string;
-  strategy: string;
-  personFirm: string;
-  location: string;
-  information: string;
-  links: string[];
-}
+const Index = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newsletterData, setNewsletterData] = useState<NewsletterRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-const API_URL = '/api/newsletters'; // change to your actual backend URL
+  useEffect(() => {
+    fetchNewsletterData()
+      .then((data) => {
+        setNewsletterData(data);
 
-export async function fetchNewsletterData(): Promise<NewsletterRow[]> {
-  const response = await fetch(API_URL, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // keep if auth/cookies are needed
-  });
+        // Optional: compute last updated from latest date
+        if (data.length > 0) {
+          const latest = data
+            .map((d) => new Date(d.date))
+            .sort((a, b) => b.getTime() - a.getTime())[0];
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch newsletters: ${response.status}`);
-  }
+          setLastUpdated(latest.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }));
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  return response.json();
-}
+  return (
+    <div className="min-h-screen bg-background">
+      <PortalHeader />
+
+      <main className="max-w-[1800px] mx-auto px-6 py-6">
+        {/* Stats Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <span>
+                <strong className="text-foreground">
+                  {loading ? "—" : newsletterData.length}
+                </strong>{" "}
+                Total Records
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>
+                Last Updated:{" "}
+                <strong className="text-foreground">
+                  {lastUpdated || "—"}
+                </strong>
+              </span>
+            </div>
+          </div>
+
+          <SearchBar
+            data={newsletterData}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+        </div>
+
+        {/* Instructions */}
+        <div className="mb-4 flex items-center gap-4 text-xs text-muted-foreground bg-muted/50 px-4 py-2.5 rounded-lg">
+          <span className="flex items-center gap-1.5">
+            <span className="font-medium text-foreground">Tip:</span>
+            Double-click on Person/Firm, Location, or Information cells to edit
+          </span>
+          <span className="text-border">|</span>
+          <span>Press Enter to save changes</span>
+          <span className="text-border">|</span>
+          <span>Click PDF links to download</span>
+        </div>
+
+        {/* Grid */}
+        <NewsletterGrid
+          data={newsletterData}
+          searchTerm={searchTerm}
+          loading={loading}
+        />
+      </main>
+    </div>
+  );
+};
+
+export default Index;
