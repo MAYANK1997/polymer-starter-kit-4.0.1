@@ -1,49 +1,272 @@
-import { useCallback,useEffect, useState } from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import { config } from '@/config';
+import { useCallback, useMemo, useRef, useState } from "react";
 
-import { restrictedCategoryColumnDefs } from './restricted-category-column-defs';
+import React from 'react';
+import { AgGridReact } from "ag-grid-react";
+import {
+  ClientSideRowModelModule,
+  ColDef,
+  ModuleRegistry,
+  CellEditingStartedEvent,
+  CellEditingStoppedEvent,
+} from "ag-grid-enterprise";
+import { NewsletterRow } from "@/data/NewsletterData";
 import { useAgGridTheme } from '@loim/loim-ui';
 
-const RestrictedCategoryTable = ({ reloadKey} : {reloadKey?:number}) => {
-  const [data, setData] = useState([]);
-  const [columnDef] = useState(restrictedCategoryColumnDefs);
-  const [loading, setLoading] = useState(false);
 
+
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
+
+interface NewsletterGridProps {
+  data: NewsletterRow[];
+  searchTerm: string;
+  loading?: boolean;
+}
+
+const NewsletterPortalTable = ({
+  data,
+  searchTerm,
+  loading = false,
+}: NewsletterGridProps) => {
+  const gridRef = useRef<AgGridReact>(null);
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const { agGridTheme } = useAgGridTheme();
 
+  const highlightText = (text: string, search: string): string => {
+    if (!search) return text;
+    const regex = new RegExp(
+      `(${search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi"
+    );
+    return text.replace(
+      regex,
+      '<mark class="bg-highlight text-highlight-foreground px-0.5 rounded">$1</mark>'
+    );
+  };
 
-  const fetchData = useCallback(() =>{
-    
+  const TextCellRenderer = useCallback(
+    (params: { value: string }) => {
+      const highlighted = highlightText(params.value || "", searchTerm);
+      return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
+    },
+    [searchTerm]
+  );
 
-    setLoading(true);
-
-    fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        cache: 'no-cache'
-      }
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setData(data);
+  const DownloadCellRenderer = (params: any) => {
+    const downloadURL =
+      'http://nycuapp01.biz.lodh.com:8011/salesportal/api/downloadFiles?fileLocations=';
+  
+    let link = params.value?.replaceAll('\\', '%5C') ?? '';
+  
+    const fileLocationArr = link
+      .split(';')
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+  
+    return React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          flexDirection: 'column', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          rowGap: '4px',
+          height: '100%',
+          textAlign: 'center',
+        },
+      },
+      fileLocationArr.map((url: string, index: number) => {
+        const fileName = url.split('%5C').pop() || url;
+  
+        return React.createElement(
+          'a',
+          {
+            key: index,
+            href: downloadURL + url,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            style: {
+              color: '#3182CE',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            },
+          },
+          fileName
+        );
       })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [setData, setLoading]);
+    );
+  };
 
-  useEffect(()=>{
-    fetchData();
-  },[fetchData,reloadKey]);
+  
+const formatDate = (params: any) => {
+  if (!params.value) return "";
+
+  const date = new Date(params.value);
+  if (isNaN(date.getTime())) return params.value;
+
+  const day = date.getDate().toString().padStart(2, "0");
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[date.getMonth()];
+
+  const year = date.getFullYear(); // full 4-digit year
+
+  return `${day}-${month}-${year}`;
+};
+
+
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Date",
+        field: "asOfDate",
+        flex: 1,
+        cellRenderer: TextCellRenderer,
+        valueFormatter: formatDate,
+        sortable: true,
+        resizable: true,
+      },
+      {
+        headerName: "Section",
+        field: "section",
+        flex: 1.2,
+        cellRenderer: TextCellRenderer,
+        sortable: true,
+        resizable: true,
+        autoHeight: true,
+        wrapText: true
+      },
+      {
+        headerName: "Strategy",
+        field: "strategy",
+        flex: 1,
+        cellRenderer: TextCellRenderer,
+        sortable: true,
+        resizable: true,
+        autoHeight: true,
+        wrapText: true
+        
+      },
+      {
+        headerName: "Person/Firm",
+        field: "personFirm",
+        flex:1.5,
+        editable: true,
+        cellRenderer: TextCellRenderer,
+        sortable: true,
+        cellClass: "cursor-pointer",
+        autoHeight: true,
+        wrapText: true,
+      },
+      {
+        headerName: "Location",
+        field: "countryRegion",
+        flex:1.5,
+        editable: true,
+        cellRenderer: TextCellRenderer,
+        sortable: true,
+        cellClass: "cursor-pointer",
+        wrapText: true,
+        autoHeight: true
+      },
+      {
+        headerName: "Information",
+        field: "description",
+        flex: 3,
+        sortable: true,
+        resizable: true,
+        editable: true,
+        cellRenderer: TextCellRenderer,
+        cellClass: "cursor-pointer",
+        wrapText: true,
+        autoHeight: true,
+      },
+      {
+        headerName: "Link",
+        field: "fileLocation",
+        flex:2,
+        cellRenderer: DownloadCellRenderer,
+        sortable: false,
+        autoHeight: true,
+        wrapText: false,
+      },
+    ],
+    [TextCellRenderer, DownloadCellRenderer]
+  );
+
+  const defaultColDef = useMemo<ColDef>(
+    () => ({
+      resizable: true,
+      filter: false,
+    }),
+    []
+  );
+
+  const onCellEditingStarted = useCallback(
+    (event: CellEditingStartedEvent) => {
+      setEditingRowId(event.data.id);
+    },
+    []
+  );
+
+  const onCellEditingStopped = useCallback(
+    async (event: CellEditingStoppedEvent) => {
+      if (event.data.id !== editingRowId) return;
+
+      const row = event.data as NewsletterRow;
+
+      try {
+        await fetch("/api/newsletter/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(row),
+        });
+
+        console.log("Record updated successfully");
+      } catch {
+        console.log("Error updating record");
+      } finally {
+        setEditingRowId(null);
+      }
+    },
+    [editingRowId]
+  );
+
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return data;
+
+    const term = searchTerm.toLowerCase();
+    return data.filter(
+      (row) =>
+        row.date.toLowerCase().includes(term) ||
+        row.section.toLowerCase().includes(term) ||
+        row.strategy.toLowerCase().includes(term) ||
+        row.personFirm.toLowerCase().includes(term) ||
+        row.location.toLowerCase().includes(term) ||
+        row.information.toLowerCase().includes(term)
+    );
+  }, [data, searchTerm]);
 
   return (
-    <div style={{ height: '90%' }}>
-      <AgGridReact rowData={data} columnDefs={columnDef} theme={agGridTheme} loading={loading} />
-    </div>
+   
+      <AgGridReact
+        ref={gridRef}
+        rowData={filteredData}
+        columnDefs={columnDefs}
+        defaultColDef={defaultColDef}
+        theme={agGridTheme} 
+        loading={loading}
+        animateRows
+        rowSelection="single"
+        stopEditingWhenCellsLoseFocus
+        onCellEditingStarted={onCellEditingStarted}
+        onCellEditingStopped={onCellEditingStopped}
+        getRowId={(params) => params.data.id.toString()}
+      />
+    
   );
 };
 
-export default RestrictedCategoryTable;
+export default NewsletterPortalTable;
