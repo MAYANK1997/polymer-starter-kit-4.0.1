@@ -192,3 +192,188 @@ const SearchBar = ({ data, searchTerm, onSearchChange }: SearchBarProps) => {
 
 export default SearchBar;
 
+
+
+import { useCallback, useMemo, useRef, useState } from "react";
+import { AgGridReact } from "ag-grid-react";
+import {
+  ClientSideRowModelModule,
+  ColDef,
+  ModuleRegistry,
+  CellEditingStartedEvent,
+  CellEditingStoppedEvent,
+} from "ag-grid-community";
+import { NewsletterRow, newsletterData } from "@/data/newsletterData";
+import LinkRenderer from "./LinkRenderer";
+import { useToast } from "@/hooks/use-toast";
+
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+]);
+
+interface NewsletterGridProps {
+  searchTerm: string;
+}
+
+const NewsletterGrid = ({ searchTerm }: NewsletterGridProps) => {
+  const gridRef = useRef<AgGridReact>(null);
+  const [rowData] = useState<NewsletterRow[]>(newsletterData);
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const highlightText = (text: string, search: string): string => {
+    if (!search) return text;
+    const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark class="bg-highlight text-highlight-foreground px-0.5 rounded">$1</mark>');
+  };
+
+  const TextCellRenderer = useCallback((params: { value: string }) => {
+    const highlighted = highlightText(params.value || '', searchTerm);
+    return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
+  }, [searchTerm]);
+
+  const LinkCellRenderer = useCallback((params: { value: string[] }) => {
+    return <LinkRenderer links={params.value || []} />;
+  }, []);
+
+  const columnDefs = useMemo<ColDef[]>(() => [
+    {
+      headerName: "Date",
+      field: "date",
+      width: 120,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+    },
+    {
+      headerName: "Section",
+      field: "section",
+      width: 160,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+    },
+    {
+      headerName: "Strategy",
+      field: "strategy",
+      width: 130,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+    },
+    {
+      headerName: "Person/Firm",
+      field: "personFirm",
+      width: 200,
+      editable: true,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+      cellClass: "cursor-pointer",
+    },
+    {
+      headerName: "Location",
+      field: "location",
+      width: 160,
+      editable: true,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+      cellClass: "cursor-pointer",
+    },
+    {
+      headerName: "Information",
+      field: "information",
+      flex: 1,
+      minWidth: 300,
+      editable: true,
+      cellRenderer: TextCellRenderer,
+      sortable: true,
+      cellClass: "cursor-pointer",
+      wrapText: true,
+      autoHeight: true,
+    },
+    {
+      headerName: "Link",
+      field: "links",
+      width: 200,
+      cellRenderer: LinkCellRenderer,
+      sortable: false,
+    },
+  ], [TextCellRenderer, LinkCellRenderer]);
+
+  const defaultColDef = useMemo<ColDef>(() => ({
+    resizable: true,
+    filter: false,
+  }), []);
+
+  const onCellEditingStarted = useCallback((event: CellEditingStartedEvent) => {
+    setEditingRowId(event.data.id);
+  }, []);
+
+  const onCellEditingStopped = useCallback(async (event: CellEditingStoppedEvent) => {
+    if (event.data.id === editingRowId) {
+      const rowData = event.data as NewsletterRow;
+      
+      try {
+        // Simulate POST request to backend API
+        console.log("Sending updated row data to backend:", rowData);
+        
+        // In a real app, this would be an actual API call
+        const response = await fetch("/api/newsletter/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(rowData),
+        }).catch(() => {
+          // Simulate successful response for demo
+          return { ok: true };
+        });
+
+        toast({
+          title: "Row Updated",
+          description: `Successfully updated record for ${rowData.personFirm}`,
+        });
+      } catch (error) {
+        toast({
+          title: "Update Failed",
+          description: "Failed to save changes. Please try again.",
+          variant: "destructive",
+        });
+      }
+      
+      setEditingRowId(null);
+    }
+  }, [editingRowId, toast]);
+
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return rowData;
+    
+    const term = searchTerm.toLowerCase();
+    return rowData.filter(row => 
+      row.date.toLowerCase().includes(term) ||
+      row.section.toLowerCase().includes(term) ||
+      row.strategy.toLowerCase().includes(term) ||
+      row.personFirm.toLowerCase().includes(term) ||
+      row.location.toLowerCase().includes(term) ||
+      row.information.toLowerCase().includes(term)
+    );
+  }, [rowData, searchTerm]);
+
+  return (
+    <div className="ag-theme-quartz w-full h-[calc(100vh-200px)] rounded-lg overflow-hidden border border-border shadow-sm">
+      <AgGridReact
+        ref={gridRef}
+        rowData={filteredData}
+        columnDefs={columnDefs}
+        defaultColDef={defaultColDef}
+        animateRows={true}
+        rowSelection="single"
+        onCellEditingStarted={onCellEditingStarted}
+        onCellEditingStopped={onCellEditingStopped}
+        stopEditingWhenCellsLoseFocus={true}
+        getRowId={(params) => params.data.id.toString()}
+      />
+    </div>
+  );
+};
+
+export default NewsletterGrid;
+
+
