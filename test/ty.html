@@ -1,1 +1,49 @@
-AG Grid: AG Grid: You are mixing modules (i.e. @ag-grid-community/core) and packages (ag-grid-community) - you can only use one or the other of these mechanisms.
+import { useCallback,useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { config } from '@/config';
+
+import { restrictedCategoryColumnDefs } from './restricted-category-column-defs';
+import { useAgGridTheme } from '@loim/loim-ui';
+
+const RestrictedCategoryTable = ({ reloadKey} : {reloadKey?:number}) => {
+  const [data, setData] = useState([]);
+  const [columnDef] = useState(restrictedCategoryColumnDefs);
+  const [loading, setLoading] = useState(false);
+
+  const { agGridTheme } = useAgGridTheme();
+
+
+  const fetchData = useCallback(() =>{
+    
+
+    setLoading(true);
+
+    fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        cache: 'no-cache'
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [setData, setLoading]);
+
+  useEffect(()=>{
+    fetchData();
+  },[fetchData,reloadKey]);
+
+  return (
+    <div style={{ height: '90%' }}>
+      <AgGridReact rowData={data} columnDefs={columnDef} theme={agGridTheme} loading={loading} />
+    </div>
+  );
+};
+
+export default RestrictedCategoryTable;
