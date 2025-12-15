@@ -1,30 +1,30 @@
-import { Box, HStack, Text } from '@chakra-ui/react';
+// newsletterData.tsx
 
-<Box
-  mb={4}
-  px={4}
-  py={2.5}
-  bg="bg.muted"
-  borderRadius="lg"
-  fontSize="xs"
-  color="fg.muted"
->
-  <HStack spacing={4}>
-    <HStack spacing={1.5}>
-      <Text fontWeight="medium" color="fg.default">
-        Tip:
-      </Text>
-      <Text>
-        Double-click on Person/Firm, Location, or Information cells to edit
-      </Text>
-    </HStack>
+export interface NewsletterRow {
+  id: number;
+  date: string;
+  section: string;
+  strategy: string;
+  personFirm: string;
+  location: string;
+  information: string;
+  links: string[];
+}
 
-    <Text color="border.default">|</Text>
+const API_URL = '/api/newsletters'; // change to your actual backend URL
 
-    <Text>Press Enter to save changes</Text>
+export async function fetchNewsletterData(): Promise<NewsletterRow[]> {
+  const response = await fetch(API_URL, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include', // keep if auth/cookies are needed
+  });
 
-    <Text color="border.default">|</Text>
+  if (!response.ok) {
+    throw new Error(`Failed to fetch newsletters: ${response.status}`);
+  }
 
-    <Text>Click PDF links to download</Text>
-  </HStack>
-</Box>
+  return response.json();
+}
