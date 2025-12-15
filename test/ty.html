@@ -1,222 +1,30 @@
-import {
-  Dialog,
-  Portal,
-  CloseButton,
-  Button,
-  HStack,
-  Field,
-  NativeSelect,
-  Spinner,
-  Input
-} from "@chakra-ui/react";
+import { Box, HStack, Text } from '@chakra-ui/react';
 
-import { useForm } from 'react-hook-form';
-import { useAsync } from 'react-use';
-import { useState, useEffect } from 'react';
-import { config } from '@/config';
-import { Toaster, toaster } from '@/components/ui/toaster';
-import { useMutation } from '@tanstack/react-query';
+<Box
+  mb={4}
+  px={4}
+  py={2.5}
+  bg="bg.muted"
+  borderRadius="lg"
+  fontSize="xs"
+  color="fg.muted"
+>
+  <HStack spacing={4}>
+    <HStack spacing={1.5}>
+      <Text fontWeight="medium" color="fg.default">
+        Tip:
+      </Text>
+      <Text>
+        Double-click on Person/Firm, Location, or Information cells to edit
+      </Text>
+    </HStack>
 
-interface ProceedWallCrossDialogProps {
-  open: boolean;
-  onPClose: () => void;
-  wcId: number;
-  validatedData: any;
-  onSuccess: () => void;
-  onWClose: () => void;
-}
+    <Text color="border.default">|</Text>
 
-interface ProceedFormData {
-  categoryName: string;
-}
+    <Text>Press Enter to save changes</Text>
 
-interface RestrictionCategories {
-  name: string;
-}
+    <Text color="border.default">|</Text>
 
-export function ProceedWallCrossDialog({
-  open,
-  onPClose,
-  wcId,
-  validatedData,
-  onSuccess,
-  onWClose
-}: ProceedWallCrossDialogProps) {
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue, // Added for setting default value
-    formState: {},
-  } = useForm<ProceedFormData>();
-
-  const [isSubmit, setIsSubmit] = useState(false);
-
-  // Fetch restriction categories
-  const state = useAsync(async (): Promise<RestrictionCategories[]> => {
-    const response = await fetch(`${config.apis.mdmApi}/EntitledRestrictionCategories?wallcrossOnly=true`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-cache',
-      },
-    });
-
-    if (!response.ok) {
-      const txt = await response.text().catch(() => '');
-      toaster.create({
-        title: 'Error',
-        description: `${txt}`,
-        type: 'error',
-        duration: 10000,
-      });
-      return [];
-    }
-
-    return response.json();
-  }, []);
-
-  // Automatically set "LOIM RL" as the default category when data arrives
-  useEffect(() => {
-    if (state.value?.length) {
-      setValue('categoryName', 'LOIM RL');
-    }
-  }, [state.value, setValue]);
-
-  // Mutation to handle form submission
-  const proceedMutation = useMutation({
-    mutationFn: async (data: ProceedFormData) => {
-      setIsSubmit(true);
-      const res = await fetch(
-        `${config.apis.mdmApi}/wallcross/accept`,
-        {
-          method: "POST",
-          credentials: 'include',
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wcId, transactionTypes: ["Buy"], categoryName: data.categoryName }),
-        }
-      );
-
-      if (!res.ok) {
-        setIsSubmit(false);
-        const txt = await res.text().catch(() => '');
-        toaster.create({
-          title: 'Error',
-          description: `${txt}`,
-          type: 'error',
-          duration: 10000,
-        });
-      } else {
-        setIsSubmit(false);
-        toaster.create({
-          title: 'Success',
-          description: 'Wall Cross Issuer Successfully Added',
-          type: 'success',
-          duration: 5000,
-        });
-
-        setTimeout(() => {
-          setIsSubmit(false);
-          reset();
-          onPClose();
-          onWClose();
-          onSuccess();
-        }, 5000);
-      }
-
-      return res.json();
-    }
-  });
-
-  const onSubmit = (data: ProceedFormData) => proceedMutation.mutate(data);
-
-  return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onPClose()}>
-      <Toaster />
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content maxW="60vw">
-            <Dialog.Header>
-              Proceed Wall Cross
-              <CloseButton position="absolute" top={2} right={2} onClick={onPClose} />
-            </Dialog.Header>
-            <Dialog.Body>
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <HStack gap={4} mb={4}>
-                  <Field.Root>
-                    <Field.Label>Issuer Name</Field.Label>
-                    <Input value={validatedData.vrequest.issuerName} disabled />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>Issuer Type</Field.Label>
-                    <Input value={validatedData.vrequest.issuerType} disabled />
-                  </Field.Root>
-                </HStack>
-
-                <HStack gap={4} mb={4}>
-                  <Field.Root>
-                    <Field.Label>Ticker</Field.Label>
-                    <Input value={validatedData.vrequest.ticker} disabled />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>ISIN</Field.Label>
-                    <Input value={validatedData.vrequest.isin} disabled />
-                  </Field.Root>
-                </HStack>
-
-                <HStack gap={4} mb={4}>
-                  <Field.Root>
-                    <Field.Label>CUSIP</Field.Label>
-                    <Input value={validatedData.vrequest.cusip} disabled />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>SEDOL</Field.Label>
-                    <Input value={validatedData.vrequest.sedol} disabled />
-                  </Field.Root>
-                </HStack>
-
-                <HStack gap={4} mb={4}>
-                  <Field.Root>
-                    <Field.Label>Restriction Category</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field {...register('categoryName')}>
-                        <option value="">Select category</option>
-                        {state.value?.map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Field.Root>
-                </HStack>
-
-                <HStack justify="flex-end" mb={3}>
-                  <Button variant="outline" onClick={onPClose}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    colorScheme="red"
-                    loading={isSubmit}
-                    loadingText="Saving"
-                    spinner={<Spinner size='sm' />}
-                  >
-                    Proceed
-                  </Button>
-                </HStack>
-              </form>
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
-  );
-}
+    <Text>Click PDF links to download</Text>
+  </HStack>
+</Box>
