@@ -1,2 +1,32 @@
-AG Grid: As of version 32.2.1, using `rowSelection` with the values "single" or "multiple" has been deprecated. Use the object value instead.
-AG Grid: theme uses google font IBM Plex Sans but no value for loadThemeGoogleFonts was provided. Pass true to load fonts from fonts.googleapis.com or false to silence this warning.
+{
+  headerName: 'Trade Date',
+  field: 'tradeDate',
+  filter: 'agDateColumnFilter',
+
+  // Display format (MM-DD-YYYY)
+  valueFormatter: (params) => {
+    if (!params.value) return '';
+    const [yyyy, mm, dd] = params.value.split('-');
+    return `${mm}-${dd}-${yyyy}`;
+  },
+
+  // Convert string → Date for filter comparisons
+  filterValueGetter: (params) => {
+    if (!params.data?.tradeDate) return null;
+    const [yyyy, mm, dd] = params.data.tradeDate.split('-');
+    return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  },
+
+  filterParams: {
+    comparator: (filterDate, cellValue) => {
+      if (!cellValue) return -1;
+
+      const cellDate = new Date(cellValue);
+      cellDate.setHours(0, 0, 0, 0);
+
+      if (cellDate < filterDate) return -1;
+      if (cellDate > filterDate) return 1;
+      return 0;
+    },
+  },
+}
