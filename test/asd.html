@@ -1,4 +1,4 @@
-valueFormatter: (params) => {
-    if (!params.value) return "";
-    return params.value.split("T")[0]; // ✅ yyyy-mm-dd
+ valueGetter: (params) => {
+    const value = params.data?.asOfDate;
+    return value ? value.split("T")[0] : "";
   },
