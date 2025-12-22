@@ -1,92 +1,76 @@
-// Newsletter Page
-
-
 import { fetchNewsletterData, NewsletterRow } from "@/data/NewsletterData";
-import NewsletterPortalTable from './NewsletterPortalTable';
-import { Box, HStack, Text} from '@chakra-ui/react';
-import { Colors, useColorMode } from '@loim/loim-ui';
-import { useEffect, useState } from 'react';
+import NewsletterPortalTable from "./NewsletterPortalTable";
+import { Box, HStack, Text } from "@chakra-ui/react";
+import { Colors, useColorMode } from "@loim/loim-ui";
+import { useEffect, useState, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
-
-
 
 export const NewsletterPortalPage = () => {
   const { colorMode } = useColorMode();
   const borderColor =
-    colorMode === 'dark' ? Colors.gray[800].value : Colors.gray[100].value;
+    colorMode === "dark" ? Colors.gray[800].value : Colors.gray[100].value;
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [newsletterData, setNewsletterData] = useState<NewsletterRow[]>([]);
-    const [loading, setLoading] = useState(true);
-   
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newsletterData, setNewsletterData] = useState<NewsletterRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // ✅ SINGLE source of truth for refresh
+  const refreshNewsletterData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchNewsletterData();
+      setNewsletterData(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      useEffect(() => {
-      fetchNewsletterData()
-        .then((data) => {
-          setNewsletterData(data);
-        })
-        .finally(() => setLoading(false));
-    }, []);
+  useEffect(() => {
+    refreshNewsletterData();
+  }, [refreshNewsletterData]);
 
   return (
     <>
-      
-        <Box
-          bg={
-            colorMode === 'dark'
-              ? Colors.gray[900].value
-              : Colors.gray[100].value
-          }
-          borderBottom={`1px solid ${borderColor}`}
-          padding="2.5rem 1.5rem"
-          display="flex"
-          alignItems="center"
-        >
+      <Box
+        bg={
+          colorMode === "dark"
+            ? Colors.gray[900].value
+            : Colors.gray[100].value
+        }
+        borderBottom={`1px solid ${borderColor}`}
+        padding="2.5rem 1.5rem"
+        display="flex"
+        alignItems="center"
+      >
+        <SearchBar
+          data={newsletterData}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+        />
 
-          <SearchBar 
-            data={newsletterData} 
-            searchTerm={searchTerm} 
-            onSearchChange={setSearchTerm} 
-          />   
+        <Box mb={4} px={4} py={2.5} borderRadius="lg" fontSize="xs">
+          <HStack mt="10px">
+            <HStack>
+              <Text fontWeight="medium">Tip:</Text>
+              <Text>
+                Double-click on Person/Firm, Location, or Information cells to
+                edit
+              </Text>
+            </HStack>
 
-
-<Box
-  mb={4}
-  px={4}
-  py={2.5}
-
-  borderRadius="lg"
-  fontSize="xs"
- 
->
-  <HStack mt='10px'>
-    <HStack>
-      <Text fontWeight="medium">
-        Tip:
-      </Text>
-      <Text>
-        Double-click on Person/Firm, Location, or Information cells to edit
-      </Text>
-    </HStack>
-
-    <Text >|</Text>
-
-    <Text>Press Enter to save changes</Text>
-
-    <Text>|</Text>
-
-    <Text>Click PDF links to download</Text>
-  </HStack>
-</Box>
-</Box>
-      
+            <Text>|</Text>
+            <Text>Press Enter to save changes</Text>
+            <Text>|</Text>
+            <Text>Click PDF links to download</Text>
+          </HStack>
+        </Box>
+      </Box>
 
       <NewsletterPortalTable
         data={newsletterData}
         searchTerm={searchTerm}
-        loading={loading} 
-       
+        loading={loading}
+        onRefresh={refreshNewsletterData}
       />
     </>
   );
@@ -101,37 +85,31 @@ export const NewsletterPortalPage = () => {
 
 
 
-// NewsletterPortal Table
 
-import { useCallback, useMemo, useRef, useState } from "react";
-
-import React from 'react';
+        import { useCallback, useMemo, useRef, useState } from "react";
+import React from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import {
-  
   ColDef,
   CellEditingStartedEvent,
   CellEditingStoppedEvent,
 } from "ag-grid-community";
-import { fetchNewsletterData, NewsletterRow } from "@/data/NewsletterData";
-import { useAgGridTheme } from '@loim/loim-ui';
-
-
-
-
+import { NewsletterRow } from "@/data/NewsletterData";
+import { useAgGridTheme } from "@loim/loim-ui";
 
 interface NewsletterGridProps {
   data: NewsletterRow[];
   searchTerm: string;
   loading?: boolean;
-
+  onRefresh: () => Promise<void>;
 }
 
 const NewsletterPortalTable = ({
   data,
   searchTerm,
   loading = false,
+  onRefresh,
 }: NewsletterGridProps) => {
   const gridRef = useRef<AgGridReact>(null);
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
@@ -159,44 +137,35 @@ const NewsletterPortalTable = ({
 
   const DownloadCellRenderer = (params: any) => {
     const downloadURL =
-      'http://nycuapp01.biz.lodh.com:8011/newsletterportal/api/downloadFiles';
-  
-    let link = params.value?.replaceAll('\\', '%5C') ?? '';
-  
+      "http://nycuapp01.biz.lodh.com:8011/newsletterportal/api/downloadFiles";
+
+    const link = params.value?.replaceAll("\\", "%5C") ?? "";
     const fileLocationArr = link
-      .split(';')
+      .split(";")
       .map((s: string) => s.trim())
       .filter(Boolean);
-  
+
     return React.createElement(
-      'div',
+      "div",
       {
         style: {
-          display: 'flex',
-          flexDirection: 'column', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          rowGap: '4px',
-          height: '100%',
-          textAlign: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          rowGap: "4px",
+          height: "100%",
         },
       },
       fileLocationArr.map((url: string, index: number) => {
-        const fileName = url.split('%5C').pop() || url;
-  
+        const fileName = url.split("%5C").pop() || url;
         return React.createElement(
-          'a',
+          "a",
           {
             key: index,
             href: downloadURL + url,
-            target: '_blank',
-            rel: 'noopener noreferrer',
-            style: {
-              color: '#3182CE',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            },
+            target: "_blank",
+            rel: "noopener noreferrer",
+            style: { color: "#3182CE", textDecoration: "none" },
           },
           fileName
         );
@@ -204,117 +173,81 @@ const NewsletterPortalTable = ({
     );
   };
 
-  
-
-
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
         headerName: "Date",
         field: "asOfDate",
-        flex: 1.2,
-        filter: 'agTextColumnFilter',
+        filter: "agTextColumnFilter",
         cellRenderer: TextCellRenderer,
-        suppressMenu:true,
-        floatingFilter:true,
+        floatingFilter: true,
         sortable: true,
         resizable: true,
- 
-        
-        
       },
       {
         headerName: "Section",
         field: "section",
-        flex: 1.3,
         cellRenderer: TextCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
         sortable: true,
-        resizable: true,
         autoHeight: true,
-        wrapText: true
+        wrapText: true,
       },
       {
         headerName: "Strategy",
         field: "strategy",
-        flex: 1,
         cellRenderer: TextCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
         sortable: true,
-        resizable: true,
         autoHeight: true,
-        wrapText: true
-        
+        wrapText: true,
       },
       {
         headerName: "Person/Firm",
         field: "personFirm",
-        flex:1.5,
         editable: true,
         cellRenderer: TextCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
         sortable: true,
-        cellClass: "cursor-pointer",
         autoHeight: true,
         wrapText: true,
       },
       {
         headerName: "Location",
         field: "countryRegion",
-        flex:1.5,
         editable: true,
         cellRenderer: TextCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
         sortable: true,
-        cellClass: "cursor-pointer",
+        autoHeight: true,
         wrapText: true,
-        autoHeight: true
       },
       {
         headerName: "Information",
         field: "description",
-        flex: 3,
-        sortable: true,
-        resizable: true,
         editable: true,
         cellRenderer: TextCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
-        cellClass: "cursor-pointer",
-        wrapText: true,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
+        sortable: true,
         autoHeight: true,
+        wrapText: true,
       },
       {
         headerName: "Link",
         field: "fileLocation",
-        flex:2,
         cellRenderer: DownloadCellRenderer,
-        filter:"agTextColumnFilter",
-        suppressMenu:true,
-        floatingFilter:true,
-        sortable: false,
+        filter: "agTextColumnFilter",
+        floatingFilter: true,
         autoHeight: true,
         wrapText: true,
       },
     ],
-    [TextCellRenderer, DownloadCellRenderer]
-  );
-
-  const defaultColDef = useMemo<ColDef>(
-    () => ({
-      resizable: true,
-      filter: false,
-    }),
-    []
+    [TextCellRenderer]
   );
 
   const onCellEditingStarted = useCallback(
@@ -328,34 +261,32 @@ const NewsletterPortalTable = ({
     async (event: CellEditingStoppedEvent) => {
       if (event.data.id !== editingRowId) return;
 
-      const row = event.data as NewsletterRow;
-      const payload = [row];
-
       try {
-        await fetch("http://nycuapp01.biz.lodh.com:8011/newsletterportal/api/crud/newsletter", {
-          method: "POST",
-          credentials: 'include', 
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cache: "no-cache",
-      },
-          body: JSON.stringify(payload),
-        });
+        await fetch(
+          "http://nycuapp01.biz.lodh.com:8011/newsletterportal/api/crud/newsletter",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify([event.data]),
+          }
+        );
 
-        console.log("Record updated successfully");
-        fetchNewsletterData();
+        // ✅ THIS triggers grid reload
+        await onRefresh();
       } catch {
-        console.log("Error updating record");
+        console.error("Error updating record");
       } finally {
         setEditingRowId(null);
       }
     },
-    [editingRowId]
+    [editingRowId, onRefresh]
   );
 
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
-
     const term = searchTerm.toLowerCase();
     return data.filter(
       (row) =>
@@ -369,22 +300,20 @@ const NewsletterPortalTable = ({
   }, [data, searchTerm]);
 
   return (
-    <div style={{ height: '71vh' }}>
+    <div style={{ height: "71vh" }}>
       <AgGridReact
         ref={gridRef}
         rowData={filteredData}
         columnDefs={columnDefs}
-        defaultColDef={defaultColDef}
-        theme={agGridTheme} 
+        theme={agGridTheme}
         loading={loading}
         animateRows
-        rowSelection="single"
         stopEditingWhenCellsLoseFocus
         onCellEditingStarted={onCellEditingStarted}
         onCellEditingStopped={onCellEditingStopped}
         getRowId={(params) => params.data.id.toString()}
       />
-</div>
+    </div>
   );
 };
 
