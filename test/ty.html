@@ -1,32 +1,29 @@
-{
-  headerName: 'Trade Date',
-  field: 'tradeDate',
-  filter: 'agDateColumnFilter',
 
-  // Display format (MM-DD-YYYY)
-  valueFormatter: (params) => {
-    if (!params.value) return '';
-    const [yyyy, mm, dd] = params.value.split('-');
-    return `${mm}-${dd}-${yyyy}`;
-  },
+const getRowStyle = useCallback((params:{data:NewsletterRow}):RowStyle | undefined =>{
 
-  // Convert string → Date for filter comparisons
-  filterValueGetter: (params) => {
-    if (!params.data?.tradeDate) return null;
-    const [yyyy, mm, dd] = params.data.tradeDate.split('-');
-    return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-  },
+    if(params.data?.colorCode){
+      return {backgroundColor:params.data.colorCode};
+    }
 
-  filterParams: {
-    comparator: (filterDate, cellValue) => {
-      if (!cellValue) return -1;
+    return undefined;
 
-      const cellDate = new Date(cellValue);
-      cellDate.setHours(0, 0, 0, 0);
 
-      if (cellDate < filterDate) return -1;
-      if (cellDate > filterDate) return 1;
-      return 0;
-    },
-  },
-}
+  },[]);
+
+  return (
+    <div style={{ height: "71vh" }}>
+      <AgGridReact
+        ref={gridRef}
+        rowData={filteredData}
+        columnDefs={columnDefs}
+        theme={agGridTheme}
+        loading={loading}
+        animateRows
+        stopEditingWhenCellsLoseFocus
+        onCellEditingStarted={onCellEditingStarted}
+        onCellEditingStopped={onCellEditingStopped}
+        getRowId={(params) => params.data.id.toString()}
+        rowStyle={getRowStyle}
+      />
+    </div>
+  );
