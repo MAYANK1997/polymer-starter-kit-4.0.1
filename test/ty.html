@@ -1,21 +1,8 @@
-const getFileNameFromPath = (path?: string) => {
-  if (!path) return "";
-  return path
-    .split("\\")
-    .pop()
-    ?.replace(/\.pdf$/i, "") ?? "";
-};
-
-
-{
-  headerName: "FileName",
-  field: "fileLocation",
-  valueGetter: (params) =>
-    getFileNameFromPath(params.data?.fileLocation),
-  cellRenderer: DownloadCellRenderer,
-  filter: "agTextColumnFilter",
-  floatingFilter: true,
-  autoHeight: true,
-  wrapText: true,
-  flex: 2,
-}
+"Compliance": "#E8F5E9",      // Light green
+  "Investment": "#E3F2FD",       // Light blue
+  "Risk Management": "#FFF3E0",  // Light orange
+  "Growth": "#F3E5F5",           // Light purple
+  "Hedging": "#FFF8E1",          // Light amber
+  "Restructuring": "#FCE4EC",    // Light pink
+  "ESG": "#E0F7FA",              // Light cyan
+  "Fixed Income": "#F1F8E9",
