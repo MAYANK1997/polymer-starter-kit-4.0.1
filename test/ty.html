@@ -1,12 +1,21 @@
-\\\\nycfsst\\LIB_FEEDS_PROD\\SalesPortalNewsLetter\\pdf_file\\Weekly Newsletter V8 (12.1-12.5).pdf
+const getFileNameFromPath = (path?: string) => {
+  if (!path) return "";
+  return path
+    .split("\\")
+    .pop()
+    ?.replace(/\.pdf$/i, "") ?? "";
+};
 
- {
-        headerName: "FileName",
-        field: "fileLocation",
-        cellRenderer: DownloadCellRenderer,
-        filter: "agTextColumnFilter",
-        floatingFilter: true,
-        autoHeight: true,
-        wrapText: true,
-        flex:2
-      },
+
+{
+  headerName: "FileName",
+  field: "fileLocation",
+  valueGetter: (params) =>
+    getFileNameFromPath(params.data?.fileLocation),
+  cellRenderer: DownloadCellRenderer,
+  filter: "agTextColumnFilter",
+  floatingFilter: true,
+  autoHeight: true,
+  wrapText: true,
+  flex: 2,
+}
