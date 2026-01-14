@@ -1,29 +1,159 @@
+import { useState } from "react";
+import {
+  Box,
+  Flex,
+  Text,
+  Tabs,
+  TabList,
+  TabPanels,
+  TabPanel,
+  Tab,
+} from "@chakra-ui/react";
+import { FileText, Calendar, Archive } from "lucide-react";
 
-const getRowStyle = useCallback((params:{data:NewsletterRow}):RowStyle | undefined =>{
+import PortalHeader from "@/components/PortalHeader";
+import SearchBar from "@/components/SearchBar";
+import NewsletterGrid from "@/components/NewsletterGrid";
+import ArchiveGrid from "@/components/ArchiveGrid";
+import { newsletterData } from "@/data/newsletterData";
+import { archiveData } from "@/data/archiveData";
 
-    if(params.data?.colorCode){
-      return {backgroundColor:params.data.colorCode};
-    }
-
-    return undefined;
-
-
-  },[]);
+const Index = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState(0); // Chakra Tabs use index
 
   return (
-    <div style={{ height: "71vh" }}>
-      <AgGridReact
-        ref={gridRef}
-        rowData={filteredData}
-        columnDefs={columnDefs}
-        theme={agGridTheme}
-        loading={loading}
-        animateRows
-        stopEditingWhenCellsLoseFocus
-        onCellEditingStarted={onCellEditingStarted}
-        onCellEditingStopped={onCellEditingStopped}
-        getRowId={(params) => params.data.id.toString()}
-        rowStyle={getRowStyle}
-      />
-    </div>
+    <Box minH="100vh" bg="bg">
+      <PortalHeader />
+
+      <Box maxW="1800px" mx="auto" px={6} py={6}>
+        <Tabs
+          index={activeTab}
+          onChange={setActiveTab}
+          variant="enclosed"
+          isFitted={false}
+        >
+          {/* Tabs Header */}
+          <Flex align="center" justify="space-between" mb={6}>
+            <TabList>
+              <Tab px={6} py={2.5} fontSize="sm" fontWeight="medium">
+                <FileText size={16} style={{ marginRight: 8 }} />
+                Newsletter Dashboard
+              </Tab>
+              <Tab px={6} py={2.5} fontSize="sm" fontWeight="medium">
+                <Archive size={16} style={{ marginRight: 8 }} />
+                Newsletter Archives
+              </Tab>
+            </TabList>
+
+            {activeTab === 0 && (
+              <SearchBar
+                data={newsletterData}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+              />
+            )}
+          </Flex>
+
+          <TabPanels>
+            {/* ================= Dashboard ================= */}
+            <TabPanel px={0}>
+              {/* Stats Bar */}
+              <Flex align="center" gap={6} mb={4}>
+                <Flex align="center" gap={2} fontSize="sm" color="fg.muted">
+                  <FileText size={16} />
+                  <Text>
+                    <Text as="span" fontWeight="semibold" color="fg">
+                      {newsletterData.length}
+                    </Text>{" "}
+                    Total Records
+                  </Text>
+                </Flex>
+
+                <Flex align="center" gap={2} fontSize="sm" color="fg.muted">
+                  <Calendar size={16} />
+                  <Text>
+                    Last Updated:{" "}
+                    <Text as="span" fontWeight="semibold" color="fg">
+                      Dec 10, 2024
+                    </Text>
+                  </Text>
+                </Flex>
+              </Flex>
+
+              {/* Instructions */}
+              <Flex
+                mb={4}
+                gap={4}
+                fontSize="xs"
+                color="fg.muted"
+                bg="bg.muted"
+                px={4}
+                py={2.5}
+                borderRadius="lg"
+                align="center"
+                wrap="wrap"
+              >
+                <Text>
+                  <Text as="span" fontWeight="medium" color="fg">
+                    Tip:
+                  </Text>{" "}
+                  Double-click on Person/Firm, Location, or Information cells to
+                  edit
+                </Text>
+                <Text color="border">|</Text>
+                <Text>Press Enter to save changes</Text>
+                <Text color="border">|</Text>
+                <Text>Click PDF links to download</Text>
+              </Flex>
+
+              {/* Grid */}
+              <NewsletterGrid searchTerm={searchTerm} />
+            </TabPanel>
+
+            {/* ================= Archives ================= */}
+            <TabPanel px={0}>
+              {/* Stats Bar */}
+              <Flex align="center" gap={6} mb={4}>
+                <Flex align="center" gap={2} fontSize="sm" color="fg.muted">
+                  <Archive size={16} />
+                  <Text>
+                    <Text as="span" fontWeight="semibold" color="fg">
+                      {archiveData.length}
+                    </Text>{" "}
+                    Archived Files
+                  </Text>
+                </Flex>
+              </Flex>
+
+              {/* Instructions */}
+              <Flex
+                mb={4}
+                gap={4}
+                fontSize="xs"
+                color="fg.muted"
+                bg="bg.muted"
+                px={4}
+                py={2.5}
+                borderRadius="lg"
+                align="center"
+              >
+                <Text>
+                  <Text as="span" fontWeight="medium" color="fg">
+                    Tip:
+                  </Text>{" "}
+                  Click on the download link to access archived newsletters
+                </Text>
+              </Flex>
+
+              {/* Archive Grid */}
+              <ArchiveGrid searchTerm={searchTerm} />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </Box>
+    </Box>
   );
+};
+
+export default Index;
