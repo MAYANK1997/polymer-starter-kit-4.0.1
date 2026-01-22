@@ -1,4 +1,62 @@
- valueGetter: (params) => {
-    const value = params.data?.asOfDate;
-    return value ? value.split("T")[0] : "";
-  },
+
+import { Tabs } from '@chakra-ui/react';
+import { useThemeColors } from '@loim/loim-ui';
+import { useState } from 'react';
+
+const BrokersPage = () => {
+  const [value, setValue] = useState('commissions');
+
+
+
+  const { bgColor } = useThemeColors();
+
+
+ 
+
+  return (
+    <Tabs.Root
+      value={value}
+      defaultValue='commissions'
+      variant='outline'
+      onValueChange={(e) => setValue(e.value)}
+      lazyMount
+      unmountOnExit
+    >
+      <Tabs.List>
+        <Tabs.Trigger value='commisions'>Commissions</Tabs.Trigger>
+        
+      </Tabs.List>
+
+      <Tabs.Content bg={bgColor} height={'calc(100vh - 233px)'} padding='0' value='commisions'>
+      <Tabs.Root
+      value={value}
+      defaultValue='pm-commision'
+      variant='outline'
+      onValueChange={(e) => setValue(e.value)}
+      lazyMount
+      unmountOnExit
+    >
+      
+      <Tabs.List>
+        <Tabs.Trigger value='pm-commisions'>PM Commissions</Tabs.Trigger>
+        <Tabs.Trigger value='mtd-commisions'>MTD Commissions</Tabs.Trigger> 
+      </Tabs.List>
+
+      <Tabs.Content  value='pm-commisions'>
+       <h1>PM Commissions Content</h1>
+       </Tabs.Content>
+
+       <Tabs.Content value='mtd-commisions'>
+       <h1>MTD Commissions Content</h1>
+       </Tabs.Content>
+</Tabs.Root>
+        
+      </Tabs.Content>
+     
+
+   
+    </Tabs.Root>
+  );
+};
+
+export default BrokersPage;
