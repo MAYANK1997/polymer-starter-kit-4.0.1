@@ -1,97 +1,10 @@
-import { Tabs, Button, HStack } from '@chakra-ui/react';
-import { useThemeColors } from '@loim/loim-ui';
-import { useEffect, useState } from 'react';
-import { AgGridReact } from 'ag-grid-react';
+{
+  "fund": "string",
+  "strategies": [
+    "string"
+  ],
+  "pmView": true,
+  "myView": true
+}
 
-const BrokersPage = () => {
-  const [commissionTab, setCommissionTab] = useState<'pm' | 'mtd'>('pm');
-  const [commissionType, setCommissionType] = useState<'my' | 'firm'>('my');
-
-  const { bgColor } = useThemeColors();
-  const [rowData, setRowData] = useState([]);
-
-  // Derived booleans for API
-  const isPM = commissionTab === 'pm';
-  const isMy = commissionType === 'my';
-
-  // API call whenever any filter changes
-  useEffect(() => {
-    fetchData(isPM, isMy);
-  }, [isPM, isMy]);
-
-  const fetchData = async (isPM: boolean, isMy: boolean) => {
-    console.log('API Params:', isPM, isMy); // true true etc.
-
-    // Example API
-    const res = await fetch(
-      `/api/commissions?isPM=${isPM}&isMy=${isMy}`
-    );
-    const data = await res.json();
-    setRowData(data);
-  };
-
-  return (
-    <Tabs.Root
-      value={commissionTab}
-      defaultValue="pm"
-      variant="outline"
-      onValueChange={(e) => setCommissionTab(e.value as 'pm' | 'mtd')}
-    >
-      {/* PM / MTD Tabs */}
-      <Tabs.List>
-        <Tabs.Trigger value="pm">PM Commissions</Tabs.Trigger>
-        <Tabs.Trigger value="mtd">MTD Commissions</Tabs.Trigger>
-      </Tabs.List>
-
-      {/* PM Content */}
-      <Tabs.Content value="pm" bg={bgColor} p="4">
-        <CommissionButtons
-          value={commissionType}
-          onChange={setCommissionType}
-        />
-
-        <AgGridReact rowData={rowData} />
-      </Tabs.Content>
-
-      {/* MTD Content */}
-      <Tabs.Content value="mtd" bg={bgColor} p="4">
-        <CommissionButtons
-          value={commissionType}
-          onChange={setCommissionType}
-        />
-
-        <AgGridReact rowData={rowData} />
-      </Tabs.Content>
-    </Tabs.Root>
-  );
-};
-
-export default BrokersPage;
-
-
-          const CommissionButtons = ({
-  value,
-  onChange,
-}: {
-  value: 'my' | 'firm';
-  onChange: (val: 'my' | 'firm') => void;
-}) => {
-  return (
-    <HStack mb={4}>
-      <Button
-        variant={value === 'my' ? 'solid' : 'outline'}
-        onClick={() => onChange('my')}
-      >
-        My Commissions
-      </Button>
-
-      <Button
-        variant={value === 'firm' ? 'solid' : 'outline'}
-        onClick={() => onChange('firm')}
-      >
-        Firm Commissions
-      </Button>
-    </HStack>
-  );
-};
-
+http://nycuapp03.biz.lodh.com:8008/api/commission
