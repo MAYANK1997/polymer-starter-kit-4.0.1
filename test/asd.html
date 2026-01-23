@@ -1,10 +1,78 @@
-{
-  "fund": "string",
-  "strategies": [
-    "string"
-  ],
-  "pmView": true,
-  "myView": true
-}
+// PMCommissions.tsx
+import { useEffect, useState } from 'react';
+import { Button, HStack, Spinner } from '@chakra-ui/react';
+import { AgGridReact } from 'ag-grid-react';
 
-http://nycuapp03.biz.lodh.com:8008/api/commission
+const PMCommissions = () => {
+  const [view, setView] = useState<'summary' | 'detailed'>('summary');
+  const [rowData, setRowData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, [view]);
+
+  const fetchData = async () => {
+    setLoading(true);
+
+    const payload = {
+      fund: 'Fund A',
+      strategies: ['Strategy 1'],
+      pmView: true,
+      myView: false,
+    };
+
+    try {
+      const res = await fetch(
+        'http://nycuapp03.biz.lodh.com:8008/api/commission',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await res.json();
+      setRowData(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columnDefs = [
+    { field: 'broker' },
+    { field: 'commission' },
+    { field: 'strategy' },
+  ];
+
+  return (
+    <>
+      {/* Toggles */}
+      <HStack mb={4}>
+        <Button
+          variant={view === 'summary' ? 'solid' : 'outline'}
+          onClick={() => setView('summary')}
+        >
+          Summary
+        </Button>
+        <Button
+          variant={view === 'detailed' ? 'solid' : 'outline'}
+          onClick={() => setView('detailed')}
+        >
+          Detailed
+        </Button>
+      </HStack>
+
+      {/* Grid */}
+      {loading ? (
+        <Spinner />
+      ) : (
+        <div style={{ height: 500 }}>
+          <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default PMCommissions;
