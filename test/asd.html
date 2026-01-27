@@ -1,78 +1,392 @@
-// PMCommissions.tsx
-import { useEffect, useState } from 'react';
-import { Button, HStack, Spinner } from '@chakra-ui/react';
-import { AgGridReact } from 'ag-grid-react';
+//BrokersPage.tsx
+import { Tabs } from '@chakra-ui/react';
+import { useThemeColors } from '@loim/loim-ui';
+import { useState } from 'react';
+import PMCommissions from './PMCommissions';
+import MTDCommissions from './PMCommissions';
 
-const PMCommissions = () => {
-  const [view, setView] = useState<'summary' | 'detailed'>('summary');
-  const [rowData, setRowData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [view]);
+const BrokersPage = () => {
+  const [mainTab, setMainTab] = useState('commissions');
+  const [childTab, setChildTab] = useState('pm-commissions');
 
-  const fetchData = async () => {
-    setLoading(true);
 
-    const payload = {
-      fund: 'Fund A',
-      strategies: ['Strategy 1'],
-      pmView: true,
-      myView: false,
-    };
 
-    try {
-      const res = await fetch(
-        'http://nycuapp03.biz.lodh.com:8008/api/commission',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
+  const { bgColor } = useThemeColors();
 
-      const data = await res.json();
-      setRowData(data);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const columnDefs = [
-    { field: 'broker' },
-    { field: 'commission' },
-    { field: 'strategy' },
-  ];
+ 
 
   return (
-    <>
-      {/* Toggles */}
-      <HStack mb={4}>
-        <Button
-          variant={view === 'summary' ? 'solid' : 'outline'}
-          onClick={() => setView('summary')}
-        >
-          Summary
-        </Button>
-        <Button
-          variant={view === 'detailed' ? 'solid' : 'outline'}
-          onClick={() => setView('detailed')}
-        >
-          Detailed
-        </Button>
-      </HStack>
+    <Tabs.Root
+      value={mainTab}
+      defaultValue='commissions'
+      variant='outline'
+      onValueChange={(e) => setMainTab(e.value)}
+      lazyMount
+      unmountOnExit
+    >
+      <Tabs.List>
+        <Tabs.Trigger value='commissions'>Commissions</Tabs.Trigger>
+        
+      </Tabs.List>
 
-      {/* Grid */}
-      {loading ? (
-        <Spinner />
-      ) : (
-        <div style={{ height: 500 }}>
-          <AgGridReact rowData={rowData} columnDefs={columnDefs} />
-        </div>
-      )}
-    </>
+      <Tabs.Content bg={bgColor} height={'calc(100vh - 233px)'} padding='0' value='commissions'>
+      <Tabs.Root
+      value={childTab}
+      defaultValue='pm-commission'
+      variant='outline'
+      onValueChange={(e) => setChildTab(e.value)}
+      lazyMount
+      unmountOnExit
+    >
+      
+      <Tabs.List>
+        <Tabs.Trigger value='pm-commission'>PM Commissions</Tabs.Trigger>
+        <Tabs.Trigger value='mtd-commission'>MTD Commissions</Tabs.Trigger> 
+      </Tabs.List>
+
+      <Tabs.Content  value='pm-commission'>
+          <PMCommissions />
+       </Tabs.Content>
+
+       <Tabs.Content value='mtd-commission'>
+         <MTDCommissions />
+       </Tabs.Content>
+     </Tabs.Root>
+        
+      </Tabs.Content>
+     
+
+   
+    </Tabs.Root>
   );
 };
 
-export default PMCommissions;
+export default BrokersPage;
+
+
+
+// PMCommissions.tsx
+
+import { useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { useFundsAndStrategies } from '@/contexts';
+import { useAgGridTheme } from '@loim/loim-ui';
+import { Button, HStack } from '@chakra-ui/react';
+import { pmCommissionsColumnDef } from './pm-commissions-column-def';
+
+
+const PMCommissions = () => {
+    const [view, setView] = useState<'my' | 'firm'>('my');
+    const [data, setData] = useState([]);
+    const [columnDef] = useState(pmCommissionsColumnDef);
+    const [loading, setLoading] = useState(false);
+    const { agGridTheme } = useAgGridTheme();
+    const {selectedFund, selectedStrategy} = useFundsAndStrategies();
+  
+    useEffect(() => {
+      fetchData();
+    }, [view]);
+  
+    const fetchData = async () => {
+      setLoading(true);
+  
+      const payload = {
+        fund: selectedFund,
+        strategies: selectedStrategy,
+        pmView: true,
+        myView: view === 'my',
+      };
+  
+      try {
+        const res = await fetch(
+          'http://nycuapp03.biz.lodh.com:8008/api/commission',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        );
+  
+        const data = await res.json();
+        console.log(data);
+        setData(data);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+   
+  
+    return (
+      <>
+        {/* Toggles */}
+        <HStack mb={4}>
+          <Button
+            variant={view === 'my' ? 'solid' : 'outline'}
+            onClick={() => setView('my')}
+          >
+            My Commissions
+          </Button>
+          <Button
+            variant={view === 'firm' ? 'solid' : 'outline'}
+            onClick={() => setView('firm')}
+          >
+            Firm Commissions
+          </Button>
+        </HStack>
+  
+   
+         <div style={{ height: '100%' }}>
+            <AgGridReact  columnDefs={columnDef} rowData={data} theme={agGridTheme} loading={loading} />
+         </div>
+     
+      </>
+    );
+  };
+  
+  export default PMCommissions;
+
+
+// pm-commissions-column-def
+       
+import type { ColDef } from 'ag-grid-community';
+
+
+export const pmCommissionsColumnDef: Array<ColDef> = [
+
+
+  {
+    headerName: 'Counterparty',
+    field: 'counterparty',
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    width: 350,
+    cellRenderer: (params: { value: any }) => {
+      const value = params.value;
+      if (value == '' || value == null) {
+        return 'NA';
+      } else {
+        return value;
+      }
+    }
+  },
+
+   {
+    headerName: "WTD Commission ($)",
+    field: 'wtdCommission',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-right',
+    width: 120,
+
+    valueFormatter: (params) => {
+      const value = parseFloat(params.value);
+      return isNaN(value) ? 'NA' : value.toFixed(2);
+    }
+  },
+
+  {
+    headerName: "MTD Commission ($)",
+    field: 'mtdCommission',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-right',
+    width: 120,
+
+    valueFormatter: (params) => {
+      const value = parseFloat(params.value);
+      return isNaN(value) ? 'NA' : value.toFixed(2);
+    }
+  },
+
+   {
+    headerName: "QTD Commission ($)",
+    field: 'qtdCommission',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-right',
+    width: 120,
+
+    valueFormatter: (params) => {
+      const value = parseFloat(params.value);
+      return isNaN(value) ? 'NA' : value.toFixed(2);
+    }
+  },
+
+  {
+    headerName: "YTD Commission ($)",
+    field: 'ytdCommission',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-right',
+    width: 120,
+
+    valueFormatter: (params) => {
+      const value = parseFloat(params.value);
+      return isNaN(value) ? 'NA' : value.toFixed(2);
+    }
+  },
+
+   
+];
+
+
+
+// MTDCommissions
+
+
+import { useEffect, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { useFundsAndStrategies } from '@/contexts';
+import { useAgGridTheme } from '@loim/loim-ui';
+import { Button, HStack } from '@chakra-ui/react';
+import { mtdCommissionsColumnDef } from './mtd-commissions-column-def';
+
+const MTDCommissions = () => {
+    const [view, setView] = useState<'my' | 'firm'>('my');
+    const [data, setData] = useState([]);
+    const [columnDef] = useState(mtdCommissionsColumnDef);
+    const [loading, setLoading] = useState(false);
+    const { agGridTheme } = useAgGridTheme();
+    const {selectedFund, selectedStrategy} = useFundsAndStrategies();
+  
+    useEffect(() => {
+      fetchData();
+    }, [view]);
+  
+    const fetchData = async () => {
+      setLoading(true);
+  
+      const payload = {
+        fund: selectedFund,
+        strategies: selectedStrategy,
+        pmView: false,
+        myView: view === 'my',
+      };
+  
+      try {
+        const res = await fetch(
+          'http://nycuapp03.biz.lodh.com:8008/api/commission',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        );
+  
+        const data = await res.json();
+        setData(data);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+   
+  
+    return (
+      <>
+        {/* Toggles */}
+        <HStack mb={4}>
+          <Button
+            variant={view === 'my' ? 'solid' : 'outline'}
+            onClick={() => setView('my')}
+          >
+            My Commissions
+          </Button>
+          <Button
+            variant={view === 'firm' ? 'solid' : 'outline'}
+            onClick={() => setView('firm')}
+          >
+            Firm Commissions
+          </Button>
+        </HStack>
+  
+   
+         <div style={{ height: '100%' }}>
+            <AgGridReact columnDefs={columnDef} rowData={data} theme={agGridTheme} loading={loading} />
+         </div>
+     
+      </>
+    );
+  };
+  
+  export default MTDCommissions;
+
+
+  // MTD Commission Column Def
+
+import type { ColDef } from 'ag-grid-community';
+
+
+export const mtdCommissionsColumnDef: Array<ColDef> = [
+
+  {
+    headerName: 'Month',
+    field: 'month',
+    sortable: true,
+    width: 140,
+    filter: 'agTextColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-center',
+    cellRenderer: (params: { value: any }) => {
+      const value = params.value;
+      if (value == '' || value == null) {
+        return 'NA';
+      } else {
+        return value;
+      }
+    }
+  },
+
+  {
+    headerName: 'Counterparty',
+    field: 'counterparty',
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    width: 350,
+    cellRenderer: (params: { value: any }) => {
+      const value = params.value;
+      if (value == '' || value == null) {
+        return 'NA';
+      } else {
+        return value;
+      }
+    }
+  },
+
+   {
+    headerName: "Commission",
+    field: 'commission',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    floatingFilter: true,
+    suppressMenu: true,
+    cellClass: 'ag-cell-right',
+    width: 120,
+
+    valueFormatter: (params) => {
+      const value = parseFloat(params.value);
+      return isNaN(value) ? 'NA' : value.toFixed(2);
+    }
+  }
+  
+];
+
+
+
+  
